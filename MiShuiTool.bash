@@ -10,7 +10,7 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH=/data/data/com.termux/files/usr/bin
-MST_UPDATE_TIME='2026-1-11 Alpha'
+MST_UPDATE_TIME='2026.1.13 Beta'
 NOW_VERSION=10000
 if [ "$(id -u)" = "0" ]
 then
