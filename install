@@ -1,0 +1,48 @@
+#!/data/data/com.termux/files/usr/bin/bash
+COLOR_30="\033[0;30m";COLOR_31="\033[0;31m"
+COLOR_32="\033[0;32m";COLOR_33="\033[0;33m"
+COLOR_34="\033[0;34m";COLOR_35="\033[0;35m"
+COLOR_36="\033[0;36m";COLOR_37="\033[0;37m"
+COLOR_0="\033[0m";COLOR_01="\033[0m"
+RM_ALL_FILE() {
+    echo -e -n "${COLOR_33}INFO:${COLOR_0}清理临时文件..."
+    if rm -rf $HOME/MST/*
+    then
+        echo -e "${COLOR_32}完成${COLOR_0}"
+    else
+        echo "失败"
+        exit 1
+    fi
+    trap - EXIT
+}
+echo -e "${COLOR_33}INFO:${COLOR_0}正在更新Termux环境..."
+if ! pkg update -y && pkg upgrade -y
+then
+    echo -e "${COLOR_31}ERROR:${COLOR_0}更新失败 检查网络连接或使用' curl -sS https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/install | bash '命令再试一次"
+    exit 1
+fi
+trap RM_ALL_FILE EXIT INT TERM
+echo
+echo -n -e "${COLOR_33}INFO:${COLOR_0}正在下载MiShuiTool及其配置文件..."
+mkdir -p $HOME/MST/
+if curl https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/MiShuiTool.bash &>$HOME/MST/MiShuiTool
+then
+    echo -e "${COLOR_32}完成${COLOR_0}"
+else
+    echo -e "${COLOR_31}ERROR:${COLOR_0}下载失败 检查网络连接或使用' curl -sS https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/install | bash '命令再试一次"
+    exit 1
+fi
+echo -n -e "${COLOR_33}INFO:${COLOR_0}正在编译原文件并授予执行权限..."
+if shc -rf $HOME/MST/MiShuiTool -o $PREFIX/bin/mishuitool &>/dev/null && chmod 777 $PREFIX/bin/mishuitool
+then
+    echo -e "${COLOR_32}完成${COLOR_0}"
+else
+    echo "失败"
+    exit 1
+fi
+RM_ALL_FILE
+echo -e "${COLOR_32}AllDone:${COLOR_0}MST工具箱已安装完成"
+echo
+echo -e "启动命令: ${COLOR_32}mishuitool${COLOR_0}"
+echo
+exit 0
