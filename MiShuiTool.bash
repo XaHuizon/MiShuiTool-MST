@@ -1831,7 +1831,7 @@ CA_FLASH_MAIN() {
             MISHUI_MAIN
             echo
             mkdir -p $MST_HOME/Update &>>$MST_LOG
-            MISHUITOOL_URL="$(base64 -d <<< aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1hhSHVpem9uL01pU2h1aVRvb2wtTVNUL21haW4vTWlTaHVpVG9vbAo=)"
+            MISHUITOOL_URL="$(base64 -d <<< aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1hhSHVpem9uL01pU2h1aVRvb2wtTVNUL21haW4vTWlTaHVpVG9vbC5iYXNoCg== 2>>$MST_LOG)"
             echo -e "${COLOR_35}[UP]${COLOR_33}云更新功能依赖GitHub >>${COLOR_0}"
             if ! mkdir -p $MST_HOME/Update && rm -rf $MST_HOME/Update/* &>>$MST_LOG
             then
@@ -1856,14 +1856,14 @@ CA_FLASH_MAIN() {
                     MAIN_REBOOT || return 0
                     ;;
                 esac
-                echo -e -n "${COLOR_35}[Download]${COLOR_33}正在下载云端最新MiShuiTool进行覆盖更新...${COLOR_0}"
-                if curl $MISHUITOOL_URL &>$MST_HOME/Update/MiShuiTool && shc -rf $MST_HOME/Update/MiShuiTool -o $0 &>>MST_LOG && chmod 777 $0 
+                echo -e "${COLOR_35}[Download]${COLOR_33}正在下载云端最新MiShuiTool进行覆盖更新...${COLOR_0}"
+                if curl -o "$MST_HOME/Update/MiShuiTool" "$MISHUITOOL_URL" &>>$MST_LOG && shc -rf "$MST_HOME/Update/MiShuiTool" -o "$0" &>>$MST_LOG && chmod 777 "$0"
                 then
-                    rm $MST_HOME/MiShuiTool
-                    echo -e "${COLOR_32}完成${COLOR_0}"
+                    rm $MST_HOME/Update/MiShuiTool
+                    echo -e "${COLOR_32}[OKAY]${COLOR_33}覆盖更新完成 文件路径:${COLOR_36}$0${COLOR_0}"
                 else
-                    rm $MST_HOME/MiShuiTool
-                    echo -e "${COLOR_31}[ERROR]${COLOR_3}下载失败 检查网络连接或使用魔法后再试一次${COLOR_0}"
+                    rm $MST_HOME/Update/MiShuiTool
+                    echo -e "${COLOR_31}[ERROR]${COLOR_33}下载失败 检查网络连接或使用魔法后再试一次${COLOR_0}"
                     REBOOT_FL || return 0
                 fi
                 echo
@@ -1872,9 +1872,9 @@ CA_FLASH_MAIN() {
                 read YN_FIX_RE_MST
                 case "$YN_FIX_RE_MST" in
                 '1' | 'y' | 'Y')
-                    echo -e "${COLOR_35}[Rebooting]${COLOR_33}正在重启MST...${COLOR_0}"
+                    echo -e -n " ${COLOR_35}[Rebooting]${COLOR_33}正在重启MST...${COLOR_0}\r"
                     sleep 0.3
-                    bash $0 && exit 0
+                    exec "$0" && exit 0
                     ;;
                 *)
                     EXIT_SHELL
