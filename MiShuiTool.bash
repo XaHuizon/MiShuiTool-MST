@@ -1790,14 +1790,14 @@ CA_FLASH_MAIN() {
             echo -e "${COLOR_35}[MST]${COLOR_33}工具名称: ${COLOR_36}MiShuitool(MST工具箱)${COLOR_33} - ${COLOR_32}CLI${COLOR_0}"
             echo -e "${COLOR_35}[BETA]${COLOR_33}当前版本: ${COLOR_32}$MST_UPDATE_TIME${COLOR_0}"
             echo -e "${COLOR_35}[CE]${COLOR_33}运行环境: ${COLOR_36}Android-Termux ${COLOR_32}Bash 5.2+${COLOR_0}"
-            echo -e "${COLOR_35}[]${COLOR_32}copyright (C)${COLOR_0}"
+            echo -e "${COLOR_35}[Apache-2.0]${COLOR_32} copyright (C) 2026 XaHuizon${COLOR_0}"
             echo
             echo -e "${COLOR_35}[TXT]${COLOR_33}工具介绍 >>${COLOR_0}"
             echo -e "${COLOR_37}    本工具旨在为${COLOR_36}无PC环境${COLOR_37}但需要使用ADB&Fastboot功能的用户提供一个方便的${COLOR_36}Termux${COLOR_37}刷机环境 其中针对${COLOR_36}ADB${COLOR_37}及${COLOR_36}Fastboot${COLOR_37}的部分常用操作均提供了高度自动化的快捷功能${COLOR_0}"
             echo -e "${COLOR_37}    脚本内置大量的检测逻辑 但是百密终有一疏 执行高危操作前务必备份好数据 对于不了解的操作一定要了解清楚后再继续${COLOR_0}"
             echo -e "${COLOR_35}[INFO]${COLOR_33}使用此工具即代表您愿意承担一切潜在风险${COLOR_0}"
             echo
-            echo -e "${COLOR_35}[GitHub]${COLOR_33}仓库地址:${COLOR_32} ${COLOR_0}"
+            echo -e "${COLOR_35}[GitHub]${COLOR_33}仓库地址:${COLOR_32} https://github.com/XaHuizon/MiShuiTool-MST${COLOR_0}"
             echo -e "${COLOR_35}[Email]${COLOR_33}联系/反馈: ${COLOR_36}"
             echo
             echo -e "${COLOR_35}[ACK]${COLOR_33}感谢以下开源项目提供支持! 如果您认为他们还不错 请为他们点上一颗Star!${COLOR_0}"
@@ -1830,22 +1830,21 @@ CA_FLASH_MAIN() {
             MISHUI_MAIN_TIP=云更新MST工具箱
             MISHUI_MAIN
             echo
+            mkdir -p $MST_HOME/Update &>>$MST_LOG
             MISHUITOOL_URL="$(base64 -d <<< aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1hhSHVpem9uL01pU2h1aVRvb2wtTVNUL21haW4vTWlTaHVpVG9vbAo=)"
             echo -e "${COLOR_35}[UP]${COLOR_33}云更新功能依赖GitHub >>${COLOR_0}"
-            if ! mkdir -p $MST_HOME/Update && rm -rf $MST_HOME/Update &>>$MST_LOG
+            if ! mkdir -p $MST_HOME/Update && rm -rf $MST_HOME/Update/* &>>$MST_LOG
             then
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}无法创建云更新所需要的文件夹:${COLOR_36}$MST_HOME/Update${COLOR_0}"
                 REBOOT_FL || return 0
             fi
-            echo -e "${COLOR_33}[>]${COLOR_33}正在检测更新...${COLOR_0}"
-            if ! curl -o $MST_HOME/Update/version.txt "$(base64 -d <<< aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1hhSHVpem9uL01pU2h1aVRvb2wtTVNUL21haW4vVmVyc2lvbi9HaXRIdWItVmVyc2lvbgo=)" &>>$MST_LOG || [ ! -f "$MST_HOME/Update/version.txt" ]
+            echo -e "${COLOR_35}[CU]${COLOR_33}正在检测更新...${COLOR_0}"
+            if ! curl -o $MST_HOME/Update/version.txt "$(base64 -d <<< aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1hhSHVpem9uL01pU2h1aVRvb2wtTVNUL21haW4vVmVyc2lvbi9HaXRIdWItVmVyc2lvbgo=)" &>>$MST_LOG || ! source "$MST_HOME/Update/version.txt"
             then
                 rm -rf $MST_HOME/Update/
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}检测更新失败 检查网络是否连接或使用魔法再试一次${COLOR_0}"
                 REBOOT_FL || return 0
             fi
-            NEW_VERSION_NUMB="$(head -n 1 $MST_HOME/Update/version.txt)"
-            NEW_VERSION_TIME="$(head -n 2 $MST_HOME/Update/version.txt)"
             DOWNLOAD_MISHUITOOL() {
                 echo
                 echo -e "${COLOR_35}[$1]${COLOR_33}$2 >>${COLOR_0}"
@@ -1853,6 +1852,7 @@ CA_FLASH_MAIN() {
                 read YN_CURL
                 case "$YN_CURL" in
                 '2' | 'n' | 'N' | '否')
+                    rm -rf $MST_HOME/Update/* &>>$MST_LOG
                     MAIN_REBOOT || return 0
                     ;;
                 esac
@@ -1889,9 +1889,9 @@ CA_FLASH_MAIN() {
             echo -e "${COLOR_35}[NEW]${COLOR_33}发现新版本:${COLOR_32}$NEW_VERSION_TIME${COLOR_0}"
             echo
             echo -e "${COLOR_35}[Update]${COLOR_33}本次更新 >>${COLOR_0}"
-            echo -e "${COLOR_32}[>]${COLOR_33}[版本:${COLOR_36}$MST_UPDATE_TIME ${COLOR_35}->${COLOR_33} ${COLOR_36}$NEW_VERSION_NUMB${COLOR_33}]${COLOR_0}"
-            echo -e -n "${COLOR_35}[LOG]${COLOR_33}正在获取本次更新内容...${COLOR_0}"
-            if curl -o $MST_HOME/Update/Update.log "$(base64 -d <<< aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1hhSHVpem9uL01pU2h1aVRvb2wtTVNUL21haW4vVmVyc2lvbi9VcGRhdGUubG9nCg==)"
+            echo -e "${COLOR_32}[>]${COLOR_33}[版本:${COLOR_36}$MST_UPDATE_TIME ${COLOR_35}->${COLOR_33} ${COLOR_36}$NEW_VERSION_TIME${COLOR_33}]${COLOR_0}"
+            echo -e -n "${COLOR_35}[LOG]${COLOR_33}正在获取本次更新内容...${COLOR_0}\r"
+            if ! curl -o $MST_HOME/Update/Update.log "$(base64 -d <<< aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1hhSHVpem9uL01pU2h1aVRvb2wtTVNUL21haW4vVmVyc2lvbi9VcGRhdGUubG9nCg==)" &>>$MST_LOG
             then
                 echo -e "\n${COLOR_31}[ERROR]${COLOR_33}更新日志获取失败${COLOR_0}"
             else
@@ -1900,7 +1900,7 @@ CA_FLASH_MAIN() {
                 do
                     echo -e "${COLOR_36}$READ_ONE_LOG${COLOR_0}"
                     sleep 0.2
-                done <& $MST_HOME/Update/Update.log
+                done < "$MST_HOME/Update/Update.log"
             fi
             DOWNLOAD_MISHUITOOL DL "是否立即下载更新最新版本MiShuiTool" "下载更新"
             ;;
@@ -1911,6 +1911,7 @@ CA_FLASH_MAIN() {
             ERROR_CONT
             ;;
         esac
+        
         REBOOT_FL || return 0
         ;;
     '7' | '退出MST工具箱' | 'EXIT')
