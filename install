@@ -25,7 +25,7 @@ trap RM_ALL_FILE EXIT INT TERM
 echo
 echo -n -e "${COLOR_33}INFO:${COLOR_0}正在下载MiShuiTool及其配置文件..."
 mkdir -p $HOME/MST/
-if curl https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/MiShuiTool.bash &>$HOME/MST/MiShuiTool
+if curl -o $HOME/MST/MiShuiTool https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/MiShuiTool.bash 2>>/dev/null
 then
     echo -e "${COLOR_32}完成${COLOR_0}"
 else
