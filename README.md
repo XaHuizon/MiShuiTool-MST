@@ -30,4 +30,4 @@
 curl -sS https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/install | bash 
 ```
 
-- **安装完成后执行 _mishuitool_ 命令即可启动MST工具箱**
+- **安装完成后执行 _mishuitool_  命令即可启动MST工具箱**
