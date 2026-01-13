@@ -1798,7 +1798,7 @@ CA_FLASH_MAIN() {
             echo -e "${COLOR_35}[INFO]${COLOR_33}使用此工具即代表您愿意承担一切潜在风险${COLOR_0}"
             echo
             echo -e "${COLOR_35}[GitHub]${COLOR_33}仓库地址:${COLOR_32} https://github.com/XaHuizon/MiShuiTool-MST${COLOR_0}"
-            echo -e "${COLOR_35}[Email]${COLOR_33}联系/反馈: ${COLOR_36}"
+            echo -e "${COLOR_35}[Email]${COLOR_33}联系/反馈: ${COLOR_36}639428035@qq.com${COLOR_0}"
             echo
             echo -e "${COLOR_35}[ACK]${COLOR_33}感谢以下开源项目提供支持! 如果您认为他们还不错 请为他们点上一颗Star!${COLOR_0}"
             echo -e "${COLOR_35}[Apache-2.0]${COLOR_32} Copyright (c) 2024 offici5l${COLOR_0}"
@@ -1896,10 +1896,11 @@ CA_FLASH_MAIN() {
                 echo -e "\n${COLOR_31}[ERROR]${COLOR_33}更新日志获取失败${COLOR_0}"
             else
                 echo -e "\033[K${COLOR_35}[LOG]${COLOR_33}本次更新内容 >>${COLOR_0}"
+                sleep 0.02
                 while IFS= read READ_ONE_LOG
                 do
                     echo -e "${COLOR_36}$READ_ONE_LOG${COLOR_0}"
-                    sleep 0.2
+                    sleep 0.03
                 done < "$MST_HOME/Update/Update.log"
             fi
             DOWNLOAD_MISHUITOOL DL "是否立即下载更新最新版本MiShuiTool" "下载更新"
