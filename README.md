@@ -31,3 +31,29 @@ curl -sS https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/install 
 ```
 
 - **安装完成后执行 _mishuitool_  命令即可启动MST工具箱**
+# 鸣谢
+> 本项目引用了以下开源项目的安装命令，如果您认为他们还不错，请为他们点上一颗Star！
+
+## MiUnlockTool
+### 开发者信息
+- **GitHub地址:** [MiUnlockTool](https://github.com/offici5l/MiUnlockTool)
+- **开源协议:** [Apache-2.0](https://github.com/offici5l/MiUnlockTool/blob/main/LICENSE)
+- **开发者:** [@offici5l](https://github.com/offici5l)
+
+- **用途:** __解锁小米设备相关__
+### 引用的命令: 
+```bash
+curl -sS https://raw.githubusercontent.com/offici5l/MiUnlockTool/main/.install | bash
+```
+
+## termux-adb
+### 开发者信息
+- **GitHub地址:** [termux-adb](https://github.com/nohajc/termux-adb)
+- **开源协议:** [MIT](https://github.com/nohajc/termux-adb/blob/master/LICENSE)
+- **开发者:** [@nohajc](https://github.com/nohajc)
+
+- **用途:** __无Root权限使用adb命令__
+### 引用的命令: 
+```bash
+curl -s https://raw.githubusercontent.com/nohajc/termux-adb/master/install.sh | bash
+```
