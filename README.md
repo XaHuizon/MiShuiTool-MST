@@ -26,7 +26,7 @@
 > 另外MiShuiTool还可以连接任何处于ADB/Fastboot模式的设备（需允许USB调试）
 ## 安装与使用
 ### 在终端中执行以下命令以一键安装/更新:
-```shell
+``` shell
 curl -sS https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/install | bash 
 ```
 
@@ -42,7 +42,7 @@ curl -sS https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/install 
 
 - **用途:** __解锁小米设备相关__
 ### 引用的命令: 
-``shell
+``` shell
 curl -sS https://raw.githubusercontent.com/offici5l/MiUnlockTool/main/.install | bash
 ```
 
@@ -54,6 +54,6 @@ curl -sS https://raw.githubusercontent.com/offici5l/MiUnlockTool/main/.install |
 
 - **用途:** __无Root权限使用adb命令__
 ### 引用的命令: 
-```shell
+``` shell
 curl -s https://raw.githubusercontent.com/nohajc/termux-adb/master/install.sh | bash
 ```
