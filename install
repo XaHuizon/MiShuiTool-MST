@@ -15,12 +15,34 @@ RM_ALL_FILE() {
     fi
     trap - EXIT
 }
+if [ ! "$PATH" = /data/data/com.termux/files/usr/bin ]
+then
+    echo -e "${COLOR_31}ERROR:${COLOR_0}当前环境(${COLOR_36}$PATH${COLOR_0})非Termux无法运行 在Termux中执行'${COLOR_36}curl -sS https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/install | bash${COLOR_0} '命令"
+    exit 1
+elif [ ! -d /data/data/com.termux.api ]
+then
+    echo -e "${COLOR_31}ERROR:${COLOR_33}当前还未安装'${COLOR_36}Termux-Api${COLOR_0}'App 访问Termux官网下载Termux-Api并安装:${COLOR_36}https://termux.dev/${COLOR_0}"
+    exit 1
+fi
 echo -e "${COLOR_33}INFO:${COLOR_0}正在更新Termux环境..."
 if ! pkg update -y && pkg upgrade -y
 then
-    echo -e "${COLOR_31}ERROR:${COLOR_0}更新失败 检查网络连接或使用' curl -sS https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/install | bash '命令再试一次"
+    echo -e "${COLOR_31}ERROR:${COLOR_0}更新失败 检查网络连接或使用' ${COLOR_36}curl -sS https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/install | bash${COLOR_0} '命令再试一次"
     exit 1
 fi
+echo -e "${COLOR_33}INFO:${COLOR_0}正在安装必须的工具包...${COLOR_0}"
+ALL_NEED_PKGE=("android-tools" "bc" "termux-tools" "termux-api")
+for ONE_NEED_PKGE in "${ALL_NEED_PKGE[@]}"
+do
+    echo -n "- 正在安装$ONE_NEED_PKGE..."
+    
+    if pkg install "$ONE_NEED_PKGE" &>>/dev/null
+    then
+        echo -e "${COLOR_32}okay${COLOR_0}"
+    else
+        echo -e "${COLOR_31}bad${COLOR_0}"
+    fi
+done
 trap RM_ALL_FILE EXIT INT TERM
 echo
 echo -n -e "${COLOR_33}INFO:${COLOR_0}正在下载MiShuiTool及其配置文件..."
@@ -29,7 +51,7 @@ if curl -o $HOME/MST/MiShuiTool https://raw.githubusercontent.com/XaHuizon/MiShu
 then
     echo -e "${COLOR_32}完成${COLOR_0}"
 else
-    echo -e "${COLOR_31}ERROR:${COLOR_0}下载失败 检查网络连接或使用' curl -sS https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/install | bash '命令再试一次"
+    echo -e "${COLOR_31}ERROR:${COLOR_0}下载失败 检查网络连接或使用' ${COLOR_36}curl -sS https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/install | bash${COLOR_0} '命令再试一次"
     exit 1
 fi
 echo -n -e "${COLOR_33}INFO:${COLOR_0}正在编译原文件并授予执行权限..."
@@ -41,6 +63,53 @@ else
     exit 1
 fi
 RM_ALL_FILE
+echo
+echo -e "${COLOR_33}INFO:${COLOR_0}正在检查当前环境..."
+echo -e -n "${COLOR_35}所需命令: ${COLOR_36}adb${COLOR_0}"
+if command -v adb &>>/dev/null
+then
+    echo -e " ------------------ ${COLOR_32}[OKAY]${COLOR_0}"
+else
+    echo -e "${COLOR_31}[Not Found]${COLOR_0}"
+    echo -e "${COLOR_31}ERROR:${COLOR_36}adb${COLOR_0}命令未安装/不可用!${COLOR_0}"
+fi
+echo -e -n "${COLOR_35}所需命令: ${COLOR_36}fastboot${COLOR_0}"
+if command -v fastboot &>>/dev/null
+then
+    echo -e " ------------- ${COLOR_32}[OKAY]${COLOR_0}"
+else
+    echo -e "${COLOR_31}[Not Found]${COLOR_0}"
+    echo -e "${COLOR_31}ERROR:${COLOR_36}adb${COLOR_0}命令未安装/不可用!${COLOR_0}"
+fi
+echo -e -n "${COLOR_35}Bash版本: ${COLOR_36}"
+if BASH_VERSION="$(bash --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)" && [ "$BASH_VERSION" > 5.2.0 ]
+then
+    echo -e "$BASH_VERSION ${COLOR_0}---------------- ${COLOR_32}[OKAY]${COLOR_0}"
+else
+    echo -e "${COLOR_31}[OLD]${COLOR_0}"
+    echo -e "${COLOR_31}ERROR:${COLOR_0}Bash版本过低 MST运行需要bash5.2+"
+fi
+echo -e -n "${COLOR_35}PATH路径: ${COLOR_36}"
+if [[ "$PATH" = **/data/data/com.termux/files/usr/bin** ]]
+then
+    echo -e ".../com.termux/.../bin ${COLOR_32}[OKAY]${COLOR_0}"
+else
+    echo -e "$PATH ${COLOR_31}[ERROR]${COLOR_0}"
+    echo -e "${COLOR_31}ERROR:${COLOR_0}当前环境似乎不是Termux"
+fi
+echo -e -n "${COLOR_35}脚本权限: ${COLOR_36}"
+case "$(id -u)" in
+0)
+    echo -e "ROOT (0)${COLOR_0} ------------- ${COLOR_32}[OKAY]${COLOR_0}"
+    ;;
+2000)
+    echo -e "SHELL (2000)${COLOR_0} --------- ${COLOR_32}[OKAY]${COLOR_0}"
+    ;;
+*)
+    echo -e "USER ($(id -u))${COLOR_0} --------- ${COLOR_32}[OKAY]${COLOR_0}"
+    ;;
+esac
+echo 
 echo -e "${COLOR_32}AllDone:${COLOR_0}MST工具箱已安装完成"
 echo
 echo -e "启动命令: ${COLOR_32}mishuitool${COLOR_0}"
