@@ -10,7 +10,7 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH=/data/data/com.termux/files/usr/bin
-MST_UPDATE_TIME='2026.1.16 Beta'
+MST_UPDATE_TIME='2026.1.14 Beta'
 NOW_VERSION=10001
 if [ "$(id -u)" = "0" ]
 then
@@ -1845,8 +1845,8 @@ CA_FLASH_MAIN() {
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}检测更新失败 检查网络是否连接或使用魔法再试一次${COLOR_0}"
                 REBOOT_FL || return 0
             fi
-            NEW_VERSION_NUMB="$(head -n 1 "$MST_HOME/Update/version.txt")"
-            NEW_VERSION_TIME="$(head -n 2 "$MST_HOME/Update/version.txt")"
+            NEW_VERSION_NUMB="$(sed -n 1p "$MST_HOME/Update/version.txt")"
+            NEW_VERSION_TIME="$(sed -n 2p "$MST_HOME/Update/version.txt")"
             echo -e "\033[2K"
             DOWNLOAD_MISHUITOOL() {
                 echo
