@@ -45,8 +45,8 @@ do
 done
 echo
 echo -n -e "${COLOR_33}INFO:${COLOR_0}正在下载MiShuiTool及其配置文件..."
-mkdir -p $HOME/MST/
-if curl -o $HOME/MST/MiShuiTool https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/MiShuiTool.bash 2>>/dev/null
+mkdir -p $HOME/MST/assets
+if curl -o $HOME/MST/MiShuiTool https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/MiShuiTool.bash -o $HOME/MST/assets/MST-Head.txt https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/assets/Text/MST-Head.txt 2>>/dev/null
 then
     echo -e "${COLOR_32}完成${COLOR_0}"
 else

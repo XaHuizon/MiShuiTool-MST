@@ -2047,6 +2047,7 @@ elif [ "$(stat -c%s $HOME/MST/MST运行日志.log)" -gt 10240 ]
 then
     echo "[$(date +%Y-%m-%d) $(date +%H:%M:%S)] 日志文件过大已自动清除" &>$MST_LOG
 fi
+mkdir -p $HOME/MST/assets
 bash -c true
 if [ "$COLUMNS" -lt "65" ]
 then
