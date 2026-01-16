@@ -31,7 +31,7 @@ then
     exit 1
 fi
 echo -e "${COLOR_33}INFO:${COLOR_0}正在安装必须的工具包...${COLOR_0}"
-ALL_NEED_PKGE=("android-tools" "bc" "termux-tools" "termux-api")
+ALL_NEED_PKGE=("android-tools" "bc" "termux-tools" "termux-api" "shc")
 for ONE_NEED_PKGE in "${ALL_NEED_PKGE[@]}"
 do
     echo -n "- 正在安装$ONE_NEED_PKGE..."
