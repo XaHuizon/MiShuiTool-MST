@@ -11,7 +11,7 @@
 - 开源协议: [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > 本项目采用 Apache-2.0 协议开源，你可以自由地使用、修改和分发本代码，但必须保留原始的版权声明，同时，本项目不提供任何形式的担保，刷机风险由使用者自行承担
 ## 简介
-![HOME_PNG](https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/PNG/MST-HOME.jpg)
+![HOME_PNG](https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/assets/PNG/MST-HOME.jpg)
 - **MiShuiTool**是一个用于在**无PC环境**受限场景中的临时解决方案，使用它仅需要**一部手机**(*注: 指主机设备*)与一根**OTG转接线**以及**最新版本**的[Termux](https://f-droid.org/repo/com.termux_1022.apk)与[Termux-Api](https://f-droid.org/repo/com.termux.api_1000.apk)就可以完成大部分简单的调试操
 > 本工具旨在为**无PC环境**但需要使用ADB&Fastboot功能的用户提供一个方便的**Termux**刷机环境，其中针对**ADB**及**Fastboot**的部分常用操作均提供了高度自动化的快捷功能，脚本内置大量的检测逻辑，但是百密终有一疏，执行高危操作前务必备份好数据，，对于不了解的操作一定要了解清楚后再继续
 ### Fastbooot功能简介:
