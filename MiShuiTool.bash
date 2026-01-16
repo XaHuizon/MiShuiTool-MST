@@ -1389,7 +1389,7 @@ CA_FLASH_MAIN() {
                     elif [ -n "$THE_APK_PULL_PATH" ] && [ "$ALL_APK_NUMBER" -ge 2 ]
                     then
                         echo -e "${COLOR_32}[OKAY]${COLOR_33}应用'${COLOR_36}$PULL_THE_APK${COLOR_33}'拥有${COLOR_36}$ALL_APK_NUMBER${COLOR_33}个Apk文件 正在将所有Apk提取至'${COLOR_36}$THE_DOWNLOAD_PATH/$PULL_THE_APK${COLOR_33}'...${COLOR_30}"
-                        if ! mkdir "$THE_DOWNLOAD_PATH/$PULL_THE_APK" &>>$MST_LOG
+                        if ! mkdir -p "$THE_DOWNLOAD_PATH/$PULL_THE_APK" &>>$MST_LOG
                         then
                             echo
                             echo -e "${COLOR_31}[ERROR]${COLOR_36}自动创建'${COLOR_36}$THE_DOWNLOAD_PATH/$PULL_THE_APK${COLOR_33}'文件夹失败 无法提取'${COLOR_36}$PULL_THE_APK${COLOR_33}'的所有Apk文件${COLOR_0}"
@@ -2036,7 +2036,7 @@ fi
 trap wait EXIT
 if [ ! -f "$HOME/MST/MST运行日志.log" ]
 then
-    mkdir $HOME/MST/
+    mkdir -p $HOME/MST/ &>>$MST_LOG
     touch $MST_LOG
 elif [ "$(stat -c%s $HOME/MST/MST运行日志.log)" -gt 10240 ]
 then
