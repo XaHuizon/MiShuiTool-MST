@@ -81,7 +81,7 @@ else
     echo -e "${COLOR_31}ERROR:${COLOR_36}adb${COLOR_0}命令未安装/不可用!${COLOR_0}"
 fi
 echo -e -n "${COLOR_35}Bash版本: ${COLOR_36}"
-if BASH_VERSION="$(bash --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)" && [ "$BASH_VERSION" > "5.2.0" ]
+if BASH_VERSION="$(bash --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)" && [ "$BASH_VERSION" > 5.2.0 ]
 then
     echo -e "$BASH_VERSION ${COLOR_0}---------------- ${COLOR_32}[OKAY]${COLOR_0}"
 else
