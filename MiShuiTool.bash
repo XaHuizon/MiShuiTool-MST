@@ -10,8 +10,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH=/data/data/com.termux/files/usr/bin
-MST_UPDATE_TIME='2026.1.13 Beta'
-NOW_VERSION=10000
+MST_UPDATE_TIME='2026.1.14 Beta'
+NOW_VERSION=10001
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -1832,19 +1832,22 @@ CA_FLASH_MAIN() {
             echo
             mkdir -p $MST_HOME/Update &>>$MST_LOG
             MISHUITOOL_URL="$(base64 -d <<< aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1hhSHVpem9uL01pU2h1aVRvb2wtTVNUL21haW4vTWlTaHVpVG9vbC5iYXNoCg== 2>>$MST_LOG)"
-            echo -e "${COLOR_35}[UP]${COLOR_33}云更新功能依赖GitHub >>${COLOR_0}"
+            echo -e "${COLOR_35}[UP]${COLOR_33}云更新功能基于GitHub仓库实现 >>${COLOR_0}"
             if ! mkdir -p $MST_HOME/Update && rm -rf $MST_HOME/Update/* &>>$MST_LOG
             then
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}无法创建云更新所需要的文件夹:${COLOR_36}$MST_HOME/Update${COLOR_0}"
                 REBOOT_FL || return 0
             fi
-            echo -e "${COLOR_35}[CU]${COLOR_33}正在检测更新...${COLOR_0}"
-            if ! curl -o $MST_HOME/Update/version.txt "$(base64 -d <<< aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1hhSHVpem9uL01pU2h1aVRvb2wtTVNUL21haW4vVmVyc2lvbi9HaXRIdWItVmVyc2lvbgo=)" &>>$MST_LOG || ! source "$MST_HOME/Update/version.txt"
+            echo -e -n " ${COLOR_35}[CU]${COLOR_33}正在检测更新...${COLOR_0}\r"
+            if ! curl -o $MST_HOME/Update/version.txt "$(base64 -d <<< aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1hhSHVpem9uL01pU2h1aVRvb2wtTVNUL21haW4vVmVyc2lvbi9HaXRIdWItVmVyc2lvbgo=)" &>>$MST_LOG || ! [ -f "$MST_HOME/Update/version.txt" ]
             then
                 rm -rf $MST_HOME/Update/
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}检测更新失败 检查网络是否连接或使用魔法再试一次${COLOR_0}"
                 REBOOT_FL || return 0
             fi
+            NEW_VERSION_NUMB="$(head -n 1 "$MST_HOME/Update/version.txt")"
+            NEW_VERSION_TIME="$(head -n 2 "$MST_HOME/Update/version.txt")"
+            echo -e "\033[2K"
             DOWNLOAD_MISHUITOOL() {
                 echo
                 echo -e "${COLOR_35}[$1]${COLOR_33}$2 >>${COLOR_0}"
@@ -1881,7 +1884,7 @@ CA_FLASH_MAIN() {
                     ;;
                 esac
             }
-            if [ "$NEW_VERSION_NUMB" -lt "$NOW_VERSION" ]
+            if [ "$NOW_VERSION" -ge "$NEW_VERSION_NUMB" ]
             then
                 echo -e "${COLOR_35}[VER]${COLOR_33}当前版本:${COLOR_36}${MST_UPDATE_TIME}${COLOR_33}-${COLOR_32}已是最新版本${COLOR_0}"
                 DOWNLOAD_MISHUITOOL FIX "是否立即下载最新版本MST修复本地文件" "下载修复"
@@ -1890,7 +1893,7 @@ CA_FLASH_MAIN() {
             echo
             echo -e "${COLOR_35}[Update]${COLOR_33}本次更新 >>${COLOR_0}"
             echo -e "${COLOR_32}[>]${COLOR_33}[版本:${COLOR_36}$MST_UPDATE_TIME ${COLOR_35}->${COLOR_33} ${COLOR_36}$NEW_VERSION_TIME${COLOR_33}]${COLOR_0}"
-            echo -e -n "${COLOR_35}[LOG]${COLOR_33}正在获取本次更新内容...${COLOR_0}\r"
+            echo -e -n " ${COLOR_35}[LOG]${COLOR_33}正在获取本次更新内容...${COLOR_0}\r"
             if ! curl -o $MST_HOME/Update/Update.log "$(base64 -d <<< aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1hhSHVpem9uL01pU2h1aVRvb2wtTVNUL21haW4vVmVyc2lvbi9VcGRhdGUubG9nCg==)" &>>$MST_LOG
             then
                 echo -e "\n${COLOR_31}[ERROR]${COLOR_33}更新日志获取失败${COLOR_0}"
@@ -2039,14 +2042,20 @@ elif [ "$(stat -c%s $HOME/MST/MST运行日志.log)" -gt 10240 ]
 then
     echo "[$(date +%Y-%m-%d) $(date +%H:%M:%S)] 日志文件过大已自动清除" &>$MST_LOG
 fi
+bash -c true
 if [ "$COLUMNS" -lt "65" ]
 then
      MAIN_HAED_TIP
      echo -e "${COLOR_35}[INFO]${COLOR_33}当前终端宽度过窄 为保证视觉效果需将终端宽度调整为'${COLOR_36}65${COLOR_33}'${COLOR_0}"
     echo -e "${COLOR_35}[Tip]${COLOR_33}双指捏合屏幕可缩小终端界面 当下方红色长条(${COLOR_36}-----...${COLOR_33})缩为一行后即为调整成功 从此刻开始每${COLOR_36}0.5s${COLOR_33}自动检查一次终端宽度是否合格 如果终端宽度已合格将自动进入主页 检测超${COLOR_36}30s${COLOR_33}则超时退出${COLOR_0}"
     echo -e -n "${COLOR_31}-------------------------------------------------------------------${COLOR_0}"
-    while [ "$COLUMNS" -lt 65 ] && [ "$TIMEOUT_NUMBER" -lt 60 ]
+    while [ "$COLUMNS" -lt 65 ]
     do
+        if [ "$TIMEOUT_NUMBER" -lt 60 ]
+        then
+            echo -e "${COLOR_31}[!]${COLOR_33}已超时自动退出${COLOR_0}"
+            EXIT_SHELL 1
+        fi
         TIMEOUT_NUMBER=$((TIMEOUT_NUMBER + 1))
         sleep 0.5
     done
