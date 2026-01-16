@@ -11,7 +11,7 @@ MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH=/data/data/com.termux/files/usr/bin
 MST_UPDATE_TIME='2026.1.16 Beta'
-NOW_VERSION=10002
+NOW_VERSION=10003
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -2042,7 +2042,7 @@ elif [ "$(stat -c%s $HOME/MST/MST运行日志.log)" -gt 10240 ]
 then
     echo "[$(date +%Y-%m-%d) $(date +%H:%M:%S)] 日志文件过大已自动清除" &>$MST_LOG
 fi
-mkdir -p $MST_HOME/assets/Text
+mkdir -p $MST_HOME/assets/Text/ &>>$MST_LOG
 bash -c true
 if [ "$COLUMNS" -lt "65" ]
 then
