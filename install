@@ -6,7 +6,7 @@ COLOR_36="\033[0;36m";COLOR_37="\033[0;37m"
 COLOR_0="\033[0m";COLOR_01="\033[0m"
 RM_ALL_FILE() {
     echo -e -n "${COLOR_33}INFO:${COLOR_0}清理临时文件..."
-    if rm -rf $HOME/MST/*
+    if rm $HOME/MST/MiShuiTool
     then
         echo -e "${COLOR_32}完成${COLOR_0}"
     else
