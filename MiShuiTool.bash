@@ -415,11 +415,7 @@ CONTINUE_YN() {
 MAIN_HAED_TIP() {
     clear
     echo -e "${COLOR}[MiShuiTool]${COLOR_33}Termux刷机工具箱${COLOR_36}/MST CLI${COLOR_33} 版本:${COLOR_32}$MST_UPDATE_TIME${COLOR_0}"
-    echo -e "${COLOR_30}$HEAD_TIP_MISHUITOOL${COLOR_0}"
-    if [ -f "$MST_HOME/assets/MST-Head.txt" ]
-    then
-        HEAD_TIP_MISHUITOOL=" - $(shuf -n 1 $MST_HOME/assets/MST-Head.txt 2>>$MST_LOG)"
-    fi
+    echo -e "${COLOR_30}$(shuf -n 1 $MST_HOME/asstes/Text/MST_Head.txt)${COLOR_0}"
 }
 MISHUI_MAIN() {
     MAIN_HAED_TIP
@@ -1943,7 +1939,7 @@ case "$1" in
     ;;
 update | -u | --update)
     echo
-    curl -sS https://gitee.com/XaHui-GitHub/mi-shui-tool/raw/master/install | bash; CLEAR_READ_INPUT
+    curl -sS https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/install | bash
     exit 0
     ;;
 help | -h | --help)
@@ -2028,7 +2024,6 @@ check | -c | --check)
 esac
 if [ ! -d $HOME/MST/ ]
 then
-    HEAD_TIP_MISHUITOOL="${COLOR_35}Tip:${COLOR_31}已自动初始化运行环境${COLOR_0}"
     if mkdir -p $HOME/MST &>>$MST_LOG
     then
         HEAD_TIP_MISHUITOOL="${COLOR_32}Okay:${COLOR_31}已自动初始化运行环境${COLOR_0}"
@@ -2047,7 +2042,7 @@ elif [ "$(stat -c%s $HOME/MST/MST运行日志.log)" -gt 10240 ]
 then
     echo "[$(date +%Y-%m-%d) $(date +%H:%M:%S)] 日志文件过大已自动清除" &>$MST_LOG
 fi
-mkdir -p $HOME/MST/assets
+mkdir -p $MST_HOME/assets/Text
 bash -c true
 if [ "$COLUMNS" -lt "65" ]
 then
