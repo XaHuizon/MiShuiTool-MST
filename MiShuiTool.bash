@@ -10,8 +10,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH=/data/data/com.termux/files/usr/bin
-MST_UPDATE_TIME='2026.1.14 Beta'
-NOW_VERSION=10001
+MST_UPDATE_TIME='2026.1.16 Beta'
+NOW_VERSION=10002
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -1864,7 +1864,7 @@ CA_FLASH_MAIN() {
                     ;;
                 esac
                 echo -e "${COLOR_35}[Download]${COLOR_33}正在下载云端最新MiShuiTool进行覆盖更新...${COLOR_0}"
-                if curl -o "$MST_HOME/Update/MiShuiTool" "$MISHUITOOL_URL" &>>$MST_LOG && shc -rf "$MST_HOME/Update/MiShuiTool" -o "$0" &>>$MST_LOG && chmod 777 "$0"
+                if curl -o "$MST_HOME/Update/MiShuiTool" "$MISHUITOOL_URL" -o $MST_HOME/assets/MST-Head.txt "$(base64 -d <<< "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1hhSHVpem9uL01pU2h1aVRvb2wtTVNUL21haW4vYXNzZXRzL1RleHQvTVNULUhlYWQudHh0Cg==")" &>>$MST_LOG && shc -rf "$MST_HOME/Update/MiShuiTool" -o "$0" &>>$MST_LOG && chmod 777 "$0"
                 then
                     rm $MST_HOME/Update/MiShuiTool
                     echo -e "${COLOR_32}[OKAY]${COLOR_33}覆盖更新完成 文件路径:${COLOR_36}$0${COLOR_0}"
