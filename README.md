@@ -1,6 +1,6 @@
 # MiShuiTool - Termux刷机工具
 ![平台](https://img.shields.io/badge/%E9%80%82%E7%94%A8%E5%B9%B3%E5%8F%B0-Android--64%20%7C%20Termux-yellow)
-![版本](https://img.shields.io/badge/%E5%BD%93%E5%89%8D%E7%89%88%E6%9C%AC-2026.1.13--Beta-brightgreen)
+![版本](https://img.shields.io/badge/%E5%BD%93%E5%89%8D%E7%89%88%E6%9C%AC-2026.1.16--Beta-brightgreen)
 ![协议](https://img.shields.io/badge/%E5%BC%80%E6%BA%90%E5%8D%8F%E8%AE%AE-Apache--2.0-blue)
 ### 作者信息:
 - 作者: **MiShui&Mi丶XaFlash**
