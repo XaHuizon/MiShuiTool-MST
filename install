@@ -22,7 +22,7 @@ then
 elif [ ! -d /data/data/com.termux.api ]
 then
     echo -e "${COLOR_31}ERROR:${COLOR_33}当前还未安装'${COLOR_36}Termux-Api${COLOR_0}'App 访问Termux官网下载Termux-Api并安装:${COLOR_36}https://termux.dev/${COLOR_0}"
-    exit 1
+   exit 1
 fi
 echo -e "${COLOR_33}INFO:${COLOR_0}正在更新Termux环境..."
 if ! pkg update -y && pkg upgrade -y
