@@ -43,7 +43,6 @@ do
         echo -e "${COLOR_31}bad${COLOR_0}"
     fi
 done
-trap RM_ALL_FILE EXIT INT TERM
 echo
 echo -n -e "${COLOR_33}INFO:${COLOR_0}正在下载MiShuiTool及其配置文件..."
 mkdir -p $HOME/MST/
