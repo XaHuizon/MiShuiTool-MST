@@ -10,8 +10,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH=/data/data/com.termux/files/usr/bin
-MST_UPDATE_TIME='2026.1.16 Beta'
-NOW_VERSION=10003
+MST_UPDATE_TIME='2026.2.21 Beta'
+NOW_VERSION=10004
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -149,7 +149,7 @@ SELEC_ADB_FB_DEVICE() {
         echo -e -n "${COLOR_33}›$USR_DEVICES_NUM*-${COLOR_32}$ONE_USR_DEV${COLOR_0} "
         case "$1" in
         'adb')
-            if ONE_DEVICE="$(adb -s "$ONE_USR_DEV" shell settings get global device_name </dev/null 2>$MST_LOG)" && [ -n "$ONE_DEVICE" ]
+            if ONE_DEVICE="$(adb -s "$ONE_USR_DEV" shell settings get global device_name </dev/null 2>>$MST_LOG)" && [ -n "$ONE_DEVICE" ]
             then
                 echo -e "${COLOR_33}(${COLOR_36}$ONE_DEVICE${COLOR_33})${COLOR_0}"
             else
@@ -165,7 +165,7 @@ SELEC_ADB_FB_DEVICE() {
     case "$1" in
     'adb')
         echo -e "${COLOR_35}[SELE]${COLOR_33}输入要选择的设备序号(多选以'${COLOR_36}-${COLOR_33}'符号分隔)${COLOR_0}"
-        echo -e -n "${COLOR_33}*ᐷ${COLOR_01}"
+        echo -e -n "${COLOR_33}*ᐷ ${COLOR_01}"
         read SELE_NEED_DEVICES
         if [[ "$SELE_NEED_DEVICES" =~ ^[0-9]+(-[0-9]+)*$ ]]
         then
@@ -202,7 +202,7 @@ SELEC_ADB_FB_DEVICE() {
     while IFS= read -r ONE_ADB_DEVICE
     do
         echo -e -n "${COLOR_36}$ONE_ADB_DEVICE${COLOR_0}"
-        if THE_ONE_DEVICE_SEE=$(adb -s "$ONE_ADB_DEVICE" shell settings get global device_name </dev/null 2>$MST_LOG) && [ -n "$THE_ONE_DEVICE_SEE" ]
+        if THE_ONE_DEVICE_SEE=$(adb -s "$ONE_ADB_DEVICE" shell settings get global device_name </dev/null 2>>$MST_LOG) && [ -n "$THE_ONE_DEVICE_SEE" ]
         then
             echo -e "${COLOR_33}(${COLOR_32}$THE_ONE_DEVICE_SEE${COLOR_33})${COLOR_0}"
         else
@@ -279,7 +279,7 @@ USB_DEVICES_ADB() {
     local SEE_SOME_LINE
     echo -e -n "${COLOR_35}[ADB]${COLOR_33}设备连接状态:${COLOR_0}"
     timeout 5 adb wait-for-device &>>$MST_LOG
-    ALL_ADB_DEVICES="$(adb devices 2>$MST_LOG)"
+    ALL_ADB_DEVICES="$(adb devices 2>>$MST_LOG)"
     ADB_DEVICES="$(sed '/^$/d; /List/d; s/\s.*//g' <<< "$ALL_ADB_DEVICES")"
     if [ -z "$ADB_DEVICES" ]
     then
@@ -293,17 +293,17 @@ USB_DEVICES_ADB() {
         echo -e "${COLOR_36}$ADB_DEVICES adb${COLOR_32}-已连接${COLOR_0}"
         SELEC_ADB_DEVICE="$ADB_DEVICES"
     fi
-    CPU_GHZ=$(adb -s "$SELEC_ADB_DEVICE" shell "MAX_GHZ=\$(cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_max_freq | sort -n | tail -1); echo \"scale=2; \$MAX_GHZ / 1000000\" | bc" 2>$MST_LOG)
-    CPUNAME=$(adb -s "$SELEC_ADB_DEVICE" shell grep 'Hardware' /proc/cpuinfo 2>$MST_LOG | sed 's/.*: //g; s/, /-/g' 2>$MST_LOG)
-    OSV=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.build.version.release 2>$MST_LOG)
-    CPUUN=$(adb -s "$SELEC_ADB_DEVICE" shell grep -c "processor" /proc/cpuinfo 2>$MST_LOG)
-    DEVONE=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.product.device 2>$MST_LOG)
-    DEVTWO=$(adb -s "$SELEC_ADB_DEVICE" shell settings get global device_name 2>$MST_LOG)
-    UINAME=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.build.display.id 2>$MST_LOG)
-    KERNEL=$(adb -s "$SELEC_ADB_DEVICE" shell uname -r 2>$MST_LOG)
-    WIFI=$(adb -s "$SELEC_ADB_DEVICE" shell getprop gsm.version.baseband 2>$MST_LOG)
-    DEV_SDK=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.build.version.sdk 2>$MST_LOG)
-    DEV_NAME=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.product.brand 2>$MST_LOG)
+    CPU_GHZ=$(adb -s "$SELEC_ADB_DEVICE" shell "MAX_GHZ=\$(cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_max_freq | sort -n | tail -1); echo \"scale=2; \$MAX_GHZ / 1000000\" | bc" 2>>$MST_LOG)
+    CPUNAME=$(adb -s "$SELEC_ADB_DEVICE" shell grep 'Hardware' /proc/cpuinfo 2>>$MST_LOG | sed 's/.*: //g; s/, /-/g' 2>>$MST_LOG)
+    OSV=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.build.version.release 2>>$MST_LOG)
+    CPUUN=$(adb -s "$SELEC_ADB_DEVICE" shell grep -c "processor" /proc/cpuinfo 2>>$MST_LOG)
+    DEVONE=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.product.device 2>>$MST_LOG)
+    DEVTWO=$(adb -s "$SELEC_ADB_DEVICE" shell settings get global device_name 2>>$MST_LOG)
+    UINAME=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.build.display.id 2>>$MST_LOG)
+    KERNEL=$(adb -s "$SELEC_ADB_DEVICE" shell uname -r 2>>$MST_LOG)
+    WIFI=$(adb -s "$SELEC_ADB_DEVICE" shell getprop gsm.version.baseband 2>>$MST_LOG)
+    DEV_SDK=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.build.version.sdk 2>>$MST_LOG)
+    DEV_NAME=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.product.brand 2>>$MST_LOG)
     local ALL_ABC=("CPUNAME" "OSV" "CPUUN" "DEVONE" "DEVTWO" "UINAME" "KERNEL" "WIFI" "DEV_SDK" "DEV_NAME" "CPU_GHZ")
     for ABC in "${ALL_ABC[@]}"
     do
@@ -552,7 +552,7 @@ CA_FLASH_MAIN() {
                         echo -e "${COLOR_32}[OKAY]${COLOR_33}已成功与'${COLOR_36}$IP_AND_PORT${COLOR_33}'配对${COLOR_0}"
                         ONLY_IP="$(sed 's/:.*//g' <<< "$IP_AND_PORT")"
                         echo -e "${COLOR_35}[NEW]${COLOR_33}输入'${COLOR_36}无线调试${COLOR_33}'页面的'IP地址:${COLOR_36}端口${COLOR_33}'以连接 >>${COLOR_0}"
-                        echo -e -n "${COLOR_33}*ᐷ${COLOR_32}$ONLY_IP:${COLOR_01}"
+                        echo -e -n "${COLOR_33}*ᐷ ${COLOR_32}$ONLY_IP:${COLOR_01}"
                         read ONLY_PORT
                         if [ "${#ONLY_PORT}" != 5 ]
                         then
@@ -601,7 +601,7 @@ CA_FLASH_MAIN() {
                 fi
                 echo
                 echo -e "${COLOR_35}[IP]${COLOR_33}正在获取目标设备IP地址...${COLOR_0}"
-                if ONLY_USB_IP="$(adb -s "$SELEC_ADB_DEVICE" shell ip addr show wlan0 2>$MST_LOG | grep 'inet ' | sed 's/.*inet //g; s|/.*||g')" && [ -n "$ONLY_USB_IP" ]
+                if ONLY_USB_IP="$(adb -s "$SELEC_ADB_DEVICE" shell ip addr show wlan0 2>>$MST_LOG | grep 'inet ' | sed 's/.*inet //g; s|/.*||g')" && [ -n "$ONLY_USB_IP" ]
                 then
                     echo -e "${COLOR_32}[OKAY]${COLOR_33}目标设备IP获取成功:${COLOR_36}$ONLY_USB_IP${COLOR_0}"
                     NEW_IP_AND_PORT="$ONLY_USB_IP:$THE_TCP_NUMBER"
@@ -704,9 +704,9 @@ CA_FLASH_MAIN() {
             local FLASH_IMG_SLOT=$2
             local IMG_FILE_PA IMG_FILE_NAME IMG_FILE_PATH
             echo -e "${COLOR_35}[FILE]${COLOR_33}输入要刷入'${COLOR_36}$FLASH_IMG_NAME${COLOR_33}'分区的镜像文件路径 >>${COLOR_0}"
-            echo -e -n "${COLOR_33}*ᐷ${COLOR_01}"
+            echo -e -n "${COLOR_33}*ᐷ ${COLOR_01}"
             read IMG_FILE_PATH
-            IMG_FILE_NAME=$(basename "$IMG_FILE_PATH" 2>$MST_LOG)
+            IMG_FILE_NAME=$(basename "$IMG_FILE_PATH" 2>>$MST_LOG)
             if [ -z "$IMG_FILE_PATH" ]
             then
                 echo -e "${COLOR_31}[!]${COLOR_33}输入不可为空${COLOR_0}"
@@ -716,7 +716,7 @@ CA_FLASH_MAIN() {
                 echo -e "${COLOR_31}[!]${COLOR_33}文件'${COLOR_36}$IMG_FILE_NAME${COLOR_33}'路径不存在/无法读取${COLOR_0}"
                 REBOOT_FL || return 0
             fi
-            echo -e "$COLOR_35[Flashing]${COLOR_33}正在将'${COLOR_36}$IMG_FILE_NAME${COLOR_33}'刷入'${COLOR_36}$FLASH_IMG_NAME${COLOR_33}'分区...${COLOR_0}"
+            echo -e "$COLOR_35[Flashing]${COLOR_33}正在将'${COLOR_36}$IMG_FILE_NAME${COLOR_33}'刷入'${COLOR_36}$FLASH_IMG_NAME${COLOR_33}'分区...${COLOR_30}"
             if fastboot -s "$SELEC_FASTBOOT_DEVICE" flash $FLASH_IMG_SLOT "$IMG_FILE_PATH"
             then
                 ALL_TIP_TION="${COLOR_32}[OKAY]${COLOR_33}刷入成功 是否立即重启 >>${COLOR_0}"
@@ -821,16 +821,116 @@ CA_FLASH_MAIN() {
             MISHUI_MAIN_TIP=刷入ROM
             SEE_USB_DEVICES
             NOT_UNLOCK_ERROR "刷机包不对" "Rom"
+            CHECK_DEVICE_FLASH_OK() {
+                echo -e -n "${COLOR_35}[+/-]${COLOR_33}当前电量:${COLOR_0}"
+                PEAGE_TEXT="$(termux-battery-status 2>>$MST_LOG)"
+                NOW_PEAGE="$(echo "$PEAGE_TEXT" | grep 'percentage' | sed 's/.*: //g; s/,//g' 2>>$MST_LOG)"
+                ALL_PEAGE="$(echo "$PEAGE_TEXT" | grep 'scale' | sed 's/.*: //g; s/,//g' 2>>$MST_LOG)"
+                NUMBER_PEAGR="${COLOR_36}$NOW_PEAGE%${COLOR_33}/${COLOR_36}$ALL_PEAGE%${COLOR_33}-"
+                if [ -z "$PEAGE_TEXT" ]
+                then
+                    echo -e "${COLOR_31}无法读取${COLOR_0}"
+                    echo -e "${COLOR_31}[ERROR]${COLOR_33}MST无法读取本机电量执行判断 若本机电量高于${COLOR_36}45%${COLOR_33}则可以继续操作 >>${COLOR_0}"
+                    echo -e "${COLOR_36}[+][1›高于45%/2›低于45%]*ᐷ${COLOR_01}"
+                    read PEAGE_YN_FF
+                    case "$PEAGE_YN_FF" in
+                    '2')
+                        echo
+                        echo -e "${COLOR_31}[WARN]${COLOR_33}设备电量过低可能导致刷入过程中意外断电 需将当前设备充至${COLOR_36}80%${COLOR_33}以上才可继续操作${COLOR_0}"
+                        REBOOT_FL || return 0
+                        ;;
+                     esac
+                elif [ "$NOW_PEAGE" -ge '80' ]
+                then
+                    echo -e "$NUMBER_PEAGR${COLOR_32}电量充足${COLOR_0}"
+                elif [ "$NOW_PEAGE" -lt '40' ]
+                then
+                    echo -e "$NUMBER_PEAGR${COLOR_31}严重不足${COLOR_0}"
+                    echo -e "${COLOR_35}[WARN]${COLOR_31}本机当前电量严重不足 必须保证本机电量高于${COLOR_36}40%${COLOR_31}才能顺利完成刷入${COLOR_0}"
+                    REBOOT_FL || return 0
+                else
+                    echo -e "$NUMBER_PEAGR${COLOR_34}电量较足${COLOR_0}"
+                    echo -e "${COLOR_35}[INFO]${COLOR_33}本机当前电量较为充足但仍然存在断电风险 是否继续 >>${COLOR_0}"
+                    echo -e -n "${COLOR_36}[+][1›继续刷入/2›取消并返回主页]*ᐷ${COLOR_01}"
+                    read PEABG_CONTINUE_YN
+                    case "$PEABG_CONTINUE_YN" in
+                    '1' | 'y' | 'Y')
+                        echo -e "${COLOR_35}[CONTINUE]${COLOR_33}已确认继续操作${COLOR_0}"
+                        ;;
+                    *)
+                        MAIN_REBOOT || return 0
+                        ;;
+                    esac
+                fi
+                echo
+                echo -e "${COLOR_35}[WARN]${COLOR_33}刷入之前必须确保所选刷机包与目标设备相符 检查刷机包/自带脚本/电量等是否准确无误 ${COLOR_31}准备不充分的刷机操作将导致不开机甚至黑砖${COLOR_33} 刷入过程中将设备(${COLOR_36}本机与目标设备${COLOR_33})与连接的数据线平放并避免触碰以保证刷入过程中不会意外中断${COLOR_0}"
+                echo -e -n "${COLOR_35}[INPUT]${COLOR_33}输入' ${COLOR_36}已确认并继续${COLOR_33} '以继续:${COLOR_01}"
+                local USER_INPUT_CONTINUE_NUMBER=1
+                CLEAR_READ_INPUT
+                while true
+                do
+                    if [ "$USER_INPUT_CONTINUE_NUMBER" -ge 3 ]
+                    then
+                        echo -e "${COLOR_31}[ERROR]${COLOR_33}超过三次无效确认已终止操作${COLOR_0}"
+                        REBOOT_FL || return 0
+                        break
+                    else
+                        USER_INPUT_CONTINUE_NUMBER=$((USER_INPUT_CONTINUE_NUMBER + 1))
+                    fi
+                    local CONTINUE_FLASH_ROM
+                    read CONTINUE_FLASH_ROM
+                    if [ "$CONTINUE_FLASH_ROM" = "已确认并继续" ]
+                    then
+                        echo -e -n " ${COLOR_35}[START]${COLOR_33}3秒后开始刷入${COLOR_0}\r"
+                        sleep 3
+                        break
+                    else
+                        echo -e -n "${COLOR_31}[!]${COLOR_33}无效确认 输入' ${COLOR_36}已确认并继续 ${COLOR_33}'以继续:${COLOR_01}"
+                        continue
+                    fi
+                done
+                echo -e "\033[K"
+            }
+            FLASH_ALL_OKAY() {
+                OKAY_PEAGE=$(termux-battery-status | grep 'percentage' | sed 's/.*: //g; s/,//g')
+                echo -e "${COLOR_35}[COMP]${COLOR_33}消耗电量:${COLOR_36}$(awk "BEGIN {printf \"%.2f\", $NOW_PEAGE - $OKAY_PEAGE}")%${COLOR_33}/耗时:${COLOR_36}$(awk "BEGIN {printf \"%.2f\", $FLASH_END - $FLASH_START}")s${COLOR_0}"
+                ALL_TIP_TION="${COLOR_35}[ROM]${COLOR_33}Rom已完成刷入 是否立即重启设备 >>${COLOR_0}"
+                REBOOT_USB_DEVICES
+            }
             echo -e "${COLOR_35}[PATH]${COLOR_33}输入${COLOR_36}'线刷包${COLOR_33}'或'${COLOR_36}解压后文件夹${COLOR_33}'的完整路径 >>${COLOR_0}"
-            echo -e -n "${COLOR_33}*ᐷ${COLOR_01}"
+            echo -e -n "${COLOR_33}*ᐷ ${COLOR_01}"
             read ZIP_DIR_PATH
             if [ -f "$ZIP_DIR_PATH" ]
             then
                 echo -e "${COLOR_35}[ZIP]${COLOR_33}该路径指向为:${COLOR_36}压缩包${COLOR_0}"
-                THE_FILE_EXT_NAME="${ZIP_DIR_PATH##*.}"
                 THE_FILE_FLASH_NAME="$(basename "$ZIP_DIR_PATH")"
                 THE_PATH_FLASH_NAME="$(dirname "$ZIP_DIR_PATH")/线刷包-MST"
-                if ! mkdir -p "$THE_PATH_FLASH_NAME"
+                INSTALL_THE_MUST_CMD 'pkg install unzip -y' 'unzip' 'unzip'
+                
+                if unzip -t "$ZIP_DIR_PATH" android-info.txt &>>$MST_LOG
+                then
+                    echo -e "${COLOR_35}[Tip]${COLOR_33}该压缩包内置'${COLOR_36}android-info.txt${COLOR_33}'文件 可直接刷入${COLOR_0}"
+                    echo -e "${COLOR_35}[INFO]${COLOR_33}该压缩包支持使用'${COLOR_33}fastboot update${COLOR_33}'命令直接刷入而无需解压 但是以该方式刷入的刷机包可能不完整 需慎重考虑${COLOR_0}"
+                    echo
+                    echo -e "${COLOR_35}[Update]${COLOR_33}是否以'${COLOR_33}fastboot update${COLOR_33}'命令刷入 >>${COLOR_0}"
+                    echo -e -n "${COLOR_36}[+][1›使用Update/2›使用刷机脚本]*ᐷ${COLOR_0}"
+                    read YN_UPDATE_FLASH
+                    case "$YN_UPDATE_FLASH" in
+                    1 | y | Y)
+                        CHECK_DEVICE_FLASH_OK
+                        echo -e "${COLOR_35}[Flashing]${COLOR_33}正在以'${COLOR_33}fastboot update${COLOR_33}'命令刷入'${COLOR_36}$THE_FILE_FLASH_NAME${COLOR_33}' >>${COLOR_0}"
+                        if fastboot update "$THE_FILE_FLASH_NAME" && FLASH_END=$(date +%s.%N)
+                        then
+                            echo -e "${COLOR_36}[Done]${COLOR_33}已完成刷入${COLOR_0}"
+                            FLASH_ALL_OKAY
+                        else
+                            echo -e "${COLOR_31}[ERROR]${COLOR_33}刷入失败 检查刷机包是否与设备相符或刷入过程中数据线是否意外断开${COLOR_0}"
+                        fi
+                        REBOOT_FL || return 0
+                        ;;
+                    esac
+                fi
+                if ! mkdir -p "$THE_PATH_FLASH_NAME" &>>$MST_LOG
                 then
                     echo -e "${COLOR_31}[ERROR]${COLOR_33}无法创建存放解压后镜像文件的文件夹 MST工具箱无法自动解压该压缩包:${COLOR_36}$THE_FILE_FLASH_NAME${COLOR_0}"
                     echo -e "${COLOR_35}[Tip]${COLOR_33}手动解压后输入'${COLOR_36}解压后文件夹${COLOR_33}'路径以继续${COLOR_0}"
@@ -865,7 +965,7 @@ CA_FLASH_MAIN() {
                     REBOOT_FL || return 0
                     ;;
                 esac
-                echo -e "${COLOR_35}[UZ]${COLOR_33}正在解压'${COLOR_36}$THE_FILE_FLASH_NAME${COLOR_33}'文件...${COLOR_30}"
+                echo -e "${COLOR_35}[Uziping]${COLOR_33}正在解压'${COLOR_36}$THE_FILE_FLASH_NAME${COLOR_33}'文件...${COLOR_30}"
                 if UNZIP_CMD
                 then
                     echo -e "${COLOR_32}[OKAY]${COLOR_33}已将线刷包解压至文件夹:${COLOR_36}$THE_PATH_FLASH_NAME${COLOR_0}"
@@ -932,74 +1032,7 @@ CA_FLASH_MAIN() {
                 ;;
             esac
             echo
-            echo -e -n "${COLOR_35}[+/-]${COLOR_33}当前电量:${COLOR_0}"
-            PEAGE_TEXT="$(termux-battery-status 2>$MST_LOG)"
-            NOW_PEAGE="$(echo "$PEAGE_TEXT" | grep 'percentage' | sed 's/.*: //g; s/,//g' 2>$MST_LOG)"
-            ALL_PEAGE="$(echo "$PEAGE_TEXT" | grep 'scale' | sed 's/.*: //g; s/,//g' 2>$MST_LOG)"
-            NUMBER_PEAGR="${COLOR_36}$NOW_PEAGE%${COLOR_33}/${COLOR_36}$ALL_PEAGE%${COLOR_33}-"
-            if [ -z "$PEAGE_TEXT" ]
-            then
-                echo -e "${COLOR_31}无法读取${COLOR_0}"
-                echo -e "${COLOR_31}[ERROR]${COLOR_33}MST无法读取本机电量执行判断 若本机电量高于${COLOR_36}45%${COLOR_33}则可以继续操作 >>${COLOR_0}"
-                echo -e "${COLOR_36}[+][1›高于45%/2›低于45%]*ᐷ${COLOR_01}"
-                read PEAGE_YN_FF
-                case "$PEAGE_YN_FF" in
-                '2')
-                    echo
-                    echo -e "${COLOR_31}[WARN]${COLOR_33}设备电量过低可能导致刷入过程中意外断电 需将当前设备充至${COLOR_36}80%${COLOR_33}以上才可继续操作${COLOR_0}"
-                    REBOOT_FL || return 0
-                    ;;
-                 esac
-            elif [ "$NOW_PEAGE" -ge '80' ]
-            then
-                echo -e "$NUMBER_PEAGR${COLOR_32}电量充足${COLOR_0}"
-            elif [ "$NOW_PEAGE" -lt '40' ]
-            then
-                echo -e "$NUMBER_PEAGR${COLOR_31}严重不足${COLOR_0}"
-                echo -e "${COLOR_35}[WARN]${COLOR_31}本机当前电量严重不足 必须保证本机电量高于${COLOR_36}40%${COLOR_31}才能顺利完成刷入${COLOR_0}"
-                REBOOT_FL || return 0
-            else
-                echo -e "$NUMBER_PEAGR${COLOR_34}电量较足${COLOR_0}"
-                echo -e "${COLOR_35}[INFO]${COLOR_33}本机当前电量较为充足但仍然存在断电风险 是否继续 >>${COLOR_0}"
-                echo -e -n "${COLOR_36}[+][1›继续刷入/2›取消并返回主页]*ᐷ${COLOR_01}"
-                read PEABG_CONTINUE_YN
-                case "$PEABG_CONTINUE_YN" in
-                '1' | 'y' | 'Y')
-                    echo -e "${COLOR_35}[CONTINUE]${COLOR_33}已确认继续操作${COLOR_0}"
-                    ;;
-                *)
-                    MAIN_REBOOT || return 0
-                    ;;
-                esac
-            fi
-            echo
-            echo -e "${COLOR_35}[WARN]${COLOR_33}刷入之前必须确保所选刷机包与目标设备相符 检查刷机包/自带脚本/电量等是否准确无误 ${COLOR_31}准备不充分的刷机操作将导致不开机甚至黑砖${COLOR_33} 刷入过程中将设备(${COLOR_36}本机与目标设备${COLOR_33})与连接的数据线平放并避免触碰以保证刷入过程中不会意外中断${COLOR_0}"
-            echo -e -n "${COLOR_35}[INPUT]${COLOR_33}输入' ${COLOR_36}已确认并继续${COLOR_33} '以继续:${COLOR_01}"
-            local USER_INPUT_CONTINUE_NUMBER=1
-            CLEAR_READ_INPUT
-            while true
-            do
-                if [ "$USER_INPUT_CONTINUE_NUMBER" -ge 3 ]
-                then
-                    echo -e "${COLOR_31}[ERROR]${COLOR_33}超过三次无效确认已终止操作${COLOR_0}"
-                    REBOOT_FL || return 0
-                    break
-                else
-                    USER_INPUT_CONTINUE_NUMBER=$((USER_INPUT_CONTINUE_NUMBER + 1))
-                fi
-                local CONTINUE_FLASH_ROM
-                read CONTINUE_FLASH_ROM
-                if [ "$CONTINUE_FLASH_ROM" = "已确认并继续" ]
-                then
-                    echo -e -n " ${COLOR_35}[START]${COLOR_33}3秒后开始刷入${COLOR_0}\r"
-                    sleep 3
-                    break
-                else
-                    echo -e -n "${COLOR_31}[!]${COLOR_33}无效确认 输入' ${COLOR_36}已确认并继续 ${COLOR_33}'以继续:${COLOR_01}"
-                    continue
-                fi
-            done
-            echo -e "\033[K"
+            CHECK_DEVICE_FLASH_OK
             echo -e "${COLOR_35}[Flashing]${COLOR_33}正在使用'${COLOR_36}$(basename "$USR_SH_FALSH")${COLOR_33}'脚本刷入ROM...${COLOR_0}"
             FLASH_START=$(date +%s.%N)
             fastboot() {
@@ -1014,10 +1047,7 @@ CA_FLASH_MAIN() {
             if bash "$USR_SH_FALSH" && FLASH_END=$(date +%s.%N) && unset -f fastboot &>>$MST_LOG
             then
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}刷机脚本'${COLOR_36}$(basename "$USR_SH_FALSH")${COLOR_33}'运行结束${COLOR_0}"
-                OKAY_PEAGE=$(termux-battery-status | grep 'percentage' | sed 's/.*: //g; s/,//g')
-                echo -e "${COLOR_35}[COMP]${COLOR_33}消耗电量:${COLOR_36}$(awk "BEGIN {printf \"%.2f\", $NOW_PEAGE - $OKAY_PEAGE}")%${COLOR_33}/耗时:${COLOR_36}$(awk "BEGIN {printf \"%.2f\", $FLASH_END - $FLASH_START}")s${COLOR_0}"
-                ALL_TIP_TION="${COLOR_35}[ROM]${COLOR_33}Rom已完成刷入 是否立即重启设备 >>${COLOR_0}"
-                REBOOT_USB_DEVICES
+                
             else
                 unset -f fastboot
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}刷入失败 检查刷机包是否与设备相符或刷入过程中数据线是否意外断开${COLOR_0}"
@@ -1106,7 +1136,7 @@ CA_FLASH_MAIN() {
                 local SEARCH_LINR OKAY_SEARCH
                 local START_YN_APP ONE_SEARCH
                 echo -e "${COLOR_35}[PKGE]${COLOR_33}输入'${COLOR_36}包名${COLOR_33}'或'${COLOR_36}包名关键词${COLOR_33}'以搜索应用(多选以'${COLOR_36}-${COLOR_33}'符号分隔) >>${COLOR_0}"
-                echo -e -n "${COLOR_33}*ᐷ${COLOR_01}"
+                echo -e -n "${COLOR_33}*ᐷ ${COLOR_01}"
                 read INPUT_PKGE_NAME
                 if [ -z "$INPUT_PKGE_NAME" ]
                 then
@@ -1236,7 +1266,7 @@ CA_FLASH_MAIN() {
                     MISHUI_MAIN_TIP=安装APK
                     SEE_USB_DEVICES
                     echo -e "${COLOR_35}[PATH]${COLOR_33}输入需要安装的apk文件位于本机的完整路径 >>${COLOR_0}"
-                    echo -e -n "${COLOR_33}*ᐷ${COLOR_01}"
+                    echo -e -n "${COLOR_33}*ᐷ ${COLOR_01}"
                     read APK_INSTALL_PATH
                     INSTALL_APK_NAMR="$(basename "$APK_INSTALL_PATH")"
                     if [ -z "$APK_INSTALL_PATH" ]
@@ -1352,7 +1382,7 @@ CA_FLASH_MAIN() {
                 SEE_USB_DEVICES
                 SEARCH_THE_NEED_APPS
                 echo -e "${COLOR_35}[DL]${COLOR_33}输入存放Apk文件的文件夹路径(留空自动存储至'${COLOR_36}Download${COLOR_33}'文件夹) >>${COLOR_0}"
-                echo -e -n "${COLOR_33}*ᐷ${COLOR_01}"
+                echo -e -n "${COLOR_33}*ᐷ ${COLOR_01}"
                 read THE_DOWNLOAD_PATH
                 if [ -n "$THE_DOWNLOAD_PATH" ] && [ -d "$THE_DOWNLOAD_PATH" ]
                 then
@@ -1380,7 +1410,7 @@ CA_FLASH_MAIN() {
                 do
                     echo
                     echo -e "${COLOR_35}[DATA]${COLOR_33}正在获取'${COLOR_36}$PULL_THE_APK${COLOR_33}'的APK文件路径...${COLOR_0}"
-                    THE_APK_PULL_PATH="$(adb -s "$SELEC_ADB_DEVICE" shell pm path "$PULL_THE_APK" </dev/null 2>$MST_LOG | sed 's/package://')"
+                    THE_APK_PULL_PATH="$(adb -s "$SELEC_ADB_DEVICE" shell pm path "$PULL_THE_APK" </dev/null 2>>$MST_LOG | sed 's/package://')"
                     ALL_APK_NUMBER="$(wc -l <<< "$THE_APK_PULL_PATH")"
                     if  [ -n "$THE_APK_PULL_PATH" ] && [ "$ALL_APK_NUMBER" = 1 ]
                     then
@@ -1485,7 +1515,7 @@ CA_FLASH_MAIN() {
                 MISHUI_MAIN_TIP=修改/恢复屏幕分辨率
                 SEE_USB_DEVICES
                 SAVE_THE_NEW_SIZE() {
-                    if ! BAK_ADB_SIZE="$(adb -s "$SELEC_ADB_DEVICE" shell wm size 2>$MST_LOG | sed 's/.*size: //g')" && [ -z "$BAK_ADB_SIZE" ]
+                    if ! BAK_ADB_SIZE="$(adb -s "$SELEC_ADB_DEVICE" shell wm size 2>>$MST_LOG | sed 's/.*size: //g')" && [ -z "$BAK_ADB_SIZE" ]
                     then
                         echo -e "${COLOR_35}[WARN]${COLOR_31}无法备份目标设备当前屏幕分辨率 继续执行可能含有风险${COLOR_33} 是否继续 >>${COLOR_0}"
                         echo -e "${COLOR_36}[+][1›确认风险并继续/2›取消并返回主页]*ᐷ${COLOR_01}"
@@ -1659,6 +1689,7 @@ CA_FLASH_MAIN() {
         ADB_FASTBOOT_CMD=fastboot
         MISHUI_MAIN_TIP=BootLoader解锁
         MISHUI_MAIN
+        echo
         echo -e "${COLOR}[UBL]${COLOR_33}支持为一加/小米设备解锁BootLoader >>${COLOR_0}"
         echo
         WARN_UNLOCK_BL() {
@@ -1886,7 +1917,7 @@ CA_FLASH_MAIN() {
             }
             if [ "$NOW_VERSION" -ge "$NEW_VERSION_NUMB" ]
             then
-                echo -e "${COLOR_35}[VER]${COLOR_33}当前版本:${COLOR_36}${MST_UPDATE_TIME}${COLOR_33}-${COLOR_32}已是最新版本${COLOR_0}"
+                echo -e "${COLOR_35}[VER]${COLOR_33}当前版本:${COLOR_36}$MST_UPDATE_TIME${COLOR_33}-${COLOR_32}已是最新版本${COLOR_0}"
                 DOWNLOAD_MISHUITOOL FIX "是否立即下载最新版本MST修复本地文件" "下载修复"
             fi
             echo -e "${COLOR_35}[NEW]${COLOR_33}发现新版本:${COLOR_32}$NEW_VERSION_TIME${COLOR_0}"

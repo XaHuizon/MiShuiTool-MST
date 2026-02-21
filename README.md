@@ -29,6 +29,7 @@
 ```shell
 curl -sS https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/install | bash 
 ```
+### 一些使用中的小技巧
 
 - **安装完成后执行 `mishuitool` 命令即可启动MST工具箱**
 # 鸣谢
