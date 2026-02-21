@@ -1861,6 +1861,7 @@ CA_FLASH_MAIN() {
             MISHUI_MAIN_TIP=云更新MST工具箱
             MISHUI_MAIN
             echo
+            MST_FILE_PATH="$PREFIX/bin/mishuitool"
             mkdir -p $MST_HOME/Update &>>$MST_LOG
             MISHUITOOL_URL="$(base64 -d <<< aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1hhSHVpem9uL01pU2h1aVRvb2wtTVNUL21haW4vTWlTaHVpVG9vbC5iYXNoCg== 2>>$MST_LOG)"
             echo -e "${COLOR_35}[UP]${COLOR_33}云更新功能基于GitHub仓库实现 >>${COLOR_0}"
@@ -1891,10 +1892,10 @@ CA_FLASH_MAIN() {
                     ;;
                 esac
                 echo -e "${COLOR_35}[Download]${COLOR_33}正在下载云端最新MiShuiTool进行覆盖更新...${COLOR_0}"
-                if curl -o "$MST_HOME/Update/MiShuiTool" "$MISHUITOOL_URL" -o $MST_HOME/assets/Text/MST-Head.txt "$(base64 -d <<< "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1hhSHVpem9uL01pU2h1aVRvb2wtTVNUL21haW4vYXNzZXRzL1RleHQvTVNULUhlYWQudHh0Cg==")" &>>$MST_LOG && shc -rf "$MST_HOME/Update/MiShuiTool" -o "$0" &>>$MST_LOG && chmod 777 "$0"
+                if curl -o "$MST_HOME/Update/MiShuiTool" "$MISHUITOOL_URL" -o $MST_HOME/assets/Text/MST-Head.txt "$(base64 -d <<< "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1hhSHVpem9uL01pU2h1aVRvb2wtTVNUL21haW4vYXNzZXRzL1RleHQvTVNULUhlYWQudHh0Cg==")" &>>$MST_LOG && shc -rf "$MST_HOME/Update/MiShuiTool" -o "$MST_FILE_PATH" &>>$MST_LOG && chmod 777 "$MST_FILE_PATH"
                 then
                     rm $MST_HOME/Update/MiShuiTool
-                    echo -e "${COLOR_32}[OKAY]${COLOR_33}覆盖更新完成 文件路径:${COLOR_36}$0${COLOR_0}"
+                    echo -e "${COLOR_32}[OKAY]${COLOR_33}覆盖更新完成 文件路径:${COLOR_36}$MST_FILE_PATH${COLOR_0}"
                 else
                     rm $MST_HOME/Update/MiShuiTool
                     echo -e "${COLOR_31}[ERROR]${COLOR_33}下载失败 检查网络连接或使用魔法后再试一次${COLOR_0}"
@@ -1908,7 +1909,7 @@ CA_FLASH_MAIN() {
                 '1' | 'y' | 'Y')
                     echo -e -n " ${COLOR_35}[Rebooting]${COLOR_33}正在重启MST...${COLOR_0}\r"
                     sleep 0.3
-                    exec "$0" && exit 0
+                    exec "$MST_FILE_PATH" && exit 0
                     ;;
                 *)
                     EXIT_SHELL
