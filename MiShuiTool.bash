@@ -6,7 +6,7 @@ export COLOR_34="\033[0;34;1m"; export COLOR_35="\033[0;35;1m"
 export COLOR_36="\033[0;36;1m"; export COLOR_37="\033[0;37;1m"
 export COLOR_0="\033[0m"; export COLOR_01="\033[0;1m"
 STORAGE=/storage/emulated/0
-MST_HOME="$HOME/MST"
+MST_HOME="/data/data/com.termux/files/home/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH=/data/data/com.termux/files/usr/bin
