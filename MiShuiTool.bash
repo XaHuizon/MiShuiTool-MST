@@ -431,7 +431,7 @@ MISHUI_MAIN() {
 CA_FLASH_MAIN() {
     MISHUI_MAIN_TIP=MiShuiTool
     MISHUI_MAIN
-    if [ ! "$PATH" = /data/data/com.termux/files/usr/bin ]
+    if [[ ! "$PATH" = */data/data/com.termux/files/usr/bin* ]]
     then
         echo -e "${COLOR_31}[!]${COLOR_33}当前环境(${COLOR_36}$PATH${COLOR_33})非Termux无法运行${COLOR_0}"
         echo -e "${COLOR_35}[Tip]${COLOR_33}在Termux中使用'${COLOR_36} bash $0 ${COLOR_33}'命令执行脚本${COLOR_0}"
