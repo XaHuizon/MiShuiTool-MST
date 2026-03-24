@@ -3,7 +3,7 @@
 ![版本](https://img.shields.io/badge/%E5%BD%93%E5%89%8D%E7%89%88%E6%9C%AC-2026.1.16--Beta-brightgreen)
 ![协议](https://img.shields.io/badge/%E5%BC%80%E6%BA%90%E5%8D%8F%E8%AE%AE-Apache--2.0-blue)
 ### 作者信息:
-- 作者: **MiShui&Mi丶XaFlash**
+- 作者: **Mi丶XaFlash**
 - 开发日期: **2025年3月28日**
 - Email: [@Mi丶XaFlash](mailto:311461xhl@gmail.com)
 - Gitee: [@Xa丶Hui](https://gitee.com/XaHui-GitHub/mi-shui-tool)

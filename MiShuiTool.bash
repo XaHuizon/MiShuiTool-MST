@@ -11,7 +11,7 @@ MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH=/data/data/com.termux/files/usr/bin
 MST_UPDATE_TIME='2026.3.24 Beta'
-NOW_VERSION=10006
+NOW_VERSION=10007
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -482,7 +482,7 @@ CA_FLASH_MAIN() {
     fi
     INSTALL_THE_MUST_CMD 'pkg install termux-api -y' 'Termux-API' 'termux-usb'
     echo -e "${COLOR_35}[DEV]${COLOR_33}›1*-${COLOR_36}管理连接设备${COLOR_35}[FB]${COLOR_33}›2*-${COLOR_36}Fastboot刷机工具${COLOR_0}"
-    echo -e "${COLOR_35}[ADB]${COLOR_33}›3*-${COLOR_36}ADB调试工具 ${COLOR_35}[ROOT]${COLOR_33}›4*-${COLOR_36}获取免解Root(测试)${COLOR_0}"
+    echo -e "${COLOR_35}[ADB]${COLOR_33}›3*-${COLOR_36}ADB调试工具 ${COLOR_35}[ROOT]${COLOR_33}›4*-${COLOR_36}获取临时Root(测试)${COLOR_0}"
     echo -e "${COLOR_35}[&]${COLOR_33}›5*-${COLOR_36}关于/帮助/更新${COLOR_35}[EXIT]${COLOR_33}›6*-${COLOR_36}退出MST工具箱${COLOR_0}"
     echo -e -n "${COLOR}[-${COLOR_32}CA${COLOR}-]${COLOR_33}输入选项*ᐷ${COLOR_0}"
     CLEAR_READ_INPUT
@@ -1841,10 +1841,10 @@ CA_FLASH_MAIN() {
             ;;
         esac
         ;;
-    '4' | '获取免解ROOT(测试)' | 'ROOT')
+    '4' | '获取临时ROOT(测试)' | 'ROOT')
         ADB_FASTBOOT_NAME=ADB
         ADB_FASTBOOT_CMD=adb
-        MISHUI_MAIN_TIP='获取免解ROOT(测试)'
+        MISHUI_MAIN_TIP='获取临时ROOT(测试)'
         MISHUI_MAIN
         echo -e "${COLOR}[ROOT]${COLOR_33}尝试在未解锁Bootloader的情况下获取Root权限(依赖漏洞) >>${COLOR_0}"
         echo
