@@ -10,8 +10,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH=/data/data/com.termux/files/usr/bin
-MST_UPDATE_TIME='2026.3.24 Beta'
-NOW_VERSION=10007
+MST_UPDATE_TIME='2026.3.25 Beta2'
+NOW_VERSION=10008
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -451,7 +451,8 @@ CA_FLASH_MAIN() {
         echo
         echo -e "$COLOR[INST]${COLOR_33}需要安装第三方${COLOR_36}ADB&Fastboot${COLOR_33}命令 >>${COLOR_0}"
         ADB_FASTBOOT_VER
-        echo -e "${COLOR_35}[GitHub]${COLOR_33}此处引用GitHub仓库'${COLOR_32}https://github.com/nohajc/termux-adb${COLOR_33}'中${COLOR_36}ADB&Fastboot${COLOR_33}工具的安装脚本 开发者:${COLOR_36}nohajc${COLOR_0}"
+        echo -e "${COLOR_35}[GitHub]${COLOR_33}此处引用GitHub仓库'${COLOR_32}https://github.com/nohajc/termux-adb${COLOR_33}'中${COLOR_36}ADB&Fastboot${COLOR_33}工具的安装脚本${COLOR_0}"
+        echo -e "${COLOR_35}[DEV]${COLOR_33}开发者:${COLOR_36}nohajc${COLOR_0}"
         echo -e "${COLOR_35}[MIT]${COLOR_32}Copyright (c) 2022 nohajc${COLOR_0}"
         echo
         echo -e "${COLOR_35}[NE]${COLOR_33}是否立即安装第三方${COLOR_36}ADB&Fastboot${COLOR_33}命令 >>${COLOR_0}"
@@ -901,7 +902,8 @@ CA_FLASH_MAIN() {
                 MISHUI_MAIN_TIP=解锁Xiaomi/Redmi
                 SEE_USB_DEVICES
                 WARN_UNLOCK_BL
-                echo -e "${COLOR_35}[GitHub]${COLOR_33}此处引用GitHub仓库'${COLOR_32}https://github.com/offici5l/MiUnlockTool${COLOR_33}'中${COLOR_36}miunlock${COLOR_33}工具的安装脚本 开发者:${COLOR_36}offici5l${COLOR_0}"
+                echo -e "${COLOR_35}[GitHub]${COLOR_33}此处引用GitHub仓库'${COLOR_32}https://github.com/offici5l/MiUnlockTool${COLOR_33}'中${COLOR_36}miunlock${COLOR_33}工具的安装脚本${COLOR_0}"
+                echo -e "${COLOR_35}[DEV]${COLOR_33}开发者:${COLOR_36}offici5l${COLOR_0}"
                 echo -e "${COLOR_35}[Apache-2.0]${COLOR_32}Copyright (c) 2024 offici5l${COLOR_0}"
                 echo
                 echo -e "${COLOR_35}[NE]${COLOR_33}是否立即安装第三方${COLOR_36}miunlock${COLOR_33}解锁工具 >>${COLOR_0}"
@@ -1848,8 +1850,6 @@ CA_FLASH_MAIN() {
         MISHUI_MAIN
         echo -e "${COLOR}[ROOT]${COLOR_33}尝试在未解锁Bootloader的情况下获取Root权限(依赖漏洞) >>${COLOR_0}"
         echo
-        echo -e "${COLOR_35}[Tip]${COLOR_33}截至本版本发布日期(${COLOR_36}$MST_UPDATE_TIME${COLOR_33}) KernelSU支持越狱的版本为${COLOR_36}CI构建版本${COLOR_33} 故不提供自动下载 需自行前往可信渠道(例如酷安)寻找安全的安装包文件 >>${COLOR_0}"
-        ENTER_ANY_CONTINUE
         SEE_USB_DEVICES
         CHUCK_PATCH_TIME() {
             lical YN_CONTINUE_R
@@ -1874,7 +1874,39 @@ CA_FLASH_MAIN() {
         else
             echo -e "${COLOR_32}通过${COLOR_0}"
         fi
-        echo -e ALL_TIP_TION="${COLOR_35}[RE]${COLOR_33}是否立即目标设备重启至Fastboot >>${COLOR_0}"
+        declare "$(adb -s "$SELEC_ADB_DEVICE" shell dumpsys package me.weishu.kernelsu 2>>$MST_LOG | awk $'/versionCode/ {print $1}')"
+        if [ -z "$versionCode" ] || [ "$versionCode" -lt 32389 ]
+        then
+            echo -e "${COLOR_35}[KSU]${COLOR_33}需要从KernrlSU的官方仓库下载Releases可越狱版本 >>${COLOR_0}"
+            ADB_FASTBOOT_VER
+            echo -e "${COLOR_35}[GitHub]${COLOR_33}此处下载GitHub仓库'${COLOR_32}https://github.com/tiann/KernelSU/${COLOR_33}'中官方的${COLOR_36}KernelSU${COLOR_33}正式发布版${COLOR_0}"
+            echo -e "${COLOR_35}[DEV]${COLOR_33}开发者:${COLOR_36}tiann${COLOR_0}"
+            echo -e "${COLOR_35}[GPL-3.0]${COLOR_32}Copyright (c) 2026 tiann${COLOR_0}"
+            echo
+            echo -e "${COLOR_35}[D&I]${COLOR_33}是否立即下载并安装${COLOR_36}KernelSU${COLOR_33}正式版(将消耗'${COLOR_36}10MB${COLOR_33}'流量) >>${COLOR_0}"
+            echo -e -n "${COLOR_36}[+][1›立即下载并安装/2›返回主页]*ᐷ${COLOR_01}"
+            read YN_DL_KERNELSU
+            case "$YN_DL_KERNELSU" in
+            2 | n | N)
+                MAIN_REBOOT || return 0
+                ;;
+            esac
+            echo
+            echo -e "${COLOR_35}[Downloading]${COLOR_33}正在下载KernelSU...${COLOR_0}"
+            if ! curl --progress-bar -L -o  "$DOWNLOAD_PATH/KernelSU_v3.2.0_32389-Releases.apk" 'https://github.com/tiann/KernelSU/releases/download/v3.2.0/KernelSU_v3.2.0_32389-release.apk' 2>>$MST_LOG
+            then
+                echo -e "${COLOR_31}[ERROR]${COLOR_33}下载失败 尝试连接魔法或手动下载安装后重试${COLOR_0}"
+                REBOOT_FL || return 0
+            fi
+            echo -e "${COLOR_35}[Installing]${COLOR_33}下载完毕正在安装KernelSU...${COLOR_30}"
+            if ! adb -s "$SELEC_ADB_DEVICE" install "$DOWNLOAD_PATH/KernelSU_v3.2.0_32389-Releases.apk"
+            then
+                echo -e "${COLOR_31}[ERROR]${COLOR_33}自动安装失败 若目标设备有安装授权弹窗需点击允许${COLOR_0}"
+                echo -e "${COLOR_35}[Tip]${COLOR_33}此前下载的KernelSU安装包位于本机路径:${COLOR_36}$DOWNLOAD_PATH/KernelSU_v3.2.0_32389-Releases.apk${COLOR_33} 尝试在目标设备上安装后再试${COLOR_0}"
+                REBOOT_FL || return 0
+            fi
+        fi
+        echo -e ALL_TIP_TION="${COLOR_35}[RE]${COLOR_33}准备就绪 是否立即目标设备重启至Fastboot >>${COLOR_0}"
         REBOOT_USB_DEVICES
         ADB_FASTBOOT_NAME=FASTBOOT
         ADB_FASTBOOT_CMD=fastboot
