@@ -6,12 +6,12 @@ export COLOR_34="\033[0;34;1m"; export COLOR_35="\033[0;35;1m"
 export COLOR_36="\033[0;36;1m"; export COLOR_37="\033[0;37;1m"
 export COLOR_0="\033[0m"; export COLOR_01="\033[0;1m"
 STORAGE=/storage/emulated/0
-MST_HOME="/data/data/com.termux/files/home/MST"
+MST_HOME="$HOME"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH=/data/data/com.termux/files/usr/bin
-MST_UPDATE_TIME='2026.2.21 Beta'
-NOW_VERSION=10004
+MST_UPDATE_TIME='2026.3.24 Beta'
+NOW_VERSION=10006
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -70,7 +70,7 @@ SHOW_FUNC_MENU() {
 }
 ENTER_ANY_CONTINUE() {
     echo
-    echo -e -n "${COLOR_35}[Enter]${COLOR_33}完成后点按任意键继续${COLOR_0}"
+    echo -e -n "${COLOR_35}[Enter]${COLOR_33}$1点按任意键继续${COLOR_0}"
     read -s -n1
     echo
 }
@@ -294,7 +294,11 @@ USB_DEVICES_ADB() {
         SELEC_ADB_DEVICE="$ADB_DEVICES"
     fi
     CPU_GHZ=$(adb -s "$SELEC_ADB_DEVICE" shell "MAX_GHZ=\$(cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_max_freq | sort -n | tail -1); echo \"scale=2; \$MAX_GHZ / 1000000\" | bc" 2>>$MST_LOG)
-    CPUNAME=$(adb -s "$SELEC_ADB_DEVICE" shell grep 'Hardware' /proc/cpuinfo 2>>$MST_LOG | sed 's/.*: //g; s/, /-/g' 2>>$MST_LOG)
+    CPUNAME=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.soc.model 2>>$MST_LOG)
+    if [ -z "$CPUNAME" ]
+    then
+        CPUNAME=$(adb -s "$SELEC_ADB_DEVICE" shell grep 'Hardware' /proc/cpuinfo 2>>$MST_LOG | sed 's/.*: //g; s/, /-/g' 2>>$MST_LOG)
+    fi
     OSV=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.build.version.release 2>>$MST_LOG)
     CPUUN=$(adb -s "$SELEC_ADB_DEVICE" shell grep -c "processor" /proc/cpuinfo 2>>$MST_LOG)
     DEVONE=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.product.device 2>>$MST_LOG)
@@ -323,10 +327,10 @@ USB_DEVICES_ADB() {
 }
 ADB_FASTBOOT_VER() {
     echo -e "${COLOR_35}[ADB]${COLOR_33}当前版本 >>${COLOR_32}"
-    adb  --version | grep 'version'
+    adb  --version | grep 'version' || echo -e "\033[1A${COLOR_31}[NotFound]${COLOR_33}没有安装!${COLOR_0}\033[K"
     echo -e "${COLOR_35}[Fastboot]${COLOR_33}当前版本 >>${COLOR_32}"
-    fastboot --version | grep 'version'
-    echo -e -n "${COLOR_0}\r"
+    fastboot --version | grep 'version' || echo -e "\033[1A${COLOR_31}[NotFound]${COLOR_33}没有安装!${COLOR_0}\033[K"
+    echo -e "${COLOR_0}"
 }
 REBOOT_USB_DEVICES() {
     local REBOOT_PT REBOOT_NAME REBOOT_TAP
@@ -364,7 +368,6 @@ REBOOT_USB_DEVICES() {
         echo -e "${COLOR_31}[ERROR]${COLOR_33}重启目标设备失败${COLOR_0}"
         echo -e "${COLOR_35}[Tip]${COLOR_33}可长按目标设备'${COLOR_36}关机$REBOOT_TAP键${COLOR_33}'手动重启${COLOR_0}"
     fi
-    REBOOT_FL || return 0
 }
 INSTALL_THE_MUST_CMD() {
     local INSTALL_ITS_CMD="$1"
@@ -431,7 +434,7 @@ MISHUI_MAIN() {
 CA_FLASH_MAIN() {
     MISHUI_MAIN_TIP=MiShuiTool
     MISHUI_MAIN
-    if [[ ! "$PATH" = */data/data/com.termux/files/usr/bin* ]]
+    if [ ! "$PATH" = /data/data/com.termux/files/usr/bin ]
     then
         echo -e "${COLOR_31}[!]${COLOR_33}当前环境(${COLOR_36}$PATH${COLOR_33})非Termux无法运行${COLOR_0}"
         echo -e "${COLOR_35}[Tip]${COLOR_33}在Termux中使用'${COLOR_36} bash $0 ${COLOR_33}'命令执行脚本${COLOR_0}"
@@ -439,14 +442,48 @@ CA_FLASH_MAIN() {
     elif [ ! -d /data/data/com.termux.api ]
     then
         echo -e "${COLOR_31}[!]${COLOR_33}当前还未安装'${COLOR_36}Termux-Api${COLOR_33}'App${COLOR_0}"
-        echo -e "${COLOR_35}[Tip]${COLOR_33}访问Termux官网下载Termux-Api并安装:${COLOR_36}https://termux.dev/${COLOR_0}"
+        echo -e "${COLOR_35}[Tip]${COLOR_33}访问Termux官网下载Termux-Api并安装:${COLOR_36}https://termux.dev/cn/${COLOR_0}"
     fi
-    INSTALL_THE_MUST_CMD 'curl -sS https://raw.githubusercontent.com/offici5l/termux-adb-fastboot/refs/heads/main/install | bash' 'ADB&Fastboot' 'fastboot'
+    if ! command -v termux-adb &>>$MST_LOG
+    then
+        MISHUI_MAIN_TIP='安装第三方F&A工具'
+        MISHUI_MAIN
+        echo
+        echo -e "$COLOR[INST]${COLOR_33}需要安装第三方${COLOR_36}ADB&Fastboot${COLOR_33}命令 >>${COLOR_0}"
+        ADB_FASTBOOT_VER
+        echo -e "${COLOR_35}[GitHub]${COLOR_33}此处引用GitHub仓库'${COLOR_32}https://github.com/nohajc/termux-adb${COLOR_33}'中${COLOR_36}ADB&Fastboot${COLOR_33}工具的安装脚本 开发者:${COLOR_36}nohajc${COLOR_0}"
+        echo -e "${COLOR_35}[MIT]${COLOR_32}Copyright (c) 2022 nohajc${COLOR_0}"
+        echo
+        echo -e "${COLOR_35}[NE]${COLOR_33}是否立即安装第三方${COLOR_36}ADB&Fastboot${COLOR_33}命令 >>${COLOR_0}"
+        echo -e -n "${COLOR_36}[+][1›立即安装/2›退出MST]*ᐷ${COLOR_01}"
+        read YN_UPDATE
+        case "$YN_UPDATE" in
+        '1' | 'y' | 'Y')
+            echo -e "${COLOR_35}[Tip]${COLOR_33}长时间未开始安装尝试连接魔法再试${COLOR_0}"
+            echo
+            echo -e "${COLOR_35}[Installing]${COLOR_33}正在安装第三方${COLOR_36}ADB&Fastboot${COLOR_33}命令...${COLOR_0}"
+            NOW_LINE
+            if pkg install android-tools; CLEAR_READ_INPUT && curl -sS https://raw.githubusercontent.com/nohajc/termux-adb/master/install.sh | bash; CLEAR_READ_INPUT
+            then
+                echo -e "${COLOR_32}[OKAY]${COLOR_33}工具包'${COLOR_36}ADB&Fastboot${COLOR_33}'安装成功${COLOR_0}"
+                ADB_FASTBOOT_VER
+                REBOOT_FL || return 0
+            else
+                unset INSTALL_ADB_FB_CLI
+                echo -e "${COLOR_31}[ERROR]${COLOR_36}$NOT_INSTALL_TOOLS${COLOR_33}安装失败 尝试手动执行命令 >>${COLOR_0}"
+                echo -e "${COLOR_33} - 命令: ${COLOR_36}curl -s https://raw.githubusercontent.com/nohajc/termux-adb/master/install.sh | bash${COLOR_0}"
+                EXIT_SHELL 1
+            fi
+            ;;
+        *)
+            EXIT_SHELL 1
+            ;;
+        esac
+    fi
     INSTALL_THE_MUST_CMD 'pkg install termux-api -y' 'Termux-API' 'termux-usb'
     echo -e "${COLOR_35}[DEV]${COLOR_33}›1*-${COLOR_36}管理连接设备${COLOR_35}[FB]${COLOR_33}›2*-${COLOR_36}Fastboot刷机工具${COLOR_0}"
-    echo -e "${COLOR_35}[ADB]${COLOR_33}›3*-${COLOR_36}ADB调试工具 ${COLOR_35}[UBL]${COLOR_33}›4*-${COLOR_36}解锁BL锁(第三方工具)${COLOR_0}"
-    echo -e "${COLOR_35}[INST]${COLOR_33}›5*-${COLOR_36}安装第三方Termux-Fastboot&ADB工具${COLOR_0}"
-    echo -e "${COLOR_35}[&]${COLOR_33}›6*-${COLOR_36}关于/帮助/更新${COLOR_35}[EXIT]${COLOR_33}›7*-${COLOR_36}退出MST工具箱${COLOR_0}"
+    echo -e "${COLOR_35}[ADB]${COLOR_33}›3*-${COLOR_36}ADB调试工具 ${COLOR_35}[ROOT]${COLOR_33}›4*-${COLOR_36}获取免解Root(测试)${COLOR_0}"
+    echo -e "${COLOR_35}[&]${COLOR_33}›5*-${COLOR_36}关于/帮助/更新${COLOR_35}[EXIT]${COLOR_33}›6*-${COLOR_36}退出MST工具箱${COLOR_0}"
     echo -e -n "${COLOR}[-${COLOR_32}CA${COLOR}-]${COLOR_33}输入选项*ᐷ${COLOR_0}"
     CLEAR_READ_INPUT
     read INPUT_USR
@@ -531,7 +568,7 @@ CA_FLASH_MAIN() {
             '1' | 'Android11以上')
                 echo -e "${COLOR_35}[Tip]${COLOR_33}在目标设备上按照以下步骤打开'${COLOR_36}无线调试${COLOR_33}'选项 >>${COLOR_0}"
                 echo -e "${COLOR_35}[STEP]${COLOR_36}系统设置 ${COLOR_33}-> ${COLOR_36}开发者选项 ${COLOR_33}->${COLOR_36} 无线调试${COLOR_33} -> ${COLOR_36}使用配对码配对${COLOR_0}"
-                ENTER_ANY_CONTINUE
+                ENTER_ANY_CONTINUE 打开后
                 echo
                 echo -e "${COLOR_35}[IP]${COLOR_33}输入'${COLOR_36}与设备配对${COLOR_33}'中显示的'${COLOR_36}IP地址:端口${COLOR_33}' >>${COLOR_0}"
                 echo -e -n "${COLOR_33}(格式:${COLOR_36}192.168.00.00:00000${COLOR_33})*ᐷ${COLOR_01}"
@@ -572,7 +609,7 @@ CA_FLASH_MAIN() {
                 ;;
             '2' | 'Android11以下')
                 echo -e "${COLOR_35}[USB]${COLOR_33}要无线连接Android11以下的设备必须先进行一次有线连接 现在先将本机与目标设备使用OTG转接线连接${COLOR_0}"
-                ENTER_ANY_CONTINUE
+                ENTER_ANY_CONTINUE 连接后
                 echo
                 CNT_ANY_DEVICED ADB y
                 echo
@@ -693,47 +730,65 @@ CA_FLASH_MAIN() {
         MISHUI_MAIN
         echo
         echo -e "${COLOR}[FB]${COLOR_33}选择Fastboot刷机功能 >>${COLOR_0}"
-        echo -e "${COLOR_35}[BOOT]${COLOR_33}›1*-${COLOR_36}刷入BOOT${COLOR_35}[REC]${COLOR_33}›2*-${COLOR_36}刷入RECOVERY${COLOR_35}[RE]${COLOR_33}›3*-${COLOR_36}重启连接设备${COLOR_0}"
-        echo -e "${COLOR_35}[SLOT]${COLOR_33}›4*-${COLOR_36}刷入指定分区${COLOR_35}[ROM]${COLOR_33}›5*-${COLOR_36}刷入ROM${COLOR_35}[HOME]${COLOR_33}›6*-${COLOR_36}返回主页${COLOR_0}"
+        echo -e "${COLOR_35}[SLOT]${COLOR_33}›1*-${COLOR_36}刷入分区镜像${COLOR_35}[RE]${COLOR_33}›2*-${COLOR_36}重启连接设备${COLOR_0}"
+        echo -e "${COLOR_35}[UBL]${COLOR_33}›3*-${COLOR_36}BL解锁(第三方工具)${COLOR_35}[ROM]${COLOR_33}›4*-${COLOR_36}刷入ROM${COLOR_0}"
+        echo -e "${COLOR_35}[CMD]${COLOR_33}›5*-${COLOR_36}执行Fastboot命令${COLOR_35}[HOME]${COLOR_33}›6*-${COLOR_36}返回主页${COLOR_0}"
         echo -e -n "${COLOR}[-${COLOR_32}FB${COLOR}-]${COLOR_33}输入选项*ᐷ${COLOR_0}"
         CLEAR_READ_INPUT
         read FUNC_CONT
         echo -e "${COLOR_30}-------------------------------------------------${COLOR_0}"
-        FLASH_IMG_TO_SLOT() {
-            local FLASH_IMG_NAME=$1
-            local FLASH_IMG_SLOT=$2
-            local IMG_FILE_PA IMG_FILE_NAME IMG_FILE_PATH
-            echo -e "${COLOR_35}[FILE]${COLOR_33}输入要刷入'${COLOR_36}$FLASH_IMG_NAME${COLOR_33}'分区的镜像文件路径 >>${COLOR_0}"
-            echo -e -n "${COLOR_33}*ᐷ ${COLOR_01}"
-            read IMG_FILE_PATH
-            IMG_FILE_NAME=$(basename "$IMG_FILE_PATH" 2>>$MST_LOG)
-            if [ -z "$IMG_FILE_PATH" ]
+        CHUCK_SLOT_FLASH() {
+            CHUCK_SLOT="$1"
+            if ! fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar partition-type:$CHUCK_SLOT &>>$MST_LOG
             then
-                echo -e "${COLOR_31}[!]${COLOR_33}输入不可为空${COLOR_0}"
-                REBOOT_FL || return 0
-            elif [ ! -f "$IMG_FILE_PATH" ]
-            then
-                echo -e "${COLOR_31}[!]${COLOR_33}文件'${COLOR_36}$IMG_FILE_NAME${COLOR_33}'路径不存在/无法读取${COLOR_0}"
-                REBOOT_FL || return 0
-            fi
-            echo -e "$COLOR_35[Flashing]${COLOR_33}正在将'${COLOR_36}$IMG_FILE_NAME${COLOR_33}'刷入'${COLOR_36}$FLASH_IMG_NAME${COLOR_33}'分区...${COLOR_30}"
-            if fastboot -s "$SELEC_FASTBOOT_DEVICE" flash $FLASH_IMG_SLOT "$IMG_FILE_PATH"
-            then
-                ALL_TIP_TION="${COLOR_32}[OKAY]${COLOR_33}刷入成功 是否立即重启 >>${COLOR_0}"
-                REBOOT_USB_DEVICES
-            else
-                echo -e "${COLOR_32}[ERROR]${COLOR_33}刷入失败 检查设备是否正确连接或镜像文件是否正确${COLOR_0}"
-                REBOOT_FL || return 0
+                echo -e "${COLOR_31}[WARN]${COLOR_33}MST检测到分区'${COLOR_36}$FLASH_IMG_SLOT${COLOR_33}'在目标设备上不存在 继续操作可能造成不可预知的后果${COLOR_0}"
+                echo -e "${COLOR_35}[Continue]${COLOR_33}需慎重考虑是否继续 >>${COLOR_0}"
+                echo -e -n "${COLOR_36}[+][1›无视风险继续操作/2›取消操作]*ᐷ${COLOR_01}"
+                read YN_FLASH_ERROR_SLOT
+                case "$YN_FLASH_ERROR_SLOT" in
+                '2' | 'n' | 'N')
+                    MAIN_REBOOT || return 0
+                    ;;
+                esac
             fi
         }
         case "$FUNC_CONT" in
-        '1' | 'BOOT' | '刷入BOOT')
-            MISHUI_MAIN_TIP=刷入BOOT
+        '1' | '镜像刷入' | '分区镜像刷入')
+            FLASH_IMG_TO_SLOT() {
+                local FLASH_IMG_NAME=$1
+                local FLASH_IMG_SLOT=$2
+                local IMG_FILE_PA IMG_FILE_NAME IMG_FILE_PATH
+                CHUCK_SLOT_FLASH
+                echo -e "${COLOR_35}[FILE]${COLOR_33}输入要刷入'${COLOR_36}$FLASH_IMG_NAME${COLOR_33}'分区的镜像文件路径 >>${COLOR_0}"
+                echo -e -n "${COLOR_33}*ᐷ ${COLOR_01}"
+                read IMG_FILE_PATH
+                IMG_FILE_NAME=$(basename "$IMG_FILE_PATH" 2>>$MST_LOG)
+                if [ -z "$IMG_FILE_PATH" ]
+                then
+                    echo -e "${COLOR_31}[!]${COLOR_33}输入不可为空${COLOR_0}"
+                    REBOOT_FL || return 0
+                elif [ ! -f "$IMG_FILE_PATH" ]
+                then
+                    echo -e "${COLOR_31}[!]${COLOR_33}文件'${COLOR_36}$IMG_FILE_NAME${COLOR_33}'路径不存在/无法读取${COLOR_0}"
+                    REBOOT_FL || return 0
+                fi
+                echo -e "$COLOR_35[Flashing]${COLOR_33}正在将'${COLOR_36}$IMG_FILE_NAME${COLOR_33}'刷入'${COLOR_36}$FLASH_IMG_NAME${COLOR_33}'分区...${COLOR_30}"
+                if fastboot -s "$SELEC_FASTBOOT_DEVICE" flash $FLASH_IMG_SLOT "$IMG_FILE_PATH"
+                then
+                    ALL_TIP_TION="${COLOR_32}[OKAY]${COLOR_33}刷入成功 是否立即重启 >>${COLOR_0}"
+                    REBOOT_USB_DEVICES
+                else
+                    echo -e "${COLOR_32}[ERROR]${COLOR_33}刷入失败 检查设备是否正确连接或镜像文件是否正确${COLOR_0}"
+                fi
+                REBOOT_FL || return 0
+            }
+            MISHUI_MAIN_TIP=分区镜像刷入
             SEE_USB_DEVICES
             NOT_UNLOCK_ERROR
             echo -e "${COLOR_35}[SLOT]${COLOR_33}选择要刷入的分区 >>$COLOR_0"
-            echo -e "${COLOR_36}›1*-Boot ›2*-Boot_a  ›3*-Boot_b ›4*-init_boot${COLOR_0}"
-            echo -e "${COLOR_36}›5*-init_Boot_a ›6*-init_boot_b ›7*-自动识别${COLOR_01}"
+            echo -e "${COLOR_36}›1*-Boot ›2*-Boot_a  ›3*-Boot_b ›4*-Init_boot${COLOR_0}"
+            echo -e "${COLOR_36}›5*-Init_Boot_a ›6*-Init_boot_b ›7*-Recovery${COLOR_01}"
+            echo -e "${COLOR_36}›8*-Recovery_a  ›9*-Recovery_b  ›10*-自定义分区${COLOR_01}"
             echo -e -n "${COLOR_35}[ST]${COLOR_33}输入选项*ᐷ${COLOR_01}"
             read YN_SLOT_AB
             case "$YN_SLOT_AB" in
@@ -755,53 +810,19 @@ CA_FLASH_MAIN() {
             '6' | 'init_b' | 'init_boot_b')
                 FLASH_IMG_TO_SLOT INIT_BOOT_B init_boot_b
                 ;;
-            '7' | '自动' | '自动识别')
-                AUTO_TO_SEE_SLOT="$(fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar all 2>&1)"
-                if grep 'type:init_boot' <<< "$AUTO_TO_SEE_SLOT"
-                then
-                    FLASH_IMG_TO_SLOT INIT_BOOT init_boot
-                elif grep 'type:boot' <<< "$AUTO_TO_SEE_SLOT"
-                then
-                    FLASH_IMG_TO_SLOT BOOT boot
-                else
-                    echo -e "${COLOR_31}[ERROR]${COLOR_33}自动识别Boot分区失败 需手动指定Boot分区${COLOR_0}"
-                    REBOOT_FL || return 0
-                fi
+            '7' | 'recovery' | 'rec')
+                FLASH_IMG_TO_SLOT RECOVERY recovery
                 ;;
-            *)
-                if [ -z "$YN_SLOT_AB" ]
-                then
-                    echo -e "${COLOR_31}[!]${COLOR_33}此处不可为空${COLOR_0}"
-                    REBOOT_FL || return 0
-                fi
-                echo -e "${COLOR_31}[!]${COLOR_33}不支持的选项:${COLOR_36}$YN_SLOT_AB${COLOR_0}"
-                REBOOT_FL || return 0
+            '8' | 'recovery_a' | 'rec_a')
+                FLASH_IMG_TO_SLOT RECOVERY_A recovery_a
                 ;;
-            esac
-            ;;
-        '2' | 'REC' | '刷入RECOVERY')
-            MISHUI_MAIN_TIP=刷入RECOVERY
-            SEE_USB_DEVICES
-            NOT_UNLOCK_ERROR
-            FLASH_IMG_TO_SLOT RECOVERY recovery
-            ;;
-        '3' | 'RE' | '重启连接设备')
-            MISHUI_MAIN_TIP=重启连接设备
-            SEE_USB_DEVICES
-            ALL_TIP_TION="${COLOR_32}[RE]${COLOR_33}选择需要重启的目标模式 >>${COLOR_0}"
-            REBOOT_USB_DEVICES
-            ;;
-        '4' | 'SLOT' | '刷入指定分区')
-            MISHUI_MAIN_TIP=刷入指定分区
-            SEE_USB_DEVICES
-            NOT_UNLOCK_ERROR
-            echo -e "${COLOR_35}[SLOT]${COLOR_33}输入要刷入的分区名称*ᐷ${COLOR_01}"
-            read FLASH_IMG_SLOT
-            if [ -z "$FLASH_IMG_SLOT" ]
-            then
-                echo -e "${COLOR_31}[!]${COLOR_33}输入不可为空${COLOR_0}"
-                REBOOT_FL || return 0
-            else
+            '9' | 'recovery_b' | 'rec_b')
+                FLASH_IMG_TO_SLOT RECOVERY_b recovery_b
+                ;;
+            '10')
+                echo -e "${COLOR_35}[SLOT]${COLOR_33}输入要刷入的分区名称*ᐷ${COLOR_01}"
+                read FLASH_IMG_SLOT
+                CHUCK_SLOT_FLASH "$FLASH_IMG_SLOT"
                 echo -e "${COLOR_35}[Y/N]${COLOR_33}是否确定指定分区为:${COLOR_36}$FLASH_IMG_SLOT${COLOR_0}"
                 echo -e -n "${COLOR_36}[+][1›确定分区/2›返回主页]*ᐷ${COLOR_01}"
                 read YN_INPUT_SLOT
@@ -815,9 +836,113 @@ CA_FLASH_MAIN() {
                     MAIN_REBOOT || return 0
                     ;;
                 esac
-            fi
+                ;;
+            *)
+                if [ -z "$YN_SLOT_AB" ]
+                then
+                    echo -e "${COLOR_31}[!]${COLOR_33}此处不可为空${COLOR_0}"
+                    REBOOT_FL || return 0
+                fi
+                echo -e "${COLOR_31}[!]${COLOR_33}不支持的选项:${COLOR_36}$YN_SLOT_AB${COLOR_0}"
+                REBOOT_FL || return 0
+                ;;
+            esac
             ;;
-        '5' | '刷入ROM' | 'ROM')
+        '2' | 'RE' | '重启连接设备')
+            MISHUI_MAIN_TIP=重启连接设备
+            SEE_USB_DEVICES
+            ALL_TIP_TION="${COLOR_32}[RE]${COLOR_33}选择需要重启的目标模式 >>${COLOR_0}"
+            REBOOT_USB_DEVICES
+            REBOOT_FL || return 0
+            ;;
+        '3' | 'UBL' | '解锁BL锁(第三方工具')
+            ADB_FASTBOOT_NAME=FASTBOOT
+            ADB_FASTBOOT_CMD=fastboot
+            MISHUI_MAIN_TIP=BootLoader解锁
+            MISHUI_MAIN
+            echo
+            echo -e "${COLOR}[UBL]${COLOR_33}支持为一加/小米设备解锁BootLoader >>${COLOR_0}"
+            echo
+            WARN_UNLOCK_BL() {
+                local UNLOCK_BOOTLOADER_YN
+                echo -e "${COLOR_35}[WARN]${COLOR_31}解锁设备的BootLoader将使设备失去保修/安全性下降 ${COLOR_33}是否继续 >>${COLOR_0}"
+                echo -e -n "${COLOR_36}[+][1›已知晓并继续/2›立即中断并退出]*ᐷ${COLOR_01}"
+                read UNLOCK_BOOTLOADER_YN
+                case "$UNLOCK_BOOTLOADER_YN" in
+                '1' | 'y' | 'Y')
+                    echo -e "${COLOR_35}[INFO]${COLOR_33}即将开始解锁 确保目标设备已开启'${COLOR_36}OEM解锁${COLOR_33}'选项${COLOR_0}"
+                    ;;
+                *)
+                    MAIN_REBOOT || return 0
+                    ;;
+                esac
+            }
+            ALL_TIP_TION="${COLOR_35}[DEV]${COLOR_33}选择目标设备类型 >>${COLOR_0}"
+            ALL_OPTION=("1*-一加(OnePlus)-命令解锁" "2*-Xiaomi/Redmi-第三方工具解锁" "3*-返回主页")
+            NOW_LINE
+            SHOW_FUNC_MENU
+            case "$FUNC_CONT" in
+            '1')
+                MISHUI_MAIN_TIP='解锁一加(OnePlus)'
+                SEE_USB_DEVICES
+                WARN_UNLOCK_BL
+                echo -e "${COLOR_35}[Unlocking]${COLOR_33}正在使用'${COLOR_36}fastboot -s "$SELEC_FASTBOOT_DEVICE" flashing unlock${COLOR_33}'命令解锁...${COLOR_0}"
+                if fastboot -s "$SELEC_FASTBOOT_DEVICE" flashing unlock || fastboot -s "$SELEC_FASTBOOT_DEVICE" oem unlock
+                then
+                    echo -e "${COLOR_32}[OKAY]${COLOR_33}命令执行成功${COLOR_0}"
+                    echo -e "${COLOR_35}[Tip]${COLOR_33}目标设备跳转页面后点击目标设备'${COLOR_36}音量-${COLOR_33}'键选择'${COLOR_36}UNLOCK THE BOOTLOADER${COLOR_33}'选项并使用关机键确定即可完成解锁${COLOR_0}"
+                    REBOOT_FL || return 0
+                else
+                    echo -e "${COLOR_31}[ERROR]${COLOR_33}命令执行失败 可能因为Termux没有足够权限或者设备意外断开${COLOR_0}"
+                    REBOOT_FL || return 0
+                fi
+                ;;
+            '2')
+                MISHUI_MAIN_TIP=解锁Xiaomi/Redmi
+                SEE_USB_DEVICES
+                WARN_UNLOCK_BL
+                echo -e "${COLOR_35}[GitHub]${COLOR_33}此处引用GitHub仓库'${COLOR_32}https://github.com/offici5l/MiUnlockTool${COLOR_33}'中${COLOR_36}miunlock${COLOR_33}工具的安装脚本 开发者:${COLOR_36}offici5l${COLOR_0}"
+                echo -e "${COLOR_35}[Apache-2.0]${COLOR_32}Copyright (c) 2024 offici5l${COLOR_0}"
+                echo
+                echo -e "${COLOR_35}[NE]${COLOR_33}是否立即安装第三方${COLOR_36}miunlock${COLOR_33}解锁工具 >>${COLOR_0}"
+                echo -e -n "${COLOR_36}[+][1›立即安装/2›返回主页]*ᐷ${COLOR_01}"
+                read YN_UPDATE
+                case "$YN_UPDATE" in
+                '1' | 'y' | 'Y')
+                    echo -e "${COLOR_35}[Tip]${COLOR_33}长时间未开始安装尝试连接魔法后再试${COLOR_0}"
+                    echo
+                    echo -e "${COLOR_35}[Installing]${COLOR_33}正在安装第三方BootLoader解锁工具:${COLOR_36}miunlock${COLOR_0}...${COLOR_0}"
+                    if curl -sS https://raw.githubusercontent.com/offici5l/MiUnlockTool/main/.install | bash; CLEAR_READ_INPUT
+                    then
+                        echo -e "${COLOR_32}[OKAY]${COLOR_33}工具'${COLOR_36}miunlock${COLOR_33}'安装成功${COLOR_0}"
+                        echo
+                        ENTER_ANY_CONTINUE
+                        sleep 0.5
+                        miunlock
+                        echo -e "${COLOR_35}[BACK]${COLOR_33}已返回脚本${COLOR_0}"
+                        REBOOT_FL || return 0
+                    else
+                        unset INSTALL_ADB_FB_CLI
+                        echo -e "${COLOR_31}[ERROR]${COLOR_36}$NOT_INSTALL_TOOLS${COLOR_33}安装失败 尝试手动执行命令 >>${COLOR_0}"
+                        echo -e "${COLOR_33} - 命令: ${COLOR_36}curl -sS https://raw.githubusercontent.com/offici5l/MiUnlockTool/main/.install | bash${COLOR_0}"
+                        REBOOT_FL || return 0
+                    fi
+                    ;;
+                *)
+                    MAIN_REBOOT || return 0
+                    ;;
+                esac
+                REBOOT_FL || return 0
+                ;;
+            '3')
+                MAIN_REBOOT || return 0
+                ;;
+            *)
+                ERROR_CONT
+                ;;
+            esac
+            ;;
+        '4' | '刷入ROM' | 'ROM')
             MISHUI_MAIN_TIP=刷入ROM
             SEE_USB_DEVICES
             NOT_UNLOCK_ERROR "刷机包不对" "Rom"
@@ -896,6 +1021,7 @@ CA_FLASH_MAIN() {
                 echo -e "${COLOR_35}[COMP]${COLOR_33}消耗电量:${COLOR_36}$(awk "BEGIN {printf \"%.2f\", $NOW_PEAGE - $OKAY_PEAGE}")%${COLOR_33}/耗时:${COLOR_36}$(awk "BEGIN {printf \"%.2f\", $FLASH_END - $FLASH_START}")s${COLOR_0}"
                 ALL_TIP_TION="${COLOR_35}[ROM]${COLOR_33}Rom已完成刷入 是否立即重启设备 >>${COLOR_0}"
                 REBOOT_USB_DEVICES
+                REBOOT_FL || return 0
             }
             echo -e "${COLOR_35}[PATH]${COLOR_33}输入${COLOR_36}'线刷包${COLOR_33}'或'${COLOR_36}解压后文件夹${COLOR_33}'的完整路径 >>${COLOR_0}"
             echo -e -n "${COLOR_33}*ᐷ ${COLOR_01}"
@@ -918,7 +1044,7 @@ CA_FLASH_MAIN() {
                     case "$YN_UPDATE_FLASH" in
                     1 | y | Y)
                         CHECK_DEVICE_FLASH_OK
-                        echo -e "${COLOR_35}[Flashing]${COLOR_33}正在以'${COLOR_33}fastboot update${COLOR_33}'命令刷入'${COLOR_36}$THE_FILE_FLASH_NAME${COLOR_33}' >>${COLOR_0}"
+                        echo -e "${COLOR_35}[Flashing]${COLOR_33}正在以'${COLOR_36}fastboot update${COLOR_33}'命令刷入'${COLOR_36}$THE_FILE_FLASH_NAME${COLOR_33}' >>${COLOR_0}"
                         if fastboot update "$THE_FILE_FLASH_NAME" && FLASH_END=$(date +%s.%N)
                         then
                             echo -e "${COLOR_36}[Done]${COLOR_33}已完成刷入${COLOR_0}"
@@ -1052,6 +1178,36 @@ CA_FLASH_MAIN() {
                 unset -f fastboot
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}刷入失败 检查刷机包是否与设备相符或刷入过程中数据线是否意外断开${COLOR_0}"
             fi
+            REBOOT_FL || return 0
+            ;;
+        '5' | 'CMD' | '执行fastboot命令')
+            MISHUI_MAIN_TIP=执行Fastboot命令
+            SEE_USB_DEVICES
+            echo -e "${COLOR_35}[CMD]${COLOR_33}输入可运行于'${COLOR_36}fastboot${COLOR_33}'的命令 输入'${COLOR_36}exit${COLOR_33}'即可退出${COLOR_0}"
+            echo
+            while true
+            do
+                read -e -p $'\001\033[0;35;1m\002[>_]\001\033[0;33;1m\002输入命令:\001\033[0;32;1m\002fastboot -s '"$SELEC_FASTBOOT_DEVICE"$' \001\033[0;1m\002' FASTBOOT_SHELL_CMD
+                if [ -z "$FASTBOOT_SHELL_CMD" ]
+                then
+                    continue
+                elif [[ "$FASTBOOT_SHELL_CMD" == exit* ]]
+                then
+                    REBOOT_FL || return 0
+                else
+                    if [[ "$FASTBOOT_SHELL_CMD" == fastboot* ]]
+                    then
+                        FASTBOOT_SHELL_CMD="${FASTBOOT_SHELL_CMD#fastboot}"
+                    fi
+                    if eval "fastboot -s $SELEC_FASTBOOT_DEVICE $FASTBOOT_SHELL_CMD"
+                    then
+                        echo -e "${COLOR_32} - 执行成功${COLOR_0}"
+                    else
+                        echo -e "${COLOR_31} - 执行失败${COLOR_0}"
+                    fi
+                    continue
+                fi
+            done
             REBOOT_FL || return 0
             ;;
         '6' | 'HOME' | '返回主页')
@@ -1668,6 +1824,7 @@ CA_FLASH_MAIN() {
             SEE_USB_DEVICES
             ALL_TIP_TION="${COLOR_35}[RE]${COLOR_33}选择需要重启的目标模式 >>${COLOR_0}"
             REBOOT_USB_DEVICES
+            REBOOT_FL || return 0
             ;;
         '6' | 'HOME' | '返回主页')
             MAIN_REBOOT || return 0
@@ -1684,128 +1841,77 @@ CA_FLASH_MAIN() {
             ;;
         esac
         ;;
-    '4' | 'UBL' | '解锁BL锁(第三方工具')
-        ADB_FASTBOOT_NAME=FASTBOOT
-        ADB_FASTBOOT_CMD=fastboot
-        MISHUI_MAIN_TIP=BootLoader解锁
+    '4' | '获取免解ROOT(测试)' | 'ROOT')
+        ADB_FASTBOOT_NAME=ADB
+        ADB_FASTBOOT_CMD=adb
+        MISHUI_MAIN_TIP='获取免解ROOT(测试)'
         MISHUI_MAIN
+        echo -e "${COLOR}[ROOT]${COLOR_33}尝试在未解锁Bootloader的情况下获取Root权限(依赖漏洞) >>${COLOR_0}"
         echo
-        echo -e "${COLOR}[UBL]${COLOR_33}支持为一加/小米设备解锁BootLoader >>${COLOR_0}"
-        echo
-        WARN_UNLOCK_BL() {
-            local UNLOCK_BOOTLOADER_YN
-            echo -e "${COLOR_35}[WARN]${COLOR_31}解锁设备的BootLoader将使设备失去保修/安全性下降 ${COLOR_33}是否继续 >>${COLOR_0}"
-            echo -e -n "${COLOR_36}[+][1›已知晓并继续/2›立即中断并退出]*ᐷ${COLOR_01}"
-            read UNLOCK_BOOTLOADER_YN
-            case "$UNLOCK_BOOTLOADER_YN" in
-            '1' | 'y' | 'Y')
-                echo -e "${COLOR_35}[INFO]${COLOR_33}即将开始解锁 确保目标设备已开启'${COLOR_36}OEM解锁${COLOR_33}'选项${COLOR_0}"
-                ;;
-            *)
+        echo -e "${COLOR_35}[Tip]${COLOR_33}截至本版本发布日期(${COLOR_36}$MST_UPDATE_TIME${COLOR_33}) KernelSU支持越狱的版本为${COLOR_36}CI构建版本${COLOR_33} 故不提供自动下载 需自行前往可信渠道(例如酷安)寻找安全的安装包文件 >>${COLOR_0}"
+        ENTER_ANY_CONTINUE
+        SEE_USB_DEVICES
+        CHUCK_PATCH_TIME() {
+            lical YN_CONTINUE_R
+            echo -e "${COLOR_31}$2${COLOR_0}"
+            echo -e "$1"
+            echo -e -n "${COLOR_36}[+][1›继续操作/2›返回主页]*ᐷ${COLOR_01}"
+            read YN_CONTINUE_ROOT
+            case "$YN_CONTINUE_ROOT" in
+            2 | n | N)
                 MAIN_REBOOT || return 0
                 ;;
             esac
         }
-        ALL_TIP_TION="${COLOR_35}[DEV]${COLOR_33}选择目标设备类型 >>${COLOR_0}"
-        ALL_OPTION=("1*-一加(OnePlus)-命令解锁" "2*-Xiaomi/Redmi-第三方工具解锁" "3*-返回主页")
-        NOW_LINE
-        SHOW_FUNC_MENU
-        case "$FUNC_CONT" in
-        '1')
-            MISHUI_MAIN_TIP='解锁一加(OnePlus)'
-            SEE_USB_DEVICES
-            WARN_UNLOCK_BL
-            echo -e "${COLOR_35}[Unlocking]${COLOR_33}正在使用'${COLOR_36}fastboot -s "$SELEC_FASTBOOT_DEVICE" flashing unlock${COLOR_33}'命令解锁...${COLOR_0}"
-            if fastboot -s "$SELEC_FASTBOOT_DEVICE" flashing unlock || fastboot -s "$SELEC_FASTBOOT_DEVICE" oem unlock
-            then
-                echo -e "${COLOR_32}[OKAY]${COLOR_33}命令执行成功${COLOR_0}"
-                echo -e "${COLOR_35}[Tip]${COLOR_33}目标设备跳转页面后点击目标设备'${COLOR_36}音量-${COLOR_33}'键选择'${COLOR_36}UNLOCK THE BOOTLOADER${COLOR_33}'选项并使用关机键确定即可完成解锁${COLOR_0}"
-                REBOOT_FL || return 0
-            else
-                echo -e "${COLOR_31}[ERROR]${COLOR_33}命令执行失败 可能因为Termux没有足够权限或者设备意外断开${COLOR_0}"
-                REBOOT_FL || return 0
-            fi
-            ;;
-        '2')
-            MISHUI_MAIN_TIP=解锁Xiaomi/Redmi
-            SEE_USB_DEVICES
-            WARN_UNLOCK_BL
-            echo -e "${COLOR_35}[GitHub]${COLOR_33}此处引用GitHub仓库'${COLOR_32}https://github.com/offici5l/MiUnlockTool${COLOR_33}'中${COLOR_36}miunlock${COLOR_33}工具的安装脚本 开发者:${COLOR_36}offici5l${COLOR_0}"
-            echo -e "${COLOR_35}[Apache-2.0]${COLOR_32}Copyright (c) 2024 offici5l${COLOR_0}"
-            echo
-            echo -e "${COLOR_35}[NE]${COLOR_33}是否立即安装第三方${COLOR_36}miunlock${COLOR_33}解锁工具 >>${COLOR_0}"
-            echo -e -n "${COLOR_36}[+][1›立即安装/2›返回主页]*ᐷ${COLOR_01}"
-            read YN_UPDATE
-            case "$YN_UPDATE" in
-            '1' | 'y' | 'Y')
-                echo -e "${COLOR_35}[Tip]${COLOR_33}长时间未开始安装尝试连接魔法后再试${COLOR_0}"
-                echo
-                echo -e "${COLOR_35}[Installing]${COLOR_33}正在安装第三方BootLoader解锁工具:${COLOR_36}miunlock${COLOR_0}...${COLOR_0}"
-                if curl -sS https://raw.githubusercontent.com/offici5l/MiUnlockTool/main/.install | bash; CLEAR_READ_INPUT
-                then
-                    echo -e "${COLOR_32}[OKAY]${COLOR_33}工具'${COLOR_36}miunlock${COLOR_33}'安装成功${COLOR_0}"
-                    echo
-                    ENTER_ANY_CONTINUE
-                    sleep 0.5
-                    miunlock
-                    echo -e "${COLOR_35}[BACK]${COLOR_33}已返回脚本${COLOR_0}"
-                    REBOOT_FL || return 0
-                else
-                    unset INSTALL_ADB_FB_CLI
-                    echo -e "${COLOR_31}[ERROR]${COLOR_36}$NOT_INSTALL_TOOLS${COLOR_33}安装失败 尝试手动执行命令 >>${COLOR_0}"
-                    echo -e "${COLOR_33} - 命令: ${COLOR_36}curl -sS https://raw.githubusercontent.com/offici5l/MiUnlockTool/main/.install | bash${COLOR_0}"
-                    REBOOT_FL || return 0
-                fi
-                ;;
-            *)
-                MAIN_REBOOT || return 0
-                ;;
-            esac
+        DEVICES_PATCHTIME="$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.build.version.security_patch 2>>$MST_LOG || echo error)"
+        echo -e -n "${COLOR_35}[PATCH]${COLOR_33}校验目标设备最新安全补丁更新日期:${COLOR_36}$DEVICES_PATCHTIME${COLOR_33}...${COLOR_0}"
+        if [ "$DEVICES_PATCHTIME" = error ]
+        then
+            CHUCK_PATCH_TIME "${COLOR_31}[ERROR]${COLOR_33}无法读取目标设备安全补丁更新日期 此功能依赖的漏洞需要安全补丁日期低于${COLOR_36}2826年3月${COLOR_33} 是否继续 >>${COLOR_0}" 未知
+        elif [[ "$DEVICES_PATCHTIME" > 2026-03-01 ]]
+        then
+            CHUCK_PATCH_TIME "${COLOR_31}[!]${COLOR_33}目标设备安全补丁版本(${COLOR_36DEVICES_PATCHTIME${COLOR_33}}$)大于${COLOR_36}2026年3月${COLOR_33} 此功能依赖的漏洞可能已被修复 是否继续 >>${COLOR_0}" 不通过
+        else
+            echo -e "${COLOR_32}通过${COLOR_0}"
+        fi
+        echo -e ALL_TIP_TION="${COLOR_35}[RE]${COLOR_33}是否立即目标设备重启至Fastboot >>${COLOR_0}"
+        REBOOT_USB_DEVICES
+        ADB_FASTBOOT_NAME=FASTBOOT
+        ADB_FASTBOOT_CMD=fastboot
+        SEE_USB_DEVICES
+        echo -e "${COLOR_33}[Setting]${COLOR_33}正在尝试通过fastboot命令将SELinux设置为宽容模式...${COLOR_0}"
+        if ! fastboot -s "$SELEC_FASTBOOT_DEVICE" oem set-gpu-preemption 0 androidboot.selinux=permissive &>>$MST_LOG
+        then
+            echo -e "${COLOR_31}[ERROR]${COLOR_33}设置失败 该漏洞在目标设备上可能已修复${COLOR_0}"
             REBOOT_FL || return 0
-            ;;
-        '3')
-            MAIN_REBOOT || return 0
-            ;;
-        *)
-            ERROR_CONT
-            ;;
-        esac
-        ;;
-    '5' | '安装第三方Termux-Fastboot&ADB工具' | 'ISNT')
-        MISHUI_MAIN_TIP='安装第三方F&A工具'
-        MISHUI_MAIN
+        fi
+        echo -e "${COLOR_31}[OKAY]${COLOR_33}操作成功 目标设备的SELinux已被设置为宽容模式${COLOR_0}"
         echo
-        echo -e "$COLOR[INST]${COLOR_33}安装更好用的第三方${COLOR_36}ADB&Fastboot${COLOR_33}命令 >>${COLOR_0}"
-        ADB_FASTBOOT_VER
-        echo -e "${COLOR_35}[GitHub]${COLOR_33}此处引用GitHub仓库'${COLOR_32}https://github.com/nohajc/termux-adb${COLOR_33}'中${COLOR_36}ADB&Fastboot${COLOR_33}工具的安装脚本 开发者:${COLOR_36}nohajc${COLOR_0}"
-        echo -e "${COLOR_35}[MIT]${COLOR_32}Copyright (c) 2022 nohajc${COLOR_0}"
-        echo
-        echo -e "${COLOR_35}[NE]${COLOR_33}是否立即安装第三方${COLOR_36}ADB&Fastboot${COLOR_33}命令 >>${COLOR_0}"
-        echo -e -n "${COLOR_36}[+][1›立即安装/2›返回主页]*ᐷ${COLOR_01}"
-        read YN_UPDATE
-        case "$YN_UPDATE" in
-        '1' | 'y' | 'Y')
-            echo -e "${COLOR_35}[Tip]${COLOR_33}长时间未开始安装尝试连接魔法再试${COLOR_0}"
-            echo
-            echo -e "${COLOR_35}[Installing]${COLOR_33}正在安装第三方${COLOR_36}ADB&Fastboot${COLOR_33}命令...${COLOR_0}"
-            if curl -sS https://raw.githubusercontent.com/nohajc/termux-adb/master/install.sh | bash; CLEAR_READ_INPUT
+        echo -e "${COLOR_35}[PERM]${COLOR_33}是否立即使目标设备以SELinux的宽容模式启动系统 >>${COLOR_0}"
+        echo -e -n "${COLOR_36}[+][1›立即启动系统/2›撤销设置并冷重启]*ᐷ${COLOR_01}"
+        read YN_CONTINUE_SYSTEM
+        case "$YN_CONTINUE_SYSTEM" in
+        1 | y | Y)
+            echo -e "${COLOR_35}[Start]${COLOR_33}正在启动系统...${COLOR_0}"
+            if ! fastboot -s "$SELEC_FASTBOOT_DEVICE" continue
             then
-                echo -e "${COLOR_32}[OKAY]${COLOR_33}工具包'${COLOR_36}ADB&Fastboot${COLOR_33}'安装成功${COLOR_0}"
-                ADB_FASTBOOT_VER
-                REBOOT_FL || return 0
-            else
-                unset INSTALL_ADB_FB_CLI
-                echo -e "${COLOR_31}[ERROR]${COLOR_36}$NOT_INSTALL_TOOLS${COLOR_33}安装失败 尝试手动执行命令 >>${COLOR_0}"
-                echo -e "${COLOR_33} - 命令: ${COLOR_36}curl -s https://raw.githubusercontent.com/nohajc/termux-adb/master/install.sh | bash${COLOR_0}"
+                echo -e "${COLOR_31}[ERROR]${COLOR_33}命令执行失败 无法直接启动系统${COLOR_0}"
+                ALL_TIP_TION="${COLOR_35}[RE]${COLOR_33}选择需要重启的目标模式 >>${COLOR_0}"
+                REBOOT_USB_DEVICES
                 REBOOT_FL || return 0
             fi
+            echo -e "${COLOR_32}[OKAY]${COLOR_33}命令执行成功 系统正在启动${COLOR_0}"
+            echo -e "${COLOR_35}[Tip]${COLOR_33}当启动完成后只需要进入${COLOR_36}构建版KernelSU${COLOR_33}点击${COLOR_36}越狱${COLOR_33}按钮便可以获取Root权限${COLOR_0}"
+            echo -e "${COLOR_35}[INFO]${COLOR_33}通过此方法获取ROOT权限后不可修改${COLOR_36}/system /vndor${COLOR_33}以及所有受AVB保护的分区如:${COLOR_36}Boot Recovery ...${COLOR_0}"
             ;;
         *)
-            MAIN_REBOOT || return 0
+            ALL_TIP_TION="${COLOR_35}[RE]${COLOR_33}选择需要重启的目标模式 >>${COLOR_0}"
+            REBOOT_USB_DEVICES
             ;;
         esac
+        REBPOT_FL || return 0
         ;;
-    '6' | '关于/帮助/更新' | '&')
+    '5' | '关于/帮助/更新' | '&')
         MISHUI_MAIN_TIP=关于/帮助/更新
         MISHUI_MAIN
         echo
@@ -1892,7 +1998,7 @@ CA_FLASH_MAIN() {
                     ;;
                 esac
                 echo -e "${COLOR_35}[Download]${COLOR_33}正在下载云端最新MiShuiTool进行覆盖更新...${COLOR_0}"
-                if curl -o "$MST_HOME/Update/MiShuiTool" "$MISHUITOOL_URL" -o $MST_HOME/assets/Text/MST-Head.txt "$(base64 -d <<< "aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1hhSHVpem9uL01pU2h1aVRvb2wtTVNUL21haW4vYXNzZXRzL1RleHQvTVNULUhlYWQudHh0Cg==")" &>>$MST_LOG && shc -rf "$MST_HOME/Update/MiShuiTool" -o "$MST_FILE_PATH" &>>$MST_LOG && chmod 777 "$MST_FILE_PATH"
+                if curl -o "$MST_HOME/Update/MiShuiTool" "$MISHUITOOL_URL" && shc -rf "$MST_HOME/Update/MiShuiTool" -o "$MST_FILE_PATH" &>>$MST_LOG && chmod 777 "$MST_FILE_PATH"
                 then
                     rm $MST_HOME/Update/MiShuiTool
                     echo -e "${COLOR_32}[OKAY]${COLOR_33}覆盖更新完成 文件路径:${COLOR_36}$MST_FILE_PATH${COLOR_0}"
@@ -1950,7 +2056,7 @@ CA_FLASH_MAIN() {
         
         REBOOT_FL || return 0
         ;;
-    '7' | '退出MST工具箱' | 'EXIT')
+    '6' | '退出MST工具箱' | 'EXIT')
         EXIT_SHELL
         ;;
     *)
@@ -2054,9 +2160,9 @@ check | -c | --check)
     exit 1
     ;;
 esac
-if [ ! -d $HOME/MST/ ]
+if [ ! -d $MST_HOME/ ]
 then
-    if mkdir -p $HOME/MST &>>$MST_LOG
+    if mkdir -p $MST_HOME &>>$MST_LOG
     then
         HEAD_TIP_MISHUITOOL="${COLOR_32}Okay:${COLOR_31}已自动初始化运行环境${COLOR_0}"
     else
@@ -2064,27 +2170,27 @@ then
         EXIT_SHELL 1
     fi
 fi
-
 trap wait EXIT
-if [ ! -f "$HOME/MST/MST运行日志.log" ]
+if [ ! -f "$MST_HOME/MST运行日志.log" ]
 then
-    mkdir -p $HOME/MST/ &>>$MST_LOG
+    mkdir -p $MST_HOME/ &>>$MST_LOG
     touch $MST_LOG
-elif [ "$(stat -c%s $HOME/MST/MST运行日志.log)" -gt 10240 ]
+elif [ "$(stat -c%s $MST_HOME/MST运行日志.log)" -gt 10240 ]
 then
     echo "[$(date +%Y-%m-%d) $(date +%H:%M:%S)] 日志文件过大已自动清除" &>$MST_LOG
 fi
-mkdir -p $MST_HOME/assets/Text/ &>>$MST_LOG
+mkdir -p $MST_HOME/
 bash -c true
 if [ "$COLUMNS" -lt "65" ]
 then
      MAIN_HAED_TIP
-     echo -e "${COLOR_35}[INFO]${COLOR_33}当前终端宽度过窄 为保证视觉效果需将终端宽度调整为'${COLOR_36}65${COLOR_33}'${COLOR_0}"
+     echo -e "${COLOR_35}[INFO]${COLOR_33}当前终端宽度过窄 为保证视觉效果需将终端宽度调整为'${COLOR_36}65${COLOR_33}'以上${COLOR_0}"
     echo -e "${COLOR_35}[Tip]${COLOR_33}双指捏合屏幕可缩小终端界面 当下方红色长条(${COLOR_36}-----...${COLOR_33})缩为一行后即为调整成功 从此刻开始每${COLOR_36}0.5s${COLOR_33}自动检查一次终端宽度是否合格 如果终端宽度已合格将自动进入主页 检测超${COLOR_36}30s${COLOR_33}则超时退出${COLOR_0}"
     echo -e -n "${COLOR_31}-------------------------------------------------------------------${COLOR_0}"
+    TIMEOUT_NUMBER=1
     while [ "$COLUMNS" -lt 65 ]
     do
-        if [ "$TIMEOUT_NUMBER" -lt 60 ]
+        if [ "$TIMEOUT_NUMBER" = 60 ]
         then
             echo -e "${COLOR_31}[!]${COLOR_33}已超时自动退出${COLOR_0}"
             EXIT_SHELL 1
@@ -2094,6 +2200,6 @@ then
     done
     echo -e "${COLOR_32}"
     echo -e "${COLOR_32}[OKAY]${COLOR_33}宽度已合格即将进入主页 如果进入后发现图形错位可尝试退出脚本后使用'${COLOR_36}mishuitool${COLOR_33}'命令重新启动MST工具箱${COLOR_0}"
-    sleep 7.5
+    sleep 5
 fi
 CA_FLASH_MAIN
