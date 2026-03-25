@@ -1,4 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/bash
+BIN="$PATH"; PATH="/system/bin:$BIN"
 bash -c true; export COLOR_RM="\033[9m"
 export COLOR_30="\033[0;30;1m"; export COLOR_31="\033[0;31;1m"
 export COLOR_32="\033[0;32;1m"; export COLOR_33="\033[0;33;1m"
@@ -9,9 +10,9 @@ STORAGE=/storage/emulated/0
 MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
-TERMUX_CMD_PATH=/data/data/com.termux/files/usr/bin
+TERMUX_CMD_PATH="${PATH%%:*}"
 MST_UPDATE_TIME='2026.3.25 Beta'
-NOW_VERSION=10009
+NOW_VERSION=10010
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -434,7 +435,7 @@ MISHUI_MAIN() {
 CA_FLASH_MAIN() {
     MISHUI_MAIN_TIP=MiShuiTool
     MISHUI_MAIN
-    if [ ! "$PATH" = /data/data/com.termux/files/usr/bin ]
+    if [[ ! "$PATH" = **/data/data/com.termux/files/usr/bin** ]]
     then
         echo -e "${COLOR_31}[!]${COLOR_33}当前环境(${COLOR_36}$PATH${COLOR_33})非Termux无法运行${COLOR_0}"
         echo -e "${COLOR_35}[Tip]${COLOR_33}在Termux中使用'${COLOR_36} bash $0 ${COLOR_33}'命令执行脚本${COLOR_0}"
