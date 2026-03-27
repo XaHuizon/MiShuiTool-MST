@@ -12,7 +12,7 @@ MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
 MST_UPDATE_TIME='2026.3.25 Beta'
-NOW_VERSION=10010
+NOW_VERSION=10011
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -1864,12 +1864,12 @@ CA_FLASH_MAIN() {
                 ;;
             esac
         }
-        DEVICES_PATCHTIME="$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.build.version.security_patch 2>>$MST_LOG || echo error)"
         echo -e -n "${COLOR_35}[PATCH]${COLOR_33}校验目标设备最新安全补丁更新日期:${COLOR_36}$DEVICES_PATCHTIME${COLOR_33}...${COLOR_0}"
+        DEVICES_PATCHTIME="$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.build.version.security_patch 2>>$MST_LOG || echo error)"
         if [ "$DEVICES_PATCHTIME" = error ]
         then
             CHUCK_PATCH_TIME "${COLOR_31}[ERROR]${COLOR_33}无法读取目标设备安全补丁更新日期 此功能依赖的漏洞需要安全补丁日期低于${COLOR_36}2826年3月${COLOR_33} 是否继续 >>${COLOR_0}" 未知
-        elif [[ "$DEVICES_PATCHTIME" > 2026-03-01 ]]
+        elif [[ "$DEVICES_PATCHTIME" > 2026-02-01 ]]
         then
             CHUCK_PATCH_TIME "${COLOR_31}[!]${COLOR_33}目标设备安全补丁版本(${COLOR_36DEVICES_PATCHTIME${COLOR_33}}$)大于${COLOR_36}2026年3月${COLOR_33} 此功能依赖的漏洞可能已被修复 是否继续 >>${COLOR_0}" 不通过
         else
