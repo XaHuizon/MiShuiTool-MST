@@ -1,5 +1,5 @@
 #!/data/data/com.termux/files/usr/bin/bash
-BIN="$PATH"; PATH="/system/bin:$BIN"
+BIN="$PATH"; PATH="$BIN:/system/bin"
 bash -c true; export COLOR_RM="\033[9m"
 export COLOR_30="\033[0;30;1m"; export COLOR_31="\033[0;31;1m"
 export COLOR_32="\033[0;32;1m"; export COLOR_33="\033[0;33;1m"
