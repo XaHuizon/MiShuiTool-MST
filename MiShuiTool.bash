@@ -1894,7 +1894,7 @@ CA_FLASH_MAIN() {
             esac
             echo
             echo -e "${COLOR_35}[Downloading]${COLOR_33}正在下载KernelSU...${COLOR_0}"
-            if ! curl --progress-bar -L -o  "$DOWNLOAD_PATH/KernelSU_v3.2.0_32389-Releases.apk" 'https://github.com/tiann/KernelSU/releases/download/v3.2.0/KernelSU_v3.2.0_32389-release.apk' 2>>$MST_LOG
+            if ! curl --progress-bar -L -o  "$DOWNLOAD_PATH/KernelSU_v3.2.0_32389-Releases.apk" 'https://github.com/tiann/KernelSU/releases/download/v3.2.0/KernelSU_v3.2.0_32389-release.apk'
             then
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}下载失败 尝试连接魔法或手动下载安装后重试${COLOR_0}"
                 REBOOT_FL || return 0
