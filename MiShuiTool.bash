@@ -1916,6 +1916,8 @@ CA_FLASH_MAIN() {
         if ! fastboot -s "$SELEC_FASTBOOT_DEVICE" oem set-gpu-preemption 0 androidboot.selinux=permissive &>>$MST_LOG
         then
             echo -e "${COLOR_31}[ERROR]${COLOR_33}设置失败 该漏洞在目标设备上可能已修复${COLOR_0}"
+            ALL_TIP_TION="${COLOR_35}[RE]${COLOR_33}选择需要重启的目标模式 >>${COLOR_0}"
+            REBOOT_USB_DEVICES
             REBOOT_FL || return 0
         fi
         echo -e "${COLOR_31}[OKAY]${COLOR_33}操作成功 目标设备的SELinux已被设置为宽容模式${COLOR_0}"
@@ -1934,7 +1936,7 @@ CA_FLASH_MAIN() {
                 REBOOT_FL || return 0
             fi
             echo -e "${COLOR_32}[OKAY]${COLOR_33}命令执行成功 系统正在启动${COLOR_0}"
-            echo -e "${COLOR_35}[Tip]${COLOR_33}当启动完成后只需要进入${COLOR_36}构建版KernelSU${COLOR_33}点击${COLOR_36}越狱${COLOR_33}按钮便可以获取Root权限${COLOR_0}"
+            echo -e "${COLOR_35}[Tip]${COLOR_33}当启动完成后只需要进入${COLOR_36}KernelSU${COLOR_33}点击${COLOR_36}越狱${COLOR_33}按钮便可以获取Root权限${COLOR_0}"
             echo -e "${COLOR_35}[INFO]${COLOR_33}通过此方法获取ROOT权限后不可修改${COLOR_36}/system /vndor${COLOR_33}以及所有受AVB保护的分区如:${COLOR_36}Boot Recovery ...${COLOR_0}"
             ;;
         *)
