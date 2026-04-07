@@ -11,8 +11,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='2026.3.27 Beta'
-NOW_VERSION=10012
+MST_UPDATE_TIME='2026.4.7 Beta'
+NOW_VERSION=10013
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -166,8 +166,7 @@ SELEC_ADB_FB_DEVICE() {
     case "$1" in
     'adb')
         echo -e "${COLOR_35}[SELE]${COLOR_33}输入要选择的设备序号(多选以'${COLOR_36}-${COLOR_33}'符号分隔)${COLOR_0}"
-        echo -e -n "${COLOR_33}*ᐷ ${COLOR_01}"
-        read SELE_NEED_DEVICES
+        read -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' SELE_NEED_DEVICES
         if [[ "$SELE_NEED_DEVICES" =~ ^[0-9]+(-[0-9]+)*$ ]]
         then
             USR_OKAY_DEVICES="$(sed -n "$(sed 's/-/p;/g' <<< "${SELE_NEED_DEVICES%%-}")p" <<< "$ALL_SEARCH")"
@@ -304,7 +303,7 @@ USB_DEVICES_ADB() {
     CPUUN=$(adb -s "$SELEC_ADB_DEVICE" shell grep -c "processor" /proc/cpuinfo 2>>$MST_LOG)
     DEVONE=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.product.device 2>>$MST_LOG)
     DEVTWO=$(adb -s "$SELEC_ADB_DEVICE" shell settings get global device_name 2>>$MST_LOG)
-    UINAME=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.build.display.id 2>>$MST_LOG)
+    UINAME=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.build.version.incremental 2>>$MST_LOG)
     KERNEL=$(adb -s "$SELEC_ADB_DEVICE" shell uname -r 2>>$MST_LOG)
     WIFI=$(adb -s "$SELEC_ADB_DEVICE" shell getprop gsm.version.baseband 2>>$MST_LOG)
     DEV_SDK=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.build.version.sdk 2>>$MST_LOG)
@@ -335,21 +334,26 @@ ADB_FASTBOOT_VER() {
 }
 REBOOT_USB_DEVICES() {
     local REBOOT_PT REBOOT_NAME REBOOT_TAP
-    ALL_OPTION=("1*-重启至FASTBOOT-线刷模式" "2*-重启至RECOVERY-卡刷/恢复模式" "3*-重启至系统" "4*-返回主页")
-    NOW_LINE
-    SHOW_FUNC_MENU
+    if [ -n "$1" ]
+    then
+        FUNC_CONT="$1"
+    else
+        ALL_OPTION=("1*-重启至FASTBOOT-线刷模式" "2*-重启至RECOVERY-卡刷/恢复模式" "3*-重启至系统" "4*-返回主页")
+        NOW_LINE
+        SHOW_FUNC_MENU
+    fi
     case "$FUNC_CONT" in
-    '1')
-        REBOOT_PT='fastboot'
+    '1' | fastboot)
+        REBOOT_PT='bootloader'
         REBOOT_NAME='FASTBOOT'
         REBOOT_TAP='+音量-'
         ;;
-    '2')
+    '2' | recovery)
         REBOOT_PT='recovery'
         REBOOT_NAME='RECOVERY'
         REBOOT_TAP='+音量+'
         ;;
-    '3')
+    '3' | system)
         REBOOT_PT=''
         REBOOT_NAME='系统'
         REBOOT_TAP=''
@@ -484,7 +488,7 @@ CA_FLASH_MAIN() {
     fi
     INSTALL_THE_MUST_CMD 'pkg install termux-api -y' 'Termux-API' 'termux-usb'
     echo -e "${COLOR_35}[DEV]${COLOR_33}›1*-${COLOR_36}管理连接设备${COLOR_35}[FB]${COLOR_33}›2*-${COLOR_36}Fastboot刷机工具${COLOR_0}"
-    echo -e "${COLOR_35}[ADB]${COLOR_33}›3*-${COLOR_36}ADB调试工具 ${COLOR_35}[ROOT]${COLOR_33}›4*-${COLOR_36}获取临时Root(测试)${COLOR_0}"
+    echo -e "${COLOR_35}[ADB]${COLOR_33}›3*-${COLOR_36}ADB调试工具 ${COLOR_35}[AUTO]${COLOR_33}›4*-${COLOR_36}自动联合操作${COLOR_0}"
     echo -e "${COLOR_35}[&]${COLOR_33}›5*-${COLOR_36}关于/帮助/更新${COLOR_35}[EXIT]${COLOR_33}›6*-${COLOR_36}退出MST工具箱${COLOR_0}"
     echo -e -n "${COLOR}[-${COLOR_32}CA${COLOR}-]${COLOR_33}输入选项*ᐷ${COLOR_0}"
     CLEAR_READ_INPUT
@@ -762,8 +766,7 @@ CA_FLASH_MAIN() {
                 local IMG_FILE_PA IMG_FILE_NAME IMG_FILE_PATH
                 CHUCK_SLOT_FLASH
                 echo -e "${COLOR_35}[FILE]${COLOR_33}输入要刷入'${COLOR_36}$FLASH_IMG_NAME${COLOR_33}'分区的镜像文件路径 >>${COLOR_0}"
-                echo -e -n "${COLOR_33}*ᐷ ${COLOR_01}"
-                read IMG_FILE_PATH
+                read -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' IMG_FILE_PATH
                 IMG_FILE_NAME=$(basename "$IMG_FILE_PATH" 2>>$MST_LOG)
                 if [ -z "$IMG_FILE_PATH" ]
                 then
@@ -780,7 +783,7 @@ CA_FLASH_MAIN() {
                     ALL_TIP_TION="${COLOR_32}[OKAY]${COLOR_33}刷入成功 是否立即重启 >>${COLOR_0}"
                     REBOOT_USB_DEVICES
                 else
-                    echo -e "${COLOR_32}[ERROR]${COLOR_33}刷入失败 检查设备是否正确连接或镜像文件是否正确${COLOR_0}"
+                    echo -e "${COLOR_31}[ERROR]${COLOR_33}刷入失败 检查设备是否正确连接或镜像文件是否正确${COLOR_0}"
                 fi
                 REBOOT_FL || return 0
             }
@@ -888,7 +891,7 @@ CA_FLASH_MAIN() {
                 MISHUI_MAIN_TIP='解锁一加(OnePlus)'
                 SEE_USB_DEVICES
                 WARN_UNLOCK_BL
-                echo -e "${COLOR_35}[Unlocking]${COLOR_33}正在使用'${COLOR_36}fastboot -s "$SELEC_FASTBOOT_DEVICE" flashing unlock${COLOR_33}'命令解锁...${COLOR_0}"
+                echo -e "${COLOR_35}[Unlocking]${COLOR_33}正在使用'${COLOR_36}fastboot -s "$SELEC_FASTBOOT_DEVICE" flashing unlock${COLOR_33}'命令解锁...${COLOR_30}"
                 if fastboot -s "$SELEC_FASTBOOT_DEVICE" flashing unlock || fastboot -s "$SELEC_FASTBOOT_DEVICE" oem unlock
                 then
                     echo -e "${COLOR_32}[OKAY]${COLOR_33}命令执行成功${COLOR_0}"
@@ -1027,8 +1030,7 @@ CA_FLASH_MAIN() {
                 REBOOT_FL || return 0
             }
             echo -e "${COLOR_35}[PATH]${COLOR_33}输入${COLOR_36}'线刷包${COLOR_33}'或'${COLOR_36}解压后文件夹${COLOR_33}'的完整路径 >>${COLOR_0}"
-            echo -e -n "${COLOR_33}*ᐷ ${COLOR_01}"
-            read ZIP_DIR_PATH
+            read -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' ZIP_DIR_PATH
             if [ -f "$ZIP_DIR_PATH" ]
             then
                 echo -e "${COLOR_35}[ZIP]${COLOR_33}该路径指向为:${COLOR_36}压缩包${COLOR_0}"
@@ -1295,8 +1297,7 @@ CA_FLASH_MAIN() {
                 local SEARCH_LINR OKAY_SEARCH
                 local START_YN_APP ONE_SEARCH
                 echo -e "${COLOR_35}[PKGE]${COLOR_33}输入'${COLOR_36}包名${COLOR_33}'或'${COLOR_36}包名关键词${COLOR_33}'以搜索应用(多选以'${COLOR_36}-${COLOR_33}'符号分隔) >>${COLOR_0}"
-                echo -e -n "${COLOR_33}*ᐷ ${COLOR_01}"
-                read INPUT_PKGE_NAME
+                read -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' INPUT_PKGE_NAME
                 if [ -z "$INPUT_PKGE_NAME" ]
                 then
                     echo -e "${COLOR_31}[!]${COLOR_33}此处不可为空${COLOR_0}"
@@ -1425,7 +1426,7 @@ CA_FLASH_MAIN() {
                     MISHUI_MAIN_TIP=安装APK
                     SEE_USB_DEVICES
                     echo -e "${COLOR_35}[PATH]${COLOR_33}输入需要安装的apk文件位于本机的完整路径 >>${COLOR_0}"
-                    echo -e -n "${COLOR_33}*ᐷ ${COLOR_01}"
+                    read -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' APK_INSTALL_PATH
                     read APK_INSTALL_PATH
                     INSTALL_APK_NAMR="$(basename "$APK_INSTALL_PATH")"
                     if [ -z "$APK_INSTALL_PATH" ]
@@ -1541,8 +1542,7 @@ CA_FLASH_MAIN() {
                 SEE_USB_DEVICES
                 SEARCH_THE_NEED_APPS
                 echo -e "${COLOR_35}[DL]${COLOR_33}输入存放Apk文件的文件夹路径(留空自动存储至'${COLOR_36}Download${COLOR_33}'文件夹) >>${COLOR_0}"
-                echo -e -n "${COLOR_33}*ᐷ ${COLOR_01}"
-                read THE_DOWNLOAD_PATH
+                read -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' THE_DOWNLOAD_PATH
                 if [ -n "$THE_DOWNLOAD_PATH" ] && [ -d "$THE_DOWNLOAD_PATH" ]
                 then
                     THE_DOWNLOAD_PATH="${THE_DOWNLOAD_PATH%%/}"
@@ -1844,107 +1844,334 @@ CA_FLASH_MAIN() {
             ;;
         esac
         ;;
-    '4' | '获取临时ROOT(测试)' | 'ROOT')
-        ADB_FASTBOOT_NAME=ADB
-        ADB_FASTBOOT_CMD=adb
-        MISHUI_MAIN_TIP='获取临时ROOT(测试)'
-        MISHUI_MAIN
-        echo -e "${COLOR}[ROOT]${COLOR_33}尝试在未解锁Bootloader的情况下获取Root权限(依赖漏洞) >>${COLOR_0}"
-        echo
-        SEE_USB_DEVICES
-        CHUCK_PATCH_TIME() {
-            lical YN_CONTINUE_R
-            echo -e "${COLOR_31}$2${COLOR_0}"
-            echo -e "$1"
-            echo -e -n "${COLOR_36}[+][1›继续操作/2›返回主页]*ᐷ${COLOR_01}"
-            read YN_CONTINUE_ROOT
-            case "$YN_CONTINUE_ROOT" in
-            2 | n | N)
-                MAIN_REBOOT || return 0
-                ;;
-            esac
-        }
-        echo -e -n "${COLOR_35}[PATCH]${COLOR_33}校验目标设备最新安全补丁更新日期:${COLOR_36}$DEVICES_PATCHTIME${COLOR_33}...${COLOR_0}"
-        DEVICES_PATCHTIME="$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.build.version.security_patch 2>>$MST_LOG || echo error)"
-        if [ "$DEVICES_PATCHTIME" = error ]
-        then
-            CHUCK_PATCH_TIME "${COLOR_31}[ERROR]${COLOR_33}无法读取目标设备安全补丁更新日期 此功能依赖的漏洞需要安全补丁日期低于${COLOR_36}2826年3月${COLOR_33} 是否继续 >>${COLOR_0}" 未知
-        elif [[ "$DEVICES_PATCHTIME" > 2026-02-01 ]]
-        then
-            CHUCK_PATCH_TIME "${COLOR_31}[!]${COLOR_33}目标设备安全补丁版本(${COLOR_36DEVICES_PATCHTIME${COLOR_33}}$)大于${COLOR_36}2026年3月${COLOR_33} 此功能依赖的漏洞可能已被修复 是否继续 >>${COLOR_0}" 不通过
-        else
-            echo -e "${COLOR_32}通过${COLOR_0}"
-        fi
-        declare "$(adb -s "$SELEC_ADB_DEVICE" shell dumpsys package me.weishu.kernelsu 2>>$MST_LOG | awk $'/versionCode/ {print $1}')"
-        if [ -z "$versionCode" ] || [ "$versionCode" -lt 32389 ]
-        then
-            echo -e "${COLOR_35}[KSU]${COLOR_33}需要从KernrlSU的官方仓库下载Releases可越狱版本 >>${COLOR_0}"
-            ADB_FASTBOOT_VER
-            echo -e "${COLOR_35}[GitHub]${COLOR_33}此处下载GitHub仓库'${COLOR_32}https://github.com/tiann/KernelSU/${COLOR_33}'中官方的${COLOR_36}KernelSU${COLOR_33}正式发布版${COLOR_0}"
-            echo -e "${COLOR_35}[DEV]${COLOR_33}开发者:${COLOR_36}tiann${COLOR_0}"
-            echo -e "${COLOR_35}[GPL-3.0]${COLOR_32}Copyright (c) 2026 tiann${COLOR_0}"
+    '4' | '自动联合操作' | 'AUTO')
+        ALL_TIP_TION="${COLOR_35}[APP]${COLOR_33}已支持ADB激活的应用 >>${COLOR_0}"
+        ALL_OPTION=("1*-获取临时Root(测试)" "2*-一键Root" "3*-返回主页")
+        NOW_LINE
+        SHOW_FUNC_MENU
+        case "$FUNC_CONT" in
+        '1')
+            ADB_FASTBOOT_NAME=ADB
+            ADB_FASTBOOT_CMD=adb
+            MISHUI_MAIN_TIP='获取临时ROOT(测试)'
+            MISHUI_MAIN
+            echo -e "${COLOR}[ROOT]${COLOR_33}尝试在未解锁Bootloader的情况下获取Root权限(依赖漏洞) >>${COLOR_0}"
             echo
-            echo -e "${COLOR_35}[D&I]${COLOR_33}是否立即下载并安装${COLOR_36}KernelSU${COLOR_33}正式版(将消耗'${COLOR_36}10MB${COLOR_33}'流量) >>${COLOR_0}"
-            echo -e -n "${COLOR_36}[+][1›立即下载并安装/2›返回主页]*ᐷ${COLOR_01}"
-            read YN_DL_KERNELSU
-            case "$YN_DL_KERNELSU" in
-            2 | n | N)
-                MAIN_REBOOT || return 0
-                ;;
-            esac
-            echo
-            echo -e "${COLOR_35}[Downloading]${COLOR_33}正在下载KernelSU...${COLOR_0}"
-            if ! curl --progress-bar -L -o  "$DOWNLOAD_PATH/KernelSU_v3.2.0_32389-Releases.apk" 'https://github.com/tiann/KernelSU/releases/download/v3.2.0/KernelSU_v3.2.0_32389-release.apk'
+            SEE_USB_DEVICES
+            CHUCK_PATCH_TIME() {
+                lical YN_CONTINUE_R
+                echo -e "${COLOR_31}$2${COLOR_0}"
+                echo -e "$1"
+                echo -e -n "${COLOR_36}[+][1›继续操作/2›返回主页]*ᐷ${COLOR_01}"
+                read YN_CONTINUE_ROOT
+                case "$YN_CONTINUE_ROOT" in
+                2 | n | N)
+                    MAIN_REBOOT || return 0
+                    ;;
+                esac
+            }
+            echo -e -n "${COLOR_35}[PATCH]${COLOR_33}校验目标设备最新安全补丁更新日期:${COLOR_36}$DEVICES_PATCHTIME${COLOR_33}...${COLOR_0}"
+            DEVICES_PATCHTIME="$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.build.version.security_patch 2>>$MST_LOG || echo error)"
+            if [ "$DEVICES_PATCHTIME" = error ]
             then
-                echo -e "${COLOR_31}[ERROR]${COLOR_33}下载失败 尝试连接魔法或手动下载安装后重试${COLOR_0}"
-                REBOOT_FL || return 0
+                CHUCK_PATCH_TIME "${COLOR_31}[ERROR]${COLOR_33}无法读取目标设备安全补丁更新日期 此功能依赖的漏洞需要安全补丁日期低于${COLOR_36}2826年3月${COLOR_33} 是否继续 >>${COLOR_0}" 未知
+            elif [[ "$DEVICES_PATCHTIME" > 2026-01-01 ]]
+            then
+                CHUCK_PATCH_TIME "${COLOR_31}[!]${COLOR_33}目标设备安全补丁版本(${COLOR_36DEVICES_PATCHTIME${COLOR_33}}$)大于${COLOR_36}2026年3月${COLOR_33} 此功能依赖的漏洞可能已被修复 是否继续 >>${COLOR_0}" 不通过
+            else
+                echo -e "${COLOR_32}通过${COLOR_0}"
             fi
-            echo -e "${COLOR_35}[Installing]${COLOR_33}下载完毕正在安装KernelSU...${COLOR_30}"
-            if ! adb -s "$SELEC_ADB_DEVICE" install "$DOWNLOAD_PATH/KernelSU_v3.2.0_32389-Releases.apk"
+            declare "$(adb -s "$SELEC_ADB_DEVICE" shell dumpsys package me.weishu.kernelsu 2>>$MST_LOG | awk $'/versionCode/ {print $1}')"
+            if [ -z "$versionCode" ] || [ "$versionCode" -lt 32389 ]
             then
-                echo -e "${COLOR_31}[ERROR]${COLOR_33}自动安装失败 若目标设备有安装授权弹窗需点击允许${COLOR_0}"
-                echo -e "${COLOR_35}[Tip]${COLOR_33}此前下载的KernelSU安装包位于本机路径:${COLOR_36}$DOWNLOAD_PATH/KernelSU_v3.2.0_32389-Releases.apk${COLOR_33} 尝试在目标设备上安装后再试${COLOR_0}"
-                REBOOT_FL || return 0
+                echo -e "${COLOR_35}[KSU]${COLOR_33}需要从KernrlSU的官方仓库下载Releases可越狱版本 >>${COLOR_0}"
+                ADB_FASTBOOT_VER
+                echo -e "${COLOR_35}[GitHub]${COLOR_33}此处下载GitHub仓库'${COLOR_32}https://github.com/tiann/KernelSU/${COLOR_33}'中官方的${COLOR_36}KernelSU${COLOR_33}正式发布版${COLOR_0}"
+                echo -e "${COLOR_35}[DEV]${COLOR_33}开发者:${COLOR_36}tiann${COLOR_0}"
+                echo -e "${COLOR_35}[GPL-3.0]${COLOR_32}Copyright (c) 2026 tiann${COLOR_0}"
+                echo
+                echo -e "${COLOR_35}[D&I]${COLOR_33}是否立即下载并安装${COLOR_36}KernelSU${COLOR_33}正式版(将消耗'${COLOR_36}10MB${COLOR_33}'流量) >>${COLOR_0}"
+                echo -e -n "${COLOR_36}[+][1›立即下载并安装/2›返回主页]*ᐷ${COLOR_01}"
+                read YN_DL_KERNELSU
+                case "$YN_DL_KERNELSU" in
+                2 | n | N)
+                    MAIN_REBOOT || return 0
+                    ;;
+                esac
+                echo
+                echo -e "${COLOR_35}[Downloading]${COLOR_33}正在下载KernelSU...${COLOR_0}"
+                if ! curl --progress-bar -L -o  "$DOWNLOAD_PATH/KernelSU_v3.2.0_32389-Releases.apk" 'https://github.com/tiann/KernelSU/releases/download/v3.2.0/KernelSU_v3.2.0_32389-release.apk'
+                then
+                    echo -e "${COLOR_31}[ERROR]${COLOR_33}下载失败 尝试连接魔法或手动下载安装后重试${COLOR_0}"
+                    REBOOT_FL || return 0
+                fi
+                echo -e "${COLOR_35}[Installing]${COLOR_33}下载完毕正在安装KernelSU...${COLOR_30}"
+                if ! adb -s "$SELEC_ADB_DEVICE" install "$DOWNLOAD_PATH/KernelSU_v3.2.0_32389-Releases.apk"
+                then
+                    echo -e "${COLOR_31}[ERROR]${COLOR_33}自动安装失败 若目标设备有安装授权弹窗需点击允许${COLOR_0}"
+                    echo -e "${COLOR_35}[Tip]${COLOR_33}此前下载的KernelSU安装包位于本机路径:${COLOR_36}$DOWNLOAD_PATH/KernelSU_v3.2.0_32389-Releases.apk${COLOR_33} 尝试在目标设备上安装后再试${COLOR_0}"
+                    REBOOT_FL || return 0
+                fi
             fi
-        fi
-        echo -e ALL_TIP_TION="${COLOR_35}[RE]${COLOR_33}准备就绪 是否立即目标设备重启至Fastboot >>${COLOR_0}"
-        REBOOT_USB_DEVICES
-        ADB_FASTBOOT_NAME=FASTBOOT
-        ADB_FASTBOOT_CMD=fastboot
-        SEE_USB_DEVICES
-        echo -e "${COLOR_33}[Setting]${COLOR_33}正在尝试通过fastboot命令将SELinux设置为宽容模式...${COLOR_0}"
-        if ! fastboot -s "$SELEC_FASTBOOT_DEVICE" oem set-gpu-preemption 0 androidboot.selinux=permissive &>>$MST_LOG
-        then
-            echo -e "${COLOR_31}[ERROR]${COLOR_33}设置失败 该漏洞在目标设备上可能已修复${COLOR_0}"
-            ALL_TIP_TION="${COLOR_35}[RE]${COLOR_33}选择需要重启的目标模式 >>${COLOR_0}"
-            REBOOT_USB_DEVICES
-            REBOOT_FL || return 0
-        fi
-        echo -e "${COLOR_31}[OKAY]${COLOR_33}操作成功 目标设备的SELinux已被设置为宽容模式${COLOR_0}"
-        echo
-        echo -e "${COLOR_35}[PERM]${COLOR_33}是否立即使目标设备以SELinux的宽容模式启动系统 >>${COLOR_0}"
-        echo -e -n "${COLOR_36}[+][1›立即启动系统/2›撤销设置并冷重启]*ᐷ${COLOR_01}"
-        read YN_CONTINUE_SYSTEM
-        case "$YN_CONTINUE_SYSTEM" in
-        1 | y | Y)
-            echo -e "${COLOR_35}[Start]${COLOR_33}正在启动系统...${COLOR_0}"
-            if ! fastboot -s "$SELEC_FASTBOOT_DEVICE" continue
+            REBOOT_USB_DEVICES fastboot
+            ENTER_ANY_CONTINUE 重启至Fastboot模式后
+            ADB_FASTBOOT_NAME=FASTBOOT
+            ADB_FASTBOOT_CMD=fastboot
+            SEE_USB_DEVICES
+            echo -e "${COLOR_33}[Setting]${COLOR_33}正在尝试通过fastboot命令将SELinux设置为宽容模式...${COLOR_0}"
+            if ! fastboot -s "$SELEC_FASTBOOT_DEVICE" oem set-gpu-preemption 0 androidboot.selinux=permissive &>>$MST_LOG
             then
-                echo -e "${COLOR_31}[ERROR]${COLOR_33}命令执行失败 无法直接启动系统${COLOR_0}"
+                echo -e "${COLOR_31}[ERROR]${COLOR_33}设置失败 该漏洞在目标设备上可能已修复${COLOR_0}"
                 ALL_TIP_TION="${COLOR_35}[RE]${COLOR_33}选择需要重启的目标模式 >>${COLOR_0}"
                 REBOOT_USB_DEVICES
                 REBOOT_FL || return 0
             fi
-            echo -e "${COLOR_32}[OKAY]${COLOR_33}命令执行成功 系统正在启动${COLOR_0}"
-            echo -e "${COLOR_35}[Tip]${COLOR_33}当启动完成后只需要进入${COLOR_36}KernelSU${COLOR_33}点击${COLOR_36}越狱${COLOR_33}按钮便可以获取Root权限${COLOR_0}"
-            echo -e "${COLOR_35}[INFO]${COLOR_33}通过此方法获取ROOT权限后不可修改${COLOR_36}/system /vndor${COLOR_33}以及所有受AVB保护的分区如:${COLOR_36}Boot Recovery ...${COLOR_0}"
+            echo -e "${COLOR_31}[OKAY]${COLOR_33}操作成功 目标设备的SELinux已被设置为宽容模式${COLOR_0}"
+            echo
+            echo -e "${COLOR_35}[PERM]${COLOR_33}是否立即使目标设备以SELinux的宽容模式启动系统 >>${COLOR_0}"
+            echo -e -n "${COLOR_36}[+][1›立即启动系统/2›撤销设置并冷重启]*ᐷ${COLOR_01}"
+            read YN_CONTINUE_SYSTEM
+            FASTBOOT_CONTINUE_TRY_NUMNER=1
+            FASTBOOT_CONTINUE_TRY() {
+                if fastboot -s "$SELEC_FASTBOOT_DEVICE" continue &>>$MST_LOG
+                then
+                    return 0
+                elif [ "$FASTBOOT_CONTINUE_TRY_NUMNER" = 3 ]
+                then
+                    return 1
+                else
+                    echo -e "${COLOR_35}[Trying]${COLOR_31}执行失败${COLOR_33}正在进行第(${COLOR_36}$FASTBOOT_CONTINUE_TRY_NUMNER${COLOR_33}/2)次尝试...${COLOR_0}"
+                    FASTBOOT_CONTINUE_TRY_NUMNER=$((FASTBOOT_CONTINUE_TRY_NUMNER + 1))
+                    FASTBOOT_CONTINUE_TRY
+                fi
+            }
+            case "$YN_CONTINUE_SYSTEM" in
+            1 | y | Y)
+                echo -e "${COLOR_35}[Start]${COLOR_33}正在启动系统...${COLOR_0}"
+                if ! FASTBOOT_CONTINUE_TRY
+                then
+                    echo -e "${COLOR_31}[ERROR]${COLOR_33}命令执行失败 无法直接启动系统 可能设备意外断开${COLOR_0}"
+                    ALL_TIP_TION="${COLOR_35}[RE]${COLOR_33}选择需要重启的目标模式 >>${COLOR_0}"
+                    REBOOT_USB_DEVICES
+                    REBOOT_FL || return 0
+                fi
+                echo -e "${COLOR_32}[OKAY]${COLOR_33}命令执行成功 系统正在启动${COLOR_0}"
+                echo -e "${COLOR_35}[Tip]${COLOR_33}当启动完成后只需要进入${COLOR_36}KernelSU${COLOR_33}点击${COLOR_36}越狱${COLOR_33}按钮便可以获取Root权限${COLOR_0}"
+                echo -e "${COLOR_35}[INFO]${COLOR_33}通过此方法获取ROOT权限后不可修改${COLOR_36}/system /vndor${COLOR_33}以及所有受AVB保护的分区如:${COLOR_36}Boot Recovery ...${COLOR_0}"
+                ;;
+            *)
+                ALL_TIP_TION="${COLOR_35}[RE]${COLOR_33}选择需要重启的目标模式 >>${COLOR_0}"
+                REBOOT_USB_DEVICES
+                ;;
+            esac
+            REBPOT_FL || return 0
+            ;;
+        2)
+            ADB_FASTBOOT_NAME=ADB
+            ADB_FASTBOOT_CMD=adb
+            MISHUI_MAIN_TIP='一键ROOT'
+            SEE_USB_DEVICES
+            if [ "$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.boot.flash.locked)" = 1 ]
+            then
+                echo -e "${COLOR_35}[WARN]${COLOR_31}目标设备似乎没有解锁BootLoader${COLOR_0}"
+                echo -e "${COLOR_31}[!]${COLOR_33}要继续操作必须先为目标设备${COLOR_36}解锁BootLoader${COLOR_33}(BL锁)${COLOR_0}"
+                REBOOT_FL || return 0
+            fi
+            ALL_SLOT_ROOT="$(adb -s "$SELEC_ADB_DEVICE" shell ls /dev/block/by-name/ 2>>$MST_LOG | grep 'boot')"
+            ROOT_SLOT_A_B="$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.boot.slot_suffix)"
+            if grep "init_boot$ROOT_SLOT_A_B" <<< "$ALL_SLOT_ROOT" &>>$MST_LOG
+            then
+                NEED_FLASH_SLOT_NAME="init_boot$ROOT_SLOT_A_B"
+                DOWNLOAD_IMG_NAME=init_boot
+            elif grep "vendor_boot$ROOT_SLOT_A_B" <<< "$ALL_SLOT_ROOT" &>>$MST_LOG
+            then
+                NEED_FLASH_SLOT_NAME="vendor_boot$ROOT_SLOT_A_B"
+                DOWNLOAD_IMG_NAME=vendor_boot
+            elif grep "boot$ROOT_SLOT_A_B" <<< "$ALL_SLOT_ROOT" &>>MST_LOG
+            then
+                NEED_FLASH_SLOT_NAME="boot$ROOT_SLOT_A_B"
+                DOWNLOAD_IMG_NAME=boot
+            fi
+            echo -e "${COLOR_35}[URL/IMG]${COLOR_33}输入适用于目标设备当前系统版本的${COLOR_36}zip卡刷包${COLOR_33}下载链接或'${COLOR_36}$DOWNLOAD_IMG_NAME.img${COLOR_33}'文件位于本机的完整路径 >>${COLOR_0}"
+            read -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' IMG_OR_URL_FOR_FILE
+            if [[ "$IMG_OR_URL_FOR_FILE" == https://* ]]
+            then
+                if grep -q '\.zip$'
+                then
+                    echo -e "${COLOR_31}[!]${COLOR_33}该链接(${COLOR_36}$IMG_OR_URL_FOR_FILE${COLOR_33})指向的文件似乎不是${COLOR_36}zip卡刷包${COLOR_33} MST无法从该链接提取需要的镜像文件${COLOR_0}"
+                    REBOOT_FL || return 0
+                fi
+                if grep 'xiaomi' <<< "$IMG_OR_URL_FOR_FILE" &>>$MST_LOG
+                then
+                    if ! grep "$UINAME" <<< "$IMG_OR_URL_FOR_FILE" &>>$MST_LOG
+                    then
+                        echo -e "${COLOR_31}[WARN]${COLOR_33}该链接(${COLOR_36}$IMG_OR_URL_FOR_FILE${COLOR_33})指向的刷机包似乎不兼容目标设备当前系统${COLOR_0}"
+                    fi
+                else
+                    echo -e "${COLOR_31}[WARN]${COLOR_33}此链接不指向小米 MST无法验证其兼容性 必须确保该链接(${COLOR_36}$IMG_OR_URL_FOR_FILE${COLOR_33})指向的刷机包与目标设备兼容${COLOR_0}"
+                fi
+                echo
+                echo -e "${COLOR_35}[LINK]${COLOR_33}是否使用该链接(${COLOR_36}$IMG_OR_URL_FOR_FILE${COLOR_33})提取所需的镜像文件 >>${COLOR_0}"
+                echo -e "${COLOR_36}[+][1›使用该链接/2›取消并返回主页]*ᐷ${COLOR_01}"
+                read YN_USR_ZIP_LINK
+                case "$YN_USR_ZIP_LINK" in
+                2)
+                    MAIN_REBOOT || return 0
+                    ;;
+                esac
+                INSTALL_THE_MUST_CMD 'pkg install python -y' 'Python' 'python'
+                INSTALL_THE_MUST_CMD 'pkg install python-pip -y' 'Python-pip' 'pip'
+                INSTALL_THE_MUST_CMD 'pip install fcetool' 'Fcetool' 'fcetool'
+                THE_LOCAL_IMG_PATH="$DOWNLOAD_PATH/$DOWNLOAD_IMG_NAME.img"
+                echo -e "${COLOR_35}[Downloading]${COLOR_33}正在从链接下载'${COLOR_36}$DOWNLOAD_IMG_NAME.img${COLOR_33}'文件...${COLOR_0}"
+                if ! fcetool "$IMG_OR_URL_FOR_FILE" $DOWNLOAD_IMG_NAME.img $THE_LOCAL_IMG_PATH &>>$MST_LOG
+                then
+                    echo -e "${COLOR_31}[ERROR]${COLOR_33}无法从链接'${COLOR_36}$IMG_OR_URL_FOR_FILE${COLOR_33}'提取需要的镜像文件${COLOR_0}"
+                    echo -e "${COLOR_35}[Tip]${COLOR_33}尝试重新获取下载链接后再使用此功能或者手动提取${COLOR_36}$DOWNLOAD_IMG_NAME.img${COLOR_33}'文件${COLOR_0}"
+                    REBOOT_FL || return 0
+                fi
+                echo -e "${COLOR_32}[OKAY]${COLOR_33}下载完毕 文件位于本机目录:${COLOR_36}$THE_LOCAL_IMG_PATH${COLOR_0}"
+                ECHO_DOWNLOAD_OR_LOCAL_FILE_TIP=下载
+            elif [ -f "$IMG_OR_URL_FOR_FILE" ] 
+            then
+                ECHO_DOWNLOAD_OR_LOCAL_FILE_TIP=本地
+                THE_LOCAL_IMG_PATH="$IMG_OR_URL_FOR_FILE"
+            fi
+            if [ ! -f "$THE_LOCAL_IMG_PATH" ]
+            then
+                echo -e "${COLOR_31}[!]${COLOR_33}文件'${COLOR_36}$THE_LOCAL_IMG_PATH${COLOR_33}'不存在或无法访问${COLOR_0}"
+                echo -e "${COLOR_35}[Tip]${COLOR_33}尝试再试一次或授予Termux本地文件访问权限/Root权限后再试${COLOR_0}"
+                REBOOT_FL || return 0
+            fi
+            echo -e "${COLOR_35}[PUSH]${COLOR_33}正在将$ECHO_DOWNLOAD_OR_LOCAL_FILE_TIP的镜像文件推送至目标设备...${COLOR_0}"
+            if adb -s "$SELEC_ADB_DEVICE" push "$THE_LOCAL_IMG_PATH" "$THE_LOCAL_IMG_PATH" &>>$MST_LOG
+            then
+                echo -e "${COLOR_31}[ERROR]${COLOR_33}镜像文件推送失败 检查设备是否意外断开后再试一次${COLOR_0}"
+                REBOOT_FL || return 0
+            fi
+            echo -e "${COLOR_32}[OKAY]${COLOR_33}推送完毕 文件位于目标设备目录:${COLOR_36}$THE_LOCAL_IMG_PATH${COLOR_0}"
+            echo
+            echo -e "${COLOR_35}[Tip]${COLOR_33}接下来在目标设备上需要的Root管理器修补推送的镜像文件${COLOR_0}"
+            ENTER_ANY_CONTINUE 修补完毕后
+            echo -e "${COLOR_35}[Searching]${COLOR_33}正在目标设备上搜索修补后的镜像文件...${COLOR_0}"
+            ALL_PATCH_IMG_FILE="$(adb -s "$SELEC_ADB_DEVICE" shell ls $DOWNLOAD_PATH/*-patched-*-*.img 2>>$MST_LOG)"
+            if [ -z "$ALL_PATCH_IMG_FILE" ]
+            then
+                echo -e "${COLOR_35}[PATH]${COLOR_33}没有找到已修补的文件 输入修补后的镜像文件在目标设备上的完整路径 >>${COLOR_0}"
+                read -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' THE_NEED_PATCH_IMG
+            elif [ -n "$ALL_PATCH_IMG_FILE" ] && [ "$(wc -l <<< "$ALL_PATCH_IMG_FILE")" -ge 2 ]
+            then
+                ALL_TIP_TION="${COLOR_35}[PATCH]${COLOR_33}选择本次修补后的镜像文件 >>${COLOR_0}"
+                read -a ALL_OPTION <<< "$ALL_PATCH_IMG_FILE"
+                NOW_LINE
+                SHOW_FUNC_MENU
+                THE_NEED_PATCH_IMG="$DOWNLOAD_PATH/$(sed -n ${FUNC_CONT}p <<< "$ALL_PATCH_IMG_FILE")"
+            fi
+            if ! adb -s "$SELEC_ADB_DEVICE" shell test -f "$THE_NEED_PATCH_IMG" &>>$MST_LOG
+            then
+                echo -e "${COLOR_31}[!]${COLOR_33}文件'${COLOR_36}$THE_NEED_PATCH_IMG${COLOR_33}'在目标设备上不存在或无法访问${COLOR_0}"
+                echo -e "${COLOR_35}[Tip]${COLOR_33}尝试将修补后的镜像文件移动至ADB权限可读取的文件夹例如'${COLOR_36}/data/local/tmp${COLOR_33}'后再试一次${COLOR_0}"
+                REBOOT_FL || return 0
+            fi
+            echo
+            echo -e "${COLOR_35}[PATCH]${COLOR_33}正在从目标设备提取修补后的镜像文件:${COLOR_36}$THE_NEED_PATCH_IMG${COLOR_33}...${COLOR_0}"
+            if ! adb -s "$SELEC_ADB_DEVICE" pull "$THE_NEED_PATCH_IMG" "$THE_NEED_PATCH_IMG" 2>>$MST_LOG || ! [ -f "$THE_NEED_PATCH_IMG" ]
+            then
+                echo -e "${COLOR_31}[ERROR]${COLOR_33}镜像文件提取失败 检查设备是否意外断开后再试一次${COLOR_0}"
+                REBOOT_FL || return 0
+            fi
+            echo -e "${COLOR_32}[OKAY]${COLOR_33}提取成功 文件位于本机目录:${COLOR_36}$THE_NEED_PATCH_IMG${COLOR_0}"
+            echo
+            REBOOT_USB_DEVICES fastboot
+            REBOOT_TO_FASTBOOT_FLASH() {
+                ENTER_ANY_CONTINUE 重启至Fastboot模式后
+                ADB_FASTBOOT_NAME=FASTBOOT
+                ADB_FASTBOOT_CMD=fastboot
+                REBOOT_TO_FASTBOOT_TRY_NUMNER=1
+                REBOOT_TO_FASTBOOT_TRY() {
+                if USB_DEVICES_FASTBOOT
+                then
+                    return 0
+                elif [ "$REBOOT_TO_FASTBOOT_TRY_NUMNER" = 3 ]
+                then
+                    return 1
+                else
+                    echo -e "${COLOR_35}[Trying]${COLOR_31}未发现设备${COLOR_33}正在进行第(${COLOR_36}$REBOOT_TO_FASTBOOT_TRY_NUMNER${COLOR_33}/2)次尝试...${COLOR_0}"
+                    REBOOT_TO_FASTBOOT_TRY_NUMNER=$((REBOOT_TO_FASTBOOT_TRY_NUMNER + 1))
+                    REBOOT_TO_FASTBOOT_TRY
+                fi
+                }
+                if ! REBOOT_TO_FASTBOOT_TRY
+                then
+                    echo -e "${COLOR_31}[ERROR]${COLOR_33}已尝试3此均未能识别到Fastboot设备${COLOR_0}"
+                    echo -e "${COLOR_35}[Tip]${COLOR_33}接下来操作较为简单 可检查设备连接是否断开后再返回主页进入'${COLOR_36}[FB]›2*-Fastboot刷机工具 -> [SLOT]›1*-刷入分区镜像 -> 选择$NEED_FLASH_SLOT_NAME分区${COLOR_33}'功能输入镜像文件路径:${COLOR_36}$THE_NEED_PATCH_IMG${COLOR_0}"
+                    REBOOT_FL || return 0
+                fi
+                echo -e -n "$COLOR_35[Flashing]${COLOR_33}正在将'${COLOR_36}$THE_NEED_PATCH_IMG${COLOR_33}'刷入'${COLOR_36}$NEED_FLASH_SLOT_NAME${COLOR_33}'分区...${COLOR_0}"
+                if fastboot -s "$SELEC_FASTBOOT_DEVICE" flash $NEED_FLASH_SLOT_NAME "$THE_NEED_PATCH_IMG" &>>$MST_LOG
+                then
+                    echo -e "${COLOR_32}OKAY${COLOR_0}"
+                    REBOOT_USB_DEVICES system
+                else
+                    echo
+                    echo -e "${COLOR_31}[ERROR]${COLOR_33}刷入失败 检查设备是否意外断开后再试一次${COLOR_0}"
+                    REBOOT_FL || return 0
+                fi
+            }
+            CLANER_AUTO_ROOT_FILE() {
+                local YN_CLANER_AUTO_ROOT_FILE
+                ENTER_ANY_CONTINUE 正常开机后
+                echo -e "${COLOR_35}[CLEAR]${COLOR_33}是否删除本次操作产生的所有镜像文件(包括本机与目标设备) >>${COLOR_0}"
+                echo -e "${COLOR_36}[+][1›清理全部临时文件/2›取消并返回主页]*ᐷ${COLOR_01}"
+                read YN_CLANER_AUTO_ROOT_FILE
+                case "$YN_CLANER_AUTO_ROOT_FILE" in
+                1)
+                    if rm $THE_LOCAL_IMG_PATH &>>$MST_LOG && rm $THE_NEED_PATCH_IMG &>>$MST_LOG
+                    then
+                        echo -e "${COLOR_32}[OKAY]${COLOR_33}本机临时镜像文件已删除${COLOR_0}"
+                    else
+                        echo -e "${COLOR_32}[ERROR]${COLOR_33}本机临时镜像文件删除失败 可尝试手动删除 >>${COLOR_0}"
+                        echo -e "${COLOR_33} - 文件1(本机):${COLOR_36} $THE_LOCAL_IMG_PATH${COLOR_0}"
+                        echo -e "${COLOR_33} - 文件2(本机):${COLOR_36} $THE_NEED_PATCH_IMG${COLOR_0}"
+                    fi
+                    if USB_DEVICES_ADB && adb -s "$SELEC_ADB_DEVICE" shell rm "$THE_LOCAL_IMG_PATH" &>>$MST_LOG && adb -s "$SELEC_ADB_DEVICE" shell rm "$THE_NEED_PATCH_IMG" &>>$MST_LOG
+                    then
+                        echo -e "${COLOR_32}[OKAY]${COLOR_33}目标设备临时镜像文件已删除${COLOR_0}"
+                    else
+                        echo -e "${COLOR_32}[ERROR]${COLOR_33}无法删除目标设备临时镜像文件 可尝试手动删除 >>${COLOR_0}"
+                        echo -e "${COLOR_33} - 文件1(目标设备):${COLOR_36} $THE_LOCAL_IMG_PATH${COLOR_0}"
+                        echo -e "${COLOR_33} - 文件2(目标设备):${COLOR_36} $THE_NEED_PATCH_IMG${COLOR_0}"
+                    fi
+                    ;;
+                esac
+            }
+            REBOOT_TO_FASTBOOT_FLASH
+            echo
+            echo -e "${COLOR_35}[STATUS]${COLOR_33}选择目标设备目前状态(若处于第二屏建议耐心等待${COLOR_36}30秒-1分钟${COLOR_33}后再选) >>${COLOR_0}"
+            echo -e -n "${COLOR_36}[+][1›正常开机/2›卡第二屏]*ᐷ${COLOR_01}"
+            read INPUT_DEVICE_STATUS_NOW
+            case "$INPUT_DEVICE_STATUS_NOW" in
+            2)
+                echo -e "${COLOR_35}[Tip]${COLOR_33}若长时间处于第二屏可尝试长按目标设备的${COLOR_36}电源+音量-${COLOR_33}键强制重启至Fastboot 稍候将刷入原版未修补${COLOR_36}$DOWNLOAD_IMG_NAME.img${COLOR_33}镜像文件${COLOR_0}"
+                ENTER_ANY_CONTINUE 目标设备重启至Fastboot后
+                THE_NEED_PATCH_IMG="$THE_LOCAL_IMG_PATH"
+                REBOOT_TO_FASTBOOT_FLASH
+                CLANER_AUTO_ROOT_FILE
+                REBOOT_FL || return 0
+                ;;
+            esac
+            echo
+            echo -e "${COLOR_32}[AllDone]${COLOR_33}所有操作已全部完成 现在可进入Root管理器查看Root状态${COLOR_0}"
+            CLANER_AUTO_ROOT_FILE
+            REBOOT_FL || return 0
+            ;;
+        3)
+            MAIN_REBOOT || return 0
             ;;
         *)
-            ALL_TIP_TION="${COLOR_35}[RE]${COLOR_33}选择需要重启的目标模式 >>${COLOR_0}"
-            REBOOT_USB_DEVICES
+            ERROR_CONT
             ;;
         esac
-        REBPOT_FL || return 0
         ;;
     '5' | '关于/帮助/更新' | '&')
         MISHUI_MAIN_TIP=关于/帮助/更新
@@ -1973,6 +2200,10 @@ CA_FLASH_MAIN() {
             echo -e "${COLOR_35}[Email]${COLOR_33}联系/反馈: ${COLOR_36}639428035@qq.com${COLOR_0}"
             echo
             echo -e "${COLOR_35}[ACK]${COLOR_33}感谢以下开源项目提供支持! 如果您认为他们还不错 请为他们点上一颗Star!${COLOR_0}"
+            echo -e "${COLOR_35}[GPL-3.0]${COLOR_32}Copyright (c) 2026 tiann${COLOR_0}"
+            echo -e "${COLOR_35}[GitHub]${COLOR_33}GitHub仓库地址:${COLOR_32}https://github.com/tiann/KernelSU/${COLOR_0}"
+            echo -e "${COLOR_33} - 开发者:${COLOR_36}tiann${COLOR_0}"
+            echo
             echo -e "${COLOR_35}[Apache-2.0]${COLOR_32} Copyright (c) 2024 offici5l${COLOR_0}"
             echo -e "${COLOR_35}[GitHub]${COLOR_33}仓库地址: ${COLOR_32}https://github.com/offici5l/MiUnlockTool${COLOR_0}"
             echo -e "${COLOR_33} - 开发者:${COLOR_36}offici5l${COLOR_0}"
