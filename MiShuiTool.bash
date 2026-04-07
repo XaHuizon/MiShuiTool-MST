@@ -2265,7 +2265,7 @@ CA_FLASH_MAIN() {
                     ;;
                 esac
                 echo -e "${COLOR_35}[Download]${COLOR_33}正在下载云端最新MiShuiTool进行覆盖更新...${COLOR_0}"
-                if curl --progress-bar -L -o "$MST_HOME/Update/MiShuiTool" "$MISHUITOOL_URL" &>>$MST_LOG && cp "$MST_HOME/Update/MiShuiTool" "$MST_FILE_PATH" &>>$MST_LOG && chmod 777 "$MST_FILE_PATH"
+                if curl --progress-bar -L -o "$MST_HOME/Update/MiShuiTool" "$MISHUITOOL_URL" && cp "$MST_HOME/Update/MiShuiTool" "$MST_FILE_PATH" &>>$MST_LOG && chmod 777 "$MST_FILE_PATH"
                 then
                     rm $MST_HOME/Update/MiShuiTool
                     echo -e "${COLOR_32}[OKAY]${COLOR_33}覆盖更新完成 文件路径:${COLOR_36}$MST_FILE_PATH${COLOR_0}"
