@@ -11,7 +11,7 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='2026.4.7 Beta'
+MST_UPDATE_TIME='2026.4.7 Official'
 NOW_VERSION=10013
 if [ "$(id -u)" = "0" ]
 then
@@ -626,7 +626,7 @@ CA_FLASH_MAIN() {
                 then
                     THE_TCP_NUMBER=5555
                     echo -e "${COLOR_35}[AUTO]${COLOR_33}已自动使用'${COLOR_36}5555${COLOR_33}'端口${COLOR_0}"
-                elif ! [ "$THE_TCP_NUMBER" ~= ^0-9+$ ]
+                elif ! [[ "$THE_TCP_NUMBER" =~ ^[0-9]+$ ]]
                 then
                     echo -e "${COLOR_31}[!]${COLOR_33}输入的内容'${COLOR_36}$THE_TCP_NUMBER${COLOR_33}'不是有效的数字端口 输入的数字必须在${COLOR_36}1024-49151${COLOR_33}之间${COLOR_0}"
                 fi
@@ -1034,6 +1034,7 @@ CA_FLASH_MAIN() {
             if [ -f "$ZIP_DIR_PATH" ]
             then
                 echo -e "${COLOR_35}[ZIP]${COLOR_33}该路径指向为:${COLOR_36}压缩包${COLOR_0}"
+                THE_FILE_EXT_NAME="${THE_FILE_FLASH_NAME##*.}"
                 THE_FILE_FLASH_NAME="$(basename "$ZIP_DIR_PATH")"
                 THE_PATH_FLASH_NAME="$(dirname "$ZIP_DIR_PATH")/线刷包-MST"
                 INSTALL_THE_MUST_CMD 'pkg install unzip -y' 'unzip' 'unzip'
@@ -1859,7 +1860,7 @@ CA_FLASH_MAIN() {
             echo
             SEE_USB_DEVICES
             CHUCK_PATCH_TIME() {
-                lical YN_CONTINUE_R
+                local YN_CONTINUE_R
                 echo -e "${COLOR_31}$2${COLOR_0}"
                 echo -e "$1"
                 echo -e -n "${COLOR_36}[+][1›继续操作/2›返回主页]*ᐷ${COLOR_01}"
@@ -1964,7 +1965,7 @@ CA_FLASH_MAIN() {
                 REBOOT_USB_DEVICES
                 ;;
             esac
-            REBPOT_FL || return 0
+            REBOOT_FL || return 0
             ;;
         2)
             ADB_FASTBOOT_NAME=ADB
@@ -2264,7 +2265,7 @@ CA_FLASH_MAIN() {
                     ;;
                 esac
                 echo -e "${COLOR_35}[Download]${COLOR_33}正在下载云端最新MiShuiTool进行覆盖更新...${COLOR_0}"
-                if curl -sS -o "$MST_HOME/Update/MiShuiTool" "$MISHUITOOL_URL" &>>$MST_LOG && shc -rf "$MST_HOME/Update/MiShuiTool" -o "$MST_FILE_PATH" &>>$MST_LOG && chmod 777 "$MST_FILE_PATH"
+                if curl --progress-bar -L -o "$MST_HOME/Update/MiShuiTool" "$MISHUITOOL_URL" &>>$MST_LOG && cp "$MST_HOME/Update/MiShuiTool" "$MST_FILE_PATH" &>>$MST_LOG && chmod 777 "$MST_FILE_PATH"
                 then
                     rm $MST_HOME/Update/MiShuiTool
                     echo -e "${COLOR_32}[OKAY]${COLOR_33}覆盖更新完成 文件路径:${COLOR_36}$MST_FILE_PATH${COLOR_0}"
