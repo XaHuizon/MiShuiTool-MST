@@ -60,12 +60,12 @@ curl -s https://raw.githubusercontent.com/nohajc/termux-adb/master/install.sh | 
 ```
 
 
-## termux-adb
+## KernelSU
 ### 开发者信息
 - **GitHub地址:** [KernelSU](https://github.com/tiann/KernelSU)
 - **开源协议:** [GPL-3.0](https://github.com/tiann/KernelSU/blob/main/LICENSE)
 - **开发者:** [@tiann](https://github.com/tiann)
 
-- **用途:** __无Root权限使用adb命令__
+- **用途:** __自动化下载并安装原版APK文件__
 ### 引用的下载链接: 
  [KernelSU_v3.2.0_32389-release.apk](https://github.com/tiann/KernelSU/releases/download/v3.2.0/KernelSU_v3.2.0_32389-release.apk)
