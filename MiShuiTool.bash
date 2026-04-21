@@ -11,17 +11,49 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='2026.4.7 Official'
-NOW_VERSION=10013
+MST_UPDATE_TIME='26.1 Official'
+NOW_VERSION=10014
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
 else
     export COLOR="$COLOR_36"
 fi
+ALL_REBOOT() {
+    CLEAR_READ_INPUT
+    sleep 0.4
+    CA_FLASH_MAIN
+    return 0
+}
+REBOOT_FL() {
+    echo
+    echo -e -n "${COLOR}[MST]${COLOR_33}点按回车返回主页${COLOR_0}"
+    read -s
+    echo
+    echo -e -n "${COLOR_34}[BACK]${COLOR_33}返回主页...${COLOR_0}"
+    ALL_REBOOT || return 0
+}
+SU_REBOOT_FL() {
+    echo
+    echo -e -n "${COLOR}[MST]${COLOR_33}返回主页...${COLOR_0}"
+    ALL_REBOOT || return 0
+}
+MAIN_REBOOT() {
+    echo -e -n "${COLOR}[MST]${COLOR_33}返回主页...${COLOR_0}"
+    ALL_REBOOT || return 0
+}
+EXIT_SHELL() {
+    local EXIT_CODE="${1:-0}"
+    echo -e "${COLOR_35}[EXIT]${COLOR_33}退出脚本(退出码:${COLOR_36}$EXIT_CODE${COLOR_33})...${COLOR_0}"
+    exit "$EXIT_CODE"
+}
 CLEAR_LINE() {
     echo -e -n "\033[$NOW_LINE;1H"
     echo -e -n "\033[J"
+}
+NOW_LINE() {
+    IFS=';' read -sdR -p $'\E[6n' NOW_LINE COL
+    NOW_LINE="${NOW_LINE#*[}"
 }
 SHOW_FUNC_MENU() {
     local ALL_CON ALL_INPUT
@@ -69,87 +101,19 @@ SHOW_FUNC_MENU() {
     echo
     echo -e "${COLOR_37}------------------------------------—${COLOR_0}"
 }
-ENTER_ANY_CONTINUE() {
-    echo
-    echo -e -n "${COLOR_35}[Enter]${COLOR_33}$1点按任意键继续${COLOR_0}"
-    read -s -n1
-    echo
-}
-CLEAR_READ_INPUT() {
-    while read -r -t 0
-    do
-        read -r
-    done
-}
-ERROR_CONT() {
-    echo -e "${COLOR_31}[!]${COLOR_33}异常选项:${COLOR_36}$FUNC_CONT${COLOR_0}"
-    REBOOT_FL || return 0
-}
-ALL_REBOOT() {
-    CLEAR_READ_INPUT
-    sleep 0.4
-    CA_FLASH_MAIN
-    return 0
-}
-REBOOT_FL() {
-    echo
-    echo -e -n "${COLOR}[MST]${COLOR_33}点按回车返回主页${COLOR_0}"
-    read -s
-    echo
-    echo -e -n "${COLOR_34}[BACK]${COLOR_33}返回主页...${COLOR_0}"
-    ALL_REBOOT || return 0
-}
-SU_REBOOT_FL() {
-    echo
-    echo -e -n "${COLOR}[MST]${COLOR_33}返回主页...${COLOR_0}"
-    ALL_REBOOT || return 0
-}
-MAIN_REBOOT() {
-    echo -e -n "${COLOR}[MST]${COLOR_33}返回主页...${COLOR_0}"
-    ALL_REBOOT || return 0
-}
-EXIT_SHELL() {
-    local EXIT_CODE="${1:-0}"
-    echo -e "${COLOR_35}[EXIT]${COLOR_33}退出脚本(退出码:${COLOR_36}$EXIT_CODE${COLOR_33})...${COLOR_0}"
-    exit "$EXIT_CODE"
-}
-BACK_TO_SHELL() {
-    local EXIT_YN
-    echo -e "${COLOR_35}[BACK]${COLOR_33}已从命令提示符返回脚本${COLOR_0}"
-    echo -e -n "${COLOR_36}[1›返回主页/2›退出脚本]*ᐷ${COLOR_01}"
-    read EXIT_YN
-    case "$EXIT_YN" in     
-    1)
-        CA_FLASH_MAIN
-        ;;
-    *)
-        EXIT_SHELL
-        ;;
-    esac
-}
-NOW_LINE() {
-    IFS=';' read -sdR -p $'\E[6n' NOW_LINE COL
-    NOW_LINE="${NOW_LINE#*[}"
-}
-START_CMD_TIME() {
-    CMD_START=$(date +%s.%N)
-}
-END_CMD_TIME() {
-    CMD_END=$(date +%s.%N)
-    ALL_CMD_TIME=$(awk "BEGIN {printf \"%.2f\", $CMD_END - $CMD_START}")
-}
 SELEC_ADB_FB_DEVICE() {
     unset SELEC_USR_DEVICE
     local ONE_USR_DEV THE_SELEC_DEV_NUM SELE_NEED_DEVICES
     local ONE_ADB_DEVICE ONE_DEVICE USR_OKAY_DEVICES
     local ALL_SEARCH="$2"
+    local ADB_OR_FASTBOOT_SELEC_MODEL="$1"
     echo -e "${COLOR_32}连接多台设备 >>${COLOR_0}"
     local USR_DEVICES_NUM=1
     while IFS= read -r ONE_USR_DEV
     do
         echo -e -n "${COLOR_33}›$USR_DEVICES_NUM*-${COLOR_32}$ONE_USR_DEV${COLOR_0} "
-        case "$1" in
-        'adb')
+        case "$ADB_FASTBOOT_NAME" in
+        'ADB')
             if ONE_DEVICE="$(adb -s "$ONE_USR_DEV" shell settings get global device_name </dev/null 2>>$MST_LOG)" && [ -n "$ONE_DEVICE" ]
             then
                 echo -e "${COLOR_33}(${COLOR_36}$ONE_DEVICE${COLOR_33})${COLOR_0}"
@@ -163,8 +127,8 @@ SELEC_ADB_FB_DEVICE() {
         esac
         USR_DEVICES_NUM=$((USR_DEVICES_NUM + 1))
     done <<< "$ADB_DEVICES"
-    case "$1" in
-    'adb')
+    case "$ADB_OR_FASTBOOT_SELEC_MODEL" in
+    'any"')
         echo -e "${COLOR_35}[SELE]${COLOR_33}输入要选择的设备序号(多选以'${COLOR_36}-${COLOR_33}'符号分隔)${COLOR_0}"
         read -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' SELE_NEED_DEVICES
         if [[ "$SELE_NEED_DEVICES" =~ ^[0-9]+(-[0-9]+)*$ ]]
@@ -178,15 +142,15 @@ SELEC_ADB_FB_DEVICE() {
             REBOOT_FL || return 0
         fi
         ;;
-    'fastboot')
-        echo -e -n "${COLOR_35}[SELE]${COLOR_33}输入要选择的设备序号*ᐷ${COLOR_01}"
+    'only')
+        echo -e -n "${COLOR_35}[SELE]${COLOR_33}输入要选择的设备序号*ᐷ${COLOR_01} "
         read SELE_NEED_DEVICES
         case "$SELE_NEED_DEVICES" in
         [1-9]*)
             USR_OKAY_DEVICES="$(sed -n ${SELE_NEED_DEVICES}p <<< "$ALL_SEARCH")"
             ;;
         *)
-            echo -e "${COLOR_31}[!]${COLOR_33}无法解析的输入(${COLOR_36}$SELE_NEED_DEVICES${COLOR_33}) Fastboot设备不支持多选${COLOR_0}"
+            echo -e "${COLOR_31}[!]${COLOR_33}无法解析的输入(${COLOR_36}$SELE_NEED_DEVICES${COLOR_33}) 当前功能不支持多选${COLOR_0}"
             REBOOT_FL || return 0
             ;;
         esac
@@ -208,7 +172,7 @@ SELEC_ADB_FB_DEVICE() {
         else
             echo -e "${COLOR_33}(${COLOR_31}未知${COLOR_33})${COLOR_0}"
         fi
-        SELEC_USR_DEVICE+="$ONE_ADB_DEVICE"
+        SELEC_USR_DEVICE+="$ONE_ADB_DEVICE"$'\n'
     done <<< "$USR_OKAY_DEVICES"
 }
 USB_DEVICES_FASTBOOT() {
@@ -228,7 +192,7 @@ USB_DEVICES_FASTBOOT() {
         return 1
     elif [ "$(wc -l <<< "$FASTBOOT_DEVICES")" -ge 2 ]
     then
-        SELEC_ADB_FB_DEVICE fastboot "$FASTBOOT_DEVICES"
+        SELEC_ADB_FB_DEVICE only "$FASTBOOT_DEVICES"
         SELEC_FASTBOOT_DEVICE="$SELEC_USR_DEVICE"
     else
         SELEC_FASTBOOT_DEVICE="$FASTBOOT_DEVICES"
@@ -276,7 +240,10 @@ USB_DEVICES_FASTBOOT() {
     return 0
 }
 USB_DEVICES_ADB() {
-    local SEE_SOME_LINE
+    local SEE_SOME_LINE ONE_LINE_DEV_INFO
+    local LINE_GT_ONE=0
+    local ANY_OR_ONLY="$1"
+    [ -z "$ANY_OR_ONLY" ] && ANY_OR_ONLY=only
     echo -e -n "${COLOR_35}[ADB]${COLOR_33}设备连接状态:${COLOR_0}"
     timeout 5 adb wait-for-device &>>$MST_LOG
     ALL_ADB_DEVICES="$(adb devices 2>>$MST_LOG)"
@@ -287,43 +254,90 @@ USB_DEVICES_ADB() {
         return 1
     elif [ "$(wc -l <<< "$ADB_DEVICES")" -gt 1 ]
     then
-        SELEC_ADB_FB_DEVICE adb "$ADB_DEVICES"
+        LINE_GT_ONE=1
+        SELEC_ADB_FB_DEVICE "$ANY_OR_ONLY" "$ADB_DEVICES"
         SELEC_ADB_DEVICE="$SELEC_USR_DEVICE"
     else
         echo -e "${COLOR_36}$ADB_DEVICES adb${COLOR_32}-已连接${COLOR_0}"
         SELEC_ADB_DEVICE="$ADB_DEVICES"
     fi
-    CPU_GHZ=$(adb -s "$SELEC_ADB_DEVICE" shell "MAX_GHZ=\$(cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_max_freq | sort -n | tail -1); echo \"scale=2; \$MAX_GHZ / 1000000\" | bc" 2>>$MST_LOG)
-    CPUNAME=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.soc.model 2>>$MST_LOG)
-    if [ -z "$CPUNAME" ]
-    then
-        CPUNAME=$(adb -s "$SELEC_ADB_DEVICE" shell grep 'Hardware' /proc/cpuinfo 2>>$MST_LOG | sed 's/.*: //g; s/, /-/g' 2>>$MST_LOG)
-    fi
-    OSV=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.build.version.release 2>>$MST_LOG)
-    CPUUN=$(adb -s "$SELEC_ADB_DEVICE" shell grep -c "processor" /proc/cpuinfo 2>>$MST_LOG)
-    DEVONE=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.product.device 2>>$MST_LOG)
-    DEVTWO=$(adb -s "$SELEC_ADB_DEVICE" shell settings get global device_name 2>>$MST_LOG)
-    UINAME=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.build.version.incremental 2>>$MST_LOG)
-    KERNEL=$(adb -s "$SELEC_ADB_DEVICE" shell uname -r 2>>$MST_LOG)
-    WIFI=$(adb -s "$SELEC_ADB_DEVICE" shell getprop gsm.version.baseband 2>>$MST_LOG)
-    DEV_SDK=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.build.version.sdk 2>>$MST_LOG)
-    DEV_NAME=$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.product.brand 2>>$MST_LOG)
-    local ALL_ABC=("CPUNAME" "OSV" "CPUUN" "DEVONE" "DEVTWO" "UINAME" "KERNEL" "WIFI" "DEV_SDK" "DEV_NAME" "CPU_GHZ")
-    for ABC in "${ALL_ABC[@]}"
+    SELEC_ADB_DEVICES_NUMBER=0
+    while IFS= read -r ONE_SELEC_ADB_DEVICE
     do
-        if [ -z "${!ABC}" ]
+        [ -z "$ONE_SELEC_ADB_DEVICE" ] && continue
+        SELEC_ADB_DEVICES_NUMBER=$((SELEC_ADB_DEVICES_NUMBER + 1))
+        CPU_GHZ=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell "MAX_GHZ=\$(cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_max_freq | sort -n | tail -1); echo \"scale=2; \$MAX_GHZ / 1000000\" | bc" 2>>$MST_LOG)
+        CPUNAME=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell getprop ro.soc.model 2>>$MST_LOG)
+        if [ -z "$CPUNAME" ]
         then
-            declare "$ABC=${COLOR_31}未知${COLOR_32}"
+            CPUNAME=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell grep 'Hardware' /proc/cpuinfo 2>>$MST_LOG | sed 's/.*: //g; s/, /-/g' 2>>$MST_LOG)
         fi
-    done
+        OSV=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell getprop ro.build.version.release 2>>$MST_LOG)
+        CPUUN=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell grep -c "processor" /proc/cpuinfo 2>>$MST_LOG)
+        DEVONE=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell getprop ro.product.device 2>>$MST_LOG)
+        DEVTWO=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell settings get global device_name 2>>$MST_LOG)
+        UINAME=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell getprop ro.build.version.incremental 2>>$MST_LOG)
+        KERNEL=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell uname -r 2>>$MST_LOG)
+        WIFI=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell getprop gsm.version.baseband 2>>$MST_LOG)
+        DEV_SDK=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell getprop ro.build.version.sdk 2>>$MST_LOG)
+        DEV_NAME=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell getprop ro.product.brand 2>>$MST_LOG)
+        local ALL_ABC=("CPUNAME" "OSV" "CPUUN" "DEVONE" "DEVTWO" "UINAME" "KERNEL" "WIFI" "DEV_SDK" "DEV_NAME" "CPU_GHZ")
+        for ABC in "${ALL_ABC[@]}"
+        do
+            if [ -z "${!ABC}" ]
+            then
+                declare "$ABC=${COLOR_31}未知${COLOR_32}"
+            fi
+        done
+        echo
+        [ "$LINE_GT_ONE" = 1 ] && local ECHO_DEVICE_INFO="(${COLOR_36}$ONE_SELEC_ADB_DEVICE adb${COLOR_33})"
+        echo -e "${COLOR_35}[ADB]${COLOR_33}已连接设备信息$ECHO_DEVICE_INFO >>${COLOR_0}"
+        echo -e "${COLOR_33}设备:${COLOR_32}$DEV_NAME $DEVTWO ($DEVONE)${COLOR_0}"
+        echo -e "${COLOR_33}CPU:${COLOR_32}$CPUNAME ${COLOR_32}($CPUUN核)${COLOR_33}/最大频率:${COLOR_32}$CPU_GHZ ${COLOR_32}GHz${COLOR_0}"
+        echo -e "${COLOR_33}内核:${COLOR_32}$KERNEL${COLOR_0}"
+        echo -e "${COLOR_33}基带:${COLOR_32}$WIFI${COLOR_0}"
+        echo -e "${COLOR_33}系统:${COLOR_32}$UINAME${COLOR_33}/Android${COLOR_32} $OSV (SDK:$DEV_SDK)${COLOR_0}"
+    done <<< "$SELEC_ADB_DEVICE"
     echo
-    echo -e "${COLOR_35}[ADB]${COLOR_33}已连接设备信息 >>${COLOR_0}"
-    echo -e "${COLOR_33}设备:${COLOR_32}$DEV_NAME $DEVTWO ($DEVONE)${COLOR_0}"
-    echo -e "${COLOR_33}CPU:${COLOR_32}$CPUNAME ${COLOR_32}($CPUUN核)${COLOR_33}/最大频率:${COLOR_32}$CPU_GHZ ${COLOR_32}GHz${COLOR_0}"
-    echo -e "${COLOR_33}内核:${COLOR_32}$KERNEL${COLOR_0}"
-    echo -e "${COLOR_33}基带:${COLOR_32}$WIFI${COLOR_0}"
-    echo -e "${COLOR_33}系统:${COLOR_32}$UINAME${COLOR_33}/Android${COLOR_32} $OSV (SDK:$DEV_SDK)${COLOR_0}"
+    echo -e "${COLOR_35}[NUM]${COLOR_33}共选择${COLOR_36}$SELEC_ADB_DEVICES_NUMBER${COLOR_33}台设备执行操作${COLOR_0}"
     return 0
+}
+ENTER_ANY_CONTINUE() {
+    echo
+    echo -e -n "${COLOR_35}[Enter]${COLOR_33}$1点按任意键继续${COLOR_0}"
+    read -s -n1
+    echo
+}
+CLEAR_READ_INPUT() {
+    while read -r -t 0
+    do
+        read -r
+    done
+}
+ERROR_CONT() {
+    echo -e "${COLOR_31}[!]${COLOR_33}异常选项:${COLOR_36}$FUNC_CONT${COLOR_0}"
+    REBOOT_FL || return 0
+}
+BACK_TO_SHELL() {
+    local EXIT_YN
+    echo -e "${COLOR_35}[BACK]${COLOR_33}已从命令提示符返回脚本${COLOR_0}"
+    echo -e -n "${COLOR_36}[1›返回主页/2›退出脚本]*ᐷ${COLOR_01}"
+    read EXIT_YN
+    case "$EXIT_YN" in     
+    1)
+        CA_FLASH_MAIN
+        ;;
+    *)
+        EXIT_SHELL
+        ;;
+    esac
+}
+START_CMD_TIME() {
+    CMD_START=$(date +%s.%N)
+}
+END_CMD_TIME() {
+    CMD_END=$(date +%s.%N)
+    ALL_CMD_TIME=$(awk "BEGIN {printf \"%.2f\", $CMD_END - $CMD_START}")
 }
 ADB_FASTBOOT_VER() {
     echo -e "${COLOR_35}[ADB]${COLOR_33}当前版本 >>${COLOR_32}"
@@ -336,7 +350,7 @@ REBOOT_USB_DEVICES() {
     local REBOOT_PT REBOOT_NAME REBOOT_TAP
     if [ -n "$1" ]
     then
-        FUNC_CONT="$1"
+        local FUNC_CONT="$1"
     else
         ALL_OPTION=("1*-重启至FASTBOOT-线刷模式" "2*-重启至RECOVERY-卡刷/恢复模式" "3*-重启至系统" "4*-返回主页")
         NOW_LINE
@@ -407,7 +421,7 @@ INSTALL_THE_MUST_CMD() {
 }
 SEE_USB_DEVICES() {
     MISHUI_MAIN
-    if ! USB_DEVICES_$ADB_FASTBOOT_NAME
+    if ! USB_DEVICES_$ADB_FASTBOOT_NAME "$1"
     then
         echo -e "${COLOR_31}[!]${COLOR_33}没有设备连接无法继续${COLOR_0}"
         echo -e "${COLOR_35}[Tip]${COLOR_33}在主页中使用'${COLOR_36}连接设备${COLOR_33}'功能连接设备后再试${COLOR_0}"
@@ -439,7 +453,7 @@ MISHUI_MAIN() {
 CA_FLASH_MAIN() {
     MISHUI_MAIN_TIP=MiShuiTool
     MISHUI_MAIN
-    if [[ ! "$PATH" = **/data/data/com.termux/files/usr/bin** ]]
+    if [[ ! "$PATH" == **/data/data/com.termux/files/usr/bin** ]]
     then
         echo -e "${COLOR_31}[!]${COLOR_33}当前环境(${COLOR_36}$PATH${COLOR_33})非Termux无法运行${COLOR_0}"
         echo -e "${COLOR_35}[Tip]${COLOR_33}在Termux中使用'${COLOR_36} bash $0 ${COLOR_33}'命令执行脚本${COLOR_0}"
@@ -552,7 +566,7 @@ CA_FLASH_MAIN() {
             REBOOT_FL || return 0
             ;;
         '2')
-            # REBOOT_THE_ADB
+            REBOOT_THE_ADB
             MISHUI_MAIN_TIP=连接ADB设备
             MISHUI_MAIN
             CNT_ANY_DEVICED ADB
@@ -825,7 +839,7 @@ CA_FLASH_MAIN() {
                 FLASH_IMG_TO_SLOT RECOVERY_b recovery_b
                 ;;
             '10')
-                echo -e "${COLOR_35}[SLOT]${COLOR_33}输入要刷入的分区名称*ᐷ${COLOR_01}"
+                echo -e - n "${COLOR_35}[SLOT]${COLOR_33}输入要刷入的分区名称*ᐷ${COLOR_01}"
                 read FLASH_IMG_SLOT
                 CHUCK_SLOT_FLASH "$FLASH_IMG_SLOT"
                 echo -e "${COLOR_35}[Y/N]${COLOR_33}是否确定指定分区为:${COLOR_36}$FLASH_IMG_SLOT${COLOR_0}"
@@ -1240,7 +1254,7 @@ CA_FLASH_MAIN() {
         case "$FUNC_CONT" in
         '1' | 'ACT' | '激活ADB应用')
             MISHUI_MAIN_TIP=激活ADB应用
-            SEE_USB_DEVICES
+            SEE_USB_DEVICES any
             ACT_ADB_APP() {
                 local ACT_APP_NAME="$1"
                 local ACT_APP_PATH="$2"
@@ -1264,28 +1278,32 @@ CA_FLASH_MAIN() {
             ALL_OPTION=("1*-Shizuku-ADB" "2*-Scene6-ADB" "3*-黑阈-ADB" "4*-全部激活-3个" "5*-返回主页")
             NOW_LINE
             SHOW_FUNC_MENU
-            case "$FUNC_CONT" in
-            '1')
-                ACT_ADB_APP 'Shizuku-ADB' "$(adb -s "$SELEC_ADB_DEVICE" shell pm path moe.shizuku.privileged.api | sed 's/package://g; s|base.apk|lib/arm64/libshizuku.so|g')" 'moe.shizuku.privileged.api/moe.shizuku.manager.MainActivity'
+            while IFS= read -r ONE_SELEC_ADB_DEVICE
+            do
+                [ -z "$ONE_SELEC_ADB_DEVICE" ] && continue
+                case "$FUNC_CONT" in
+                '1')
+                    ACT_ADB_APP 'Shizuku-ADB' "$(adb -s "$ONE_SELEC_ADB_DEVICE" shell pm path moe.shizuku.privileged.api | sed 's/package://g; s|base.apk|lib/arm64/libshizuku.so|g')" 'moe.shizuku.privileged.api/moe.shizuku.manager.MainActivity'
+                    ;;
+                '2')
+                    ACT_ADB_APP 'Scene6-ADB' "sh $STORAGE/Android/data/com.omarea.vtools/up.sh" 'com.omarea.vtools/com.omarea.vtools.activities.ActivityStartSplash'
+                    ;;
+                '3')
+                    ACT_ADB_APP '黑阈-ADB' "$(adb -s "$ONE_SELEC_ADB_DEVICE" shell pm path me.piebridge.brevent | sed 's/package://g; s|base.apk|lib/arm64/libbrevent.so|g')" 'me.piebridge.brevent/me.piebridge.brevent.ui.BreventActivity'
+                    ;;
+                '4')
+                    ACT_ADB_APP 'Shizuku-ADB' "$(adb -s "$ONE_SELEC_ADB_DEVICE" shell pm path moe.shizuku.privileged.api | sed 's/package://g; s|base.apk|lib/arm64/libshizuku.so|g')" 'moe.shizuku.privileged.api/moe.shizuku.manager.MainActivity'
+                    ACT_ADB_APP 'Scene6-ADB' "sh $STORAGE/Android/data/com.omarea.vtools/up.sh" 'com.omarea.vtools/com.omarea.vtools.activities.ActivityStartSplash'
+                    ACT_ADB_APP '黑阈-ADB' "$(adb -s "$ONE_SELEC_ADB_DEVICE" shell pm path me.piebridge.brevent | sed 's/package://g; s|base.apk|lib/arm64/libbrevent.so|g')" 'me.piebridge.brevent/me.piebridge.brevent.ui.BreventActivity'
+                    ;;
+                '5')
+                    MAIN_REBOOT || return 0
+                    ;;
+                *)
+                    ERROR_CONT
                 ;;
-            '2')
-                ACT_ADB_APP 'Scene6-ADB' "sh $STORAGE/Android/data/com.omarea.vtools/up.sh" 'com.omarea.vtools/com.omarea.vtools.activities.ActivityStartSplash'
-                ;;
-            '3')
-                ACT_ADB_APP '黑阈-ADB' "$(adb -s "$SELEC_ADB_DEVICE" shell pm path me.piebridge.brevent | sed 's/package://g; s|base.apk|lib/arm64/libbrevent.so|g')" 'me.piebridge.brevent/me.piebridge.brevent.ui.BreventActivity'
-                ;;
-            '4')
-                ACT_ADB_APP 'Shizuku-ADB' "$(adb -s "$SELEC_ADB_DEVICE" shell pm path moe.shizuku.privileged.api | sed 's/package://g; s|base.apk|lib/arm64/libshizuku.so|g')" 'moe.shizuku.privileged.api/moe.shizuku.manager.MainActivity'
-                ACT_ADB_APP 'Scene6-ADB' "sh $STORAGE/Android/data/com.omarea.vtools/up.sh" 'com.omarea.vtools/com.omarea.vtools.activities.ActivityStartSplash'
-                ACT_ADB_APP '黑阈-ADB' "$(adb -s "$SELEC_ADB_DEVICE" shell pm path me.piebridge.brevent | sed 's/package://g; s|base.apk|lib/arm64/libbrevent.so|g')" 'me.piebridge.brevent/me.piebridge.brevent.ui.BreventActivity'
-                ;;
-            '5')
-                MAIN_REBOOT || return 0
-                ;;
-            *)
-                ERROR_CONT
-            ;;
-            esac
+                esac
+            done <<< "$SELEC_ADB_DEVICE"
             REBOOT_FL || return 0
             ;;
         '2' | 'APP' | '应用管理')
@@ -1388,7 +1406,7 @@ CA_FLASH_MAIN() {
                     fi
                 done <<< "$USR_OKAY_PKGE"
                 REBOOT_FL || return 0
-            }
+                }
                 echo -e "${COLOR_35}[ICE]${COLOR_33}选择需要对选定应用进行的冻结/解冻操作 >>${COLOR_0}"
                 echo -e -n "${COLOR_36}[+][1›冻结选定应用/2›解冻选定应用]*ᐷ${COLOR_0}"
                 read YN_ICE_USR
@@ -1530,7 +1548,6 @@ CA_FLASH_MAIN() {
                     if [ -z "$KILL_YN_START" ]
                     then
                         echo -e "${COLOR_31}[!]${COLOR_33}此处不可为空${COLOR_0}"
-                        sleep 0.3
                         MAIN_REBOOT || return 0
                     fi
                     echo -e "${COLOR_31}[!]${COLOR_33}'${COLOR_36}$KILL_YN_START${COLOR_33}'非菜单中的选项${COLOR_0}"
@@ -1846,7 +1863,10 @@ CA_FLASH_MAIN() {
         esac
         ;;
     '4' | '自动联合操作' | 'AUTO')
-        ALL_TIP_TION="${COLOR_35}[APP]${COLOR_33}已支持ADB激活的应用 >>${COLOR_0}"
+        MISHUI_MAIN_TIP=自动联合操作
+        MISHUI_MAIN
+        echo
+        ALL_TIP_TION="${COLOR_35}[AUTO]${COLOR_33}选择一个联合自动操作 >>${COLOR_0}"
         ALL_OPTION=("1*-获取临时Root(测试)" "2*-一键Root" "3*-返回主页")
         NOW_LINE
         SHOW_FUNC_MENU
@@ -1878,7 +1898,7 @@ CA_FLASH_MAIN() {
                 CHUCK_PATCH_TIME "${COLOR_31}[ERROR]${COLOR_33}无法读取目标设备安全补丁更新日期 此功能依赖的漏洞需要安全补丁日期低于${COLOR_36}2826年3月${COLOR_33} 是否继续 >>${COLOR_0}" 未知
             elif [[ "$DEVICES_PATCHTIME" > 2026-01-01 ]]
             then
-                CHUCK_PATCH_TIME "${COLOR_31}[!]${COLOR_33}目标设备安全补丁版本(${COLOR_36DEVICES_PATCHTIME${COLOR_33}}$)大于${COLOR_36}2026年3月${COLOR_33} 此功能依赖的漏洞可能已被修复 是否继续 >>${COLOR_0}" 不通过
+                CHUCK_PATCH_TIME "${COLOR_31}[!]${COLOR_33}目标设备安全补丁版本(${COLOR_36DEVICES_PATCHTIME${COLOR_33}}$)大于${COLOR_36}2026年1月${COLOR_33} 此功能依赖的漏洞可能已被修复 是否继续 >>${COLOR_0}" 不通过
             else
                 echo -e "${COLOR_32}通过${COLOR_0}"
             fi
@@ -2084,12 +2104,7 @@ CA_FLASH_MAIN() {
             echo -e "${COLOR_32}[OKAY]${COLOR_33}提取成功 文件位于本机目录:${COLOR_36}$THE_NEED_PATCH_IMG${COLOR_0}"
             echo
             REBOOT_USB_DEVICES fastboot
-            REBOOT_TO_FASTBOOT_FLASH() {
-                ENTER_ANY_CONTINUE 重启至Fastboot模式后
-                ADB_FASTBOOT_NAME=FASTBOOT
-                ADB_FASTBOOT_CMD=fastboot
-                REBOOT_TO_FASTBOOT_TRY_NUMNER=1
-                REBOOT_TO_FASTBOOT_TRY() {
+            REBOOT_TO_FASTBOOT_TRY() {
                 if USB_DEVICES_FASTBOOT
                 then
                     return 0
@@ -2101,7 +2116,12 @@ CA_FLASH_MAIN() {
                     REBOOT_TO_FASTBOOT_TRY_NUMNER=$((REBOOT_TO_FASTBOOT_TRY_NUMNER + 1))
                     REBOOT_TO_FASTBOOT_TRY
                 fi
-                }
+            }
+            REBOOT_TO_FASTBOOT_FLASH() {
+                ENTER_ANY_CONTINUE 重启至Fastboot模式后
+                ADB_FASTBOOT_NAME=FASTBOOT
+                ADB_FASTBOOT_CMD=fastboot
+                REBOOT_TO_FASTBOOT_TRY_NUMNER=1
                 if ! REBOOT_TO_FASTBOOT_TRY
                 then
                     echo -e "${COLOR_31}[ERROR]${COLOR_33}已尝试3此均未能识别到Fastboot设备${COLOR_0}"
