@@ -11,8 +11,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='26.1 Official'
-NOW_VERSION=10014
+MST_UPDATE_TIME='26.1.1 Official'
+NOW_VERSION=10015
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -201,10 +201,7 @@ USB_DEVICES_FASTBOOT() {
     FB_DEV_BL="$(fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar unlocked 2>&1 | grep 'unlocked' | sed 's/.*: //g' &>>$MST_LOG)"
     FB_DEV_TOKEN="$(fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar token 2>&1 | grep 'token' | sed 's/.*: //g' &>>$MST_LOG)"
     FB_DEV_SLOT="$(fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar current-slot 2>&1 | grep 'slot' | sed 's/.*slot: //g' &>>$MST_LOG)"
-    if [ -z "$FB_DEV_TOKEN" ]
-    then
-        FB_DEV_TOKEN="${COLOR_31}未知${COLOR_0}"
-    fi
+    [ -z "$FB_DEV_TOKEN" ] && FB_DEV_TOKEN="${COLOR_31}未知${COLOR_0}"
     case "$FB_DEV_SLOT" in
     'a')
         FB_DEV_SLOT="${COLOR_32}A${COLOR_0}"
@@ -268,10 +265,7 @@ USB_DEVICES_ADB() {
         SELEC_ADB_DEVICES_NUMBER=$((SELEC_ADB_DEVICES_NUMBER + 1))
         CPU_GHZ=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell "MAX_GHZ=\$(cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_max_freq | sort -n | tail -1); echo \"scale=2; \$MAX_GHZ / 1000000\" | bc" 2>>$MST_LOG)
         CPUNAME=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell getprop ro.soc.model 2>>$MST_LOG)
-        if [ -z "$CPUNAME" ]
-        then
-            CPUNAME=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell grep 'Hardware' /proc/cpuinfo 2>>$MST_LOG | sed 's/.*: //g; s/, /-/g' 2>>$MST_LOG)
-        fi
+        [ -z "$CPUNAME" ] && CPUNAME=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell grep 'Hardware' /proc/cpuinfo 2>>$MST_LOG | sed 's/.*: //g; s/, /-/g' 2>>$MST_LOG)
         OSV=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell getprop ro.build.version.release 2>>$MST_LOG)
         CPUUN=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell grep -c "processor" /proc/cpuinfo 2>>$MST_LOG)
         DEVONE=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell getprop ro.product.device 2>>$MST_LOG)
@@ -284,10 +278,7 @@ USB_DEVICES_ADB() {
         local ALL_ABC=("CPUNAME" "OSV" "CPUUN" "DEVONE" "DEVTWO" "UINAME" "KERNEL" "WIFI" "DEV_SDK" "DEV_NAME" "CPU_GHZ")
         for ABC in "${ALL_ABC[@]}"
         do
-            if [ -z "${!ABC}" ]
-            then
-                declare "$ABC=${COLOR_31}未知${COLOR_32}"
-            fi
+            [ -z "${!ABC}" ] && declare -g "$ABC=${COLOR_31}未知${COLOR_32}"
         done
         echo
         [ "$LINE_GT_ONE" = 1 ] && local ECHO_DEVICE_INFO="(${COLOR_36}$ONE_SELEC_ADB_DEVICE adb${COLOR_33})"
@@ -1327,10 +1318,8 @@ CA_FLASH_MAIN() {
                 echo
                 echo -e "${COLOR_35}[SRCH]${COLOR_33}正在搜索包含'${COLOR_36}${INPUT_PKGE_NAME[*]}${COLOR_33}'的包名...${COLOR_0}"
                 ALL_LIST_PKGE="$(adb -s "$SELEC_ADB_DEVICE" shell pm list packages --user current 2>>$MST_LOG)"
-                if [ -z "$ALL_LIST_PKGE" ]
-                then
-                    ALL_LIST_PKGE="$(adb -s "$SELEC_ADB_DEVICE" shell pm list packages 2>>$MST_LOG)"
-                fi
+                [ -z "$ALL_LIST_PKGE" ]
+ && ALL_LIST_PKGE="$(adb -s "$SELEC_ADB_DEVICE" shell pm list packages 2>>$MST_LOG)"
                 PKGE_NUMBER=1
                 ALL_SEARCH=""
                 for ONE_SEARCH in "${INPUT_PKGE_NAME[@]}"
@@ -1622,10 +1611,7 @@ CA_FLASH_MAIN() {
                 while IFS= read ONE_CLEAN_APP
                 do
                     echo -e "${COLOR_35}[Cleaning]${COLOR_33}正在清理应用'${COLOR_36}$ONE_CLEAN_APP${COLOR_33}'的全部数据...${COLOR_0}"
-                    if [ -z "$SELEC_ADB_DEVICE" ]
-                    then
-                        continue
-                    fi
+                    [ -z "$SELEC_ADB_DEVICE" ] && continue
                     ALL_CLEAN_APP=$((ALL_CLEAN_APP + 1))
                     DATA_SIZE="$(adb -s "$SELEC_ADB_DEVICE" shell df /data | awk 'NR==2 {printf "%.2f", ($3/1024/1024)}' 2>>$MST_LOG)"
                     if echo -e -n "$COLOR_30" && adb -s "$SELEC_ADB_DEVICE" shell pm clear "$ONE_CLEAN_APP" </dev/null
