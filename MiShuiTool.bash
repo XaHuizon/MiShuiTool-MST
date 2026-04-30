@@ -11,8 +11,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='26.2.1 Official'
-NOW_VERSION=10017
+MST_UPDATE_TIME='26.2.2 Official'
+NOW_VERSION=10018
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
