@@ -11,14 +11,103 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='26.2.1 Official'
-NOW_VERSION=10017
+MST_UPDATE_TIME='26.2.2 Official'
+NOW_VERSION=10018
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
 else
     export COLOR="$COLOR_36"
 fi
+case "$1" in
+'')
+    true
+    ;;
+update | -u | --update)
+    echo
+    curl -sS https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/install | bash
+    exit 0
+    ;;
+help | -h | --help)
+    echo
+    echo "mishuitool支持使用选项快捷完成一些操作"
+    echo -e "在 ${COLOR_32}mishuitool${COLOR_0} 命令后添加以下选项即可快捷启动对应功能"
+    echo
+    echo -e " ${COLOR_32}update${COLOR_0}  | ${COLOR_32}-u ${COLOR_0}| ${COLOR_32}--update${COLOR_0}   更新MST工具箱"
+    echo -e " ${COLOR_32}version${COLOR_0} | ${COLOR_32}-v ${COLOR_0}| ${COLOR_32}--version${COLOR_0}  查看MST工具箱的版本信息"
+    echo -e " ${COLOR_32}check${COLOR_0}   | ${COLOR_32}-c ${COLOR_0}| ${COLOR_32}--check${COLOR_0}    快速检查运行环境"
+    echo
+    exit 0
+    ;;
+version | -v | --version)
+    echo
+    echo -e " - ${COLOR_32}MiShuiTool${COLOR_36} (MST工具箱)${COLOR_0} >>"
+    echo -e "版本: ${COLOR_36}$MST_UPDATE_TIME ${COLOR_32}CLI (基于命令行)${COLOR_0}"
+    echo -e "运行环境:  ${COLOR_32}Linux-Android-Termux Bash 5.2+${COLOR_0}"
+    echo -e "Gitee地址: ${COLOR_32}https://gitee.com/XaHui-GitHub/mi-shui-tool/${COLOR_0}"
+    echo
+    echo -e "${COLOR_35}INFO:${COLOR_0}作者不保证此工具没有任何BUG 仅供交流学习 使用前务必备份好重要数据${COLOR_0}"
+    echo -e "${COLOR_35}Email: ${COLOR_32}311461xhl@gmail.com${COLOR_0}"
+    echo
+    exit 0
+    ;;
+check | -c | --check)
+    echo
+    echo "Check:正在检查当前环境..."
+    echo -e -n "${COLOR_35}所需命令: ${COLOR_36}adb${COLOR_0}"
+    if command -v adb &>>$MST_LOG
+    then
+        echo -e " ------------------ ${COLOR_32}[OKAY]${COLOR_0}"
+    else
+        echo -e "${COLOR_31}[Not Found]${COLOR_0}"
+        echo -e "${COLOR_31}ERROR:${COLOR_36}adb${COLOR_0}命令未安装/不可用!${COLOR_0}"
+    fi
+    echo -e -n "${COLOR_35}所需命令: ${COLOR_36}fastboot${COLOR_0}"
+    if command -v fastboot &>>$MST_LOG
+    then
+        echo -e " ------------- ${COLOR_32}[OKAY]${COLOR_0}"
+    else
+        echo -e "${COLOR_31}[Not Found]${COLOR_0}"
+        echo -e "${COLOR_31}ERROR:${COLOR_36}adb${COLOR_0}命令未安装/不可用!${COLOR_0}"
+    fi
+    echo -e -n "${COLOR_35}Bash版本: ${COLOR_36}"
+    if BASH_VERSION="$(bash --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)" && [ "$BASH_VERSION" > 5.2.0 ]
+    then
+        echo -e "$BASH_VERSION ${COLOR_0}---------------- ${COLOR_32}[OKAY]${COLOR_0}"
+    else
+        echo -e "${COLOR_31}[OLD]${COLOR_0}"
+        echo -e "${COLOR_31}ERROR:${COLOR_0}Bash版本过低 MST运行需要bash5.2+"
+    fi
+    echo -e -n "${COLOR_35}PATH路径: ${COLOR_36}"
+    if [[ "$PATH" = **/data/data/com.termux/files/usr/bin** ]]
+    then
+        echo -e ".../com.termux/.../bin ${COLOR_32}[OKAY]${COLOR_0}"
+    else
+        echo -e "$PATH ${COLOR_31}[ERROR]${COLOR_0}"
+        echo -e "${COLOR_31}ERROR:${COLOR_0}当前环境似乎不是Termux"
+    fi
+    echo -e -n "${COLOR_35}脚本权限: ${COLOR_36}"
+    case "$(id -u)" in
+    0)
+        echo -e "ROOT (0)${COLOR_0} ------------- ${COLOR_32}[OKAY]${COLOR_0}"
+        ;;
+    2000)
+        echo -e "SHELL (2000)${COLOR_0} --------- ${COLOR_32}[OKAY]${COLOR_0}"
+        ;;
+    *)
+        echo -e "USER ($(id -u))${COLOR_0} --------- ${COLOR_32}[OKAY]${COLOR_0}"
+        ;;
+    esac
+    echo 
+    exit 0
+    ;;
+*)
+    echo
+    echo -e "执行 ${COLOR_32}mishuitool help${COLOR_0} 命令以查看MST支持哪些选项及其功能"
+    echo
+    exit 1
+    ;;
+esac
 ALL_REBOOT() {
     CLEAR_READ_INPUT
     sleep 0.4
@@ -2357,96 +2446,6 @@ MiShuiTool_i_main() {
     esac
     REBOOT_FL || return 0
 }
-CA_FLASH_MAIN
-case "$1" in
-'')
-    true
-    ;;
-update | -u | --update)
-    echo
-    curl -sS https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/install | bash
-    exit 0
-    ;;
-help | -h | --help)
-    echo
-    echo "mishuitool支持使用选项快捷完成一些操作"
-    echo -e "在 ${COLOR_32}mishuitool${COLOR_0} 命令后添加以下选项即可快捷启动对应功能"
-    echo
-    echo -e " ${COLOR_32}update${COLOR_0}  | ${COLOR_32}-u ${COLOR_0}| ${COLOR_32}--update${COLOR_0}   更新MST工具箱"
-    echo -e " ${COLOR_32}version${COLOR_0} | ${COLOR_32}-v ${COLOR_0}| ${COLOR_32}--version${COLOR_0}  查看MST工具箱的版本信息"
-    echo -e " ${COLOR_32}check${COLOR_0}   | ${COLOR_32}-c ${COLOR_0}| ${COLOR_32}--check${COLOR_0}    快速检查运行环境"
-    echo
-    exit 0
-    ;;
-version | -v | --version)
-    echo
-    echo -e " - ${COLOR_32}MiShuiTool${COLOR_36} (MST工具箱)${COLOR_0} >>"
-    echo -e "版本: ${COLOR_36}$MST_UPDATE_TIME ${COLOR_32}CLI (基于命令行)${COLOR_0}"
-    echo -e "运行环境:  ${COLOR_32}Linux-Android-Termux Bash 5.2+${COLOR_0}"
-    echo -e "Gitee地址: ${COLOR_32}https://gitee.com/XaHui-GitHub/mi-shui-tool/${COLOR_0}"
-    echo
-    echo -e "${COLOR_35}INFO:${COLOR_0}作者不保证此工具没有任何BUG 仅供交流学习 使用前务必备份好重要数据${COLOR_0}"
-    echo -e "${COLOR_35}Email: ${COLOR_32}311461xhl@gmail.com${COLOR_0}"
-    echo
-    exit 0
-    ;;
-check | -c | --check)
-    echo
-    echo "Check:正在检查当前环境..."
-    echo -e -n "${COLOR_35}所需命令: ${COLOR_36}adb${COLOR_0}"
-    if command -v adb &>>$MST_LOG
-    then
-        echo -e " ------------------ ${COLOR_32}[OKAY]${COLOR_0}"
-    else
-        echo -e "${COLOR_31}[Not Found]${COLOR_0}"
-        echo -e "${COLOR_31}ERROR:${COLOR_36}adb${COLOR_0}命令未安装/不可用!${COLOR_0}"
-    fi
-    echo -e -n "${COLOR_35}所需命令: ${COLOR_36}fastboot${COLOR_0}"
-    if command -v fastboot &>>$MST_LOG
-    then
-        echo -e " ------------- ${COLOR_32}[OKAY]${COLOR_0}"
-    else
-        echo -e "${COLOR_31}[Not Found]${COLOR_0}"
-        echo -e "${COLOR_31}ERROR:${COLOR_36}adb${COLOR_0}命令未安装/不可用!${COLOR_0}"
-    fi
-    echo -e -n "${COLOR_35}Bash版本: ${COLOR_36}"
-    if BASH_VERSION="$(bash --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)" && [ "$BASH_VERSION" > 5.2.0 ]
-    then
-        echo -e "$BASH_VERSION ${COLOR_0}---------------- ${COLOR_32}[OKAY]${COLOR_0}"
-    else
-        echo -e "${COLOR_31}[OLD]${COLOR_0}"
-        echo -e "${COLOR_31}ERROR:${COLOR_0}Bash版本过低 MST运行需要bash5.2+"
-    fi
-    echo -e -n "${COLOR_35}PATH路径: ${COLOR_36}"
-    if [[ "$PATH" = **/data/data/com.termux/files/usr/bin** ]]
-    then
-        echo -e ".../com.termux/.../bin ${COLOR_32}[OKAY]${COLOR_0}"
-    else
-        echo -e "$PATH ${COLOR_31}[ERROR]${COLOR_0}"
-        echo -e "${COLOR_31}ERROR:${COLOR_0}当前环境似乎不是Termux"
-    fi
-    echo -e -n "${COLOR_35}脚本权限: ${COLOR_36}"
-    case "$(id -u)" in
-    0)
-        echo -e "ROOT (0)${COLOR_0} ------------- ${COLOR_32}[OKAY]${COLOR_0}"
-        ;;
-    2000)
-        echo -e "SHELL (2000)${COLOR_0} --------- ${COLOR_32}[OKAY]${COLOR_0}"
-        ;;
-    *)
-        echo -e "USER ($(id -u))${COLOR_0} --------- ${COLOR_32}[OKAY]${COLOR_0}"
-        ;;
-    esac
-    echo 
-    exit 0
-    ;;
-*)
-    echo
-    echo -e "执行 ${COLOR_32}mishuitool help${COLOR_0} 命令以查看MST支持哪些选项及其功能"
-    echo
-    exit 1
-    ;;
-esac
 if [ ! -d $MST_HOME/ ]
 then
     if mkdir -p $MST_HOME &>>$MST_LOG
@@ -2489,3 +2488,4 @@ then
     echo -e "${COLOR_32}[OKAY]${COLOR_33}宽度已合格即将进入主页 如果进入后发现图形错位可尝试退出脚本后使用'${COLOR_36}mishuitool${COLOR_33}'命令重新启动MST工具箱${COLOR_0}"
     sleep 5
 fi
+CA_FLASH_MAIN
