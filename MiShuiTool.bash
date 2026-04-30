@@ -11,8 +11,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='26.2 Official'
-NOW_VERSION=10016
+MST_UPDATE_TIME='26.2.1 Official'
+NOW_VERSION=10017
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -436,6 +436,7 @@ MISHUI_MAIN() {
     echo -e "$COLOR[MST]${COLOR_33}当前时间:[${COLOR_32}$(date +%Y.%m.%d)${COLOR_33}/${COLOR_32}$(date +%H:%M:%S)${COLOR_33}] $MISHUI_MAIN_TIP >>${COLOR_0}"
 }
 CA_FLASH_MAIN() {
+    BACK_MAIN=CA_FLASH_MAIN
     MISHUI_MAIN_TIP=MiShuiTool
     MISHUI_MAIN
     if [[ ! "$PATH" == **/data/data/com.termux/files/usr/bin** ]]
@@ -523,7 +524,6 @@ CA_FLASH_MAIN() {
         REBOOT_FL || return 0
     ;;
     esac
-    BACK_MAIN=CA_FLASH_MAIN
 }
 MiShuiTool_DEV_main() {
     CNT_ANY_DEVICED() {
@@ -2357,7 +2357,6 @@ MiShuiTool_i_main() {
     esac
     REBOOT_FL || return 0
 }
-BACK_MAIN=CA_FLASH_MAIN
 CA_FLASH_MAIN
 case "$1" in
 '')
