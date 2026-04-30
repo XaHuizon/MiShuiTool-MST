@@ -11,8 +11,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='26.2.2 Official'
-NOW_VERSION=10018
+MST_UPDATE_TIME='26.2.1 Official'
+NOW_VERSION=10017
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -2446,6 +2446,7 @@ MiShuiTool_i_main() {
     esac
     REBOOT_FL || return 0
 }
+trap wait EXIT
 if [ ! -d $MST_HOME/ ]
 then
     if mkdir -p $MST_HOME &>>$MST_LOG
@@ -2456,7 +2457,6 @@ then
         EXIT_SHELL 1
     fi
 fi
-trap wait EXIT
 if [ ! -f "$MST_HOME/MST运行日志.log" ]
 then
     mkdir -p $MST_HOME/ &>>$MST_LOG
@@ -2465,8 +2465,6 @@ elif [ "$(stat -c%s $MST_HOME/MST运行日志.log)" -gt 10240 ]
 then
     echo "[$(date +%Y-%m-%d) $(date +%H:%M:%S)] 日志文件过大已自动清除" &>$MST_LOG
 fi
-mkdir -p $MST_HOME/
-bash -c true
 if [ "$COLUMNS" -lt "65" ]
 then
      MAIN_HAED_TIP
