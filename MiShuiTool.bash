@@ -511,7 +511,7 @@ CONTINUE_YN() {
 MAIN_HAED_TIP() {
     clear
     echo -e "${COLOR}[MiShuiTool]${COLOR_33}Termux刷机工具箱${COLOR_36}/MST CLI${COLOR_33} 版本:${COLOR_32}$MST_UPDATE_TIME${COLOR_0}"
-    echo
+    echo -e "$HEAD_TIP_MISHUITOOL"
 }
 MISHUI_MAIN() {
     MAIN_HAED_TIP
