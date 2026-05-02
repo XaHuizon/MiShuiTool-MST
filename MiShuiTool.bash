@@ -11,8 +11,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='26.2.2 Official'
-NOW_VERSION=10018
+MST_UPDATE_TIME='26.2.3 Official'
+NOW_VERSION=10019
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -468,7 +468,7 @@ INSTALL_THE_MUST_CMD() {
     local NOT_INSTALL_CMD="$3"
     if ! command -v $NOT_INSTALL_CMD &>>$MST_LOG
     then
-        echo -e "${COLOR_31}[ERROR]${COLOR_33}没有在当前环境(${COLOR_36}$PATH${COLOR_33})中找到'${COLOR_36}$NOT_INSTALL_CMD${COLOR_33}'命令${COLOT_0}"
+        echo -e "${COLOR_31}[ERROR]${COLOR_33}没有在当前环境(${COLOR_36}$PATH${COLOR_33})中找到'${COLOR_36}$NOT_INSTALL_CMD${COLOR_33}'命令${COLOR_0}"
         echo
         echo -e "${COLOR_35}[GET]${COLOR_33}是否安装'${COLOR_36}$NOT_INSTALL_TOOLS${COLOR_33}'工具包 >>${COLOR_0}"
         echo -e -n "${COLOR_36}[+][1›立即安装/2›取消并退出]*ᐷ${COLOR_01}"
@@ -2000,7 +2000,7 @@ MiShuiTool_AUTO_main() {
             CHUCK_PATCH_TIME "${COLOR_31}[ERROR]${COLOR_33}无法读取目标设备安全补丁更新日期 此功能依赖的漏洞需要安全补丁日期低于${COLOR_36}2826年3月${COLOR_33} 是否继续 >>${COLOR_0}" 未知
         elif [[ "$DEVICES_PATCHTIME" > 2026-01-01 ]]
         then
-            CHUCK_PATCH_TIME "${COLOR_31}[!]${COLOR_33}目标设备安全补丁版本(${COLOR_36DEVICES_PATCHTIME${COLOR_33}}$)大于${COLOR_36}2026年1月${COLOR_33} 此功能依赖的漏洞可能已被修复 是否继续 >>${COLOR_0}" 不通过
+            CHUCK_PATCH_TIME "${COLOR_31}[!]${COLOR_33}目标设备安全补丁版本(${COLOR_36}$DEVICES_PATCHTIME${COLOR_33}}$)大于${COLOR_36}2026年1月${COLOR_33} 此功能依赖的漏洞可能已被修复 是否继续 >>${COLOR_0}" 不通过
         else
             echo -e "${COLOR_32}通过${COLOR_0}"
         fi
@@ -2056,17 +2056,20 @@ MiShuiTool_AUTO_main() {
         read YN_CONTINUE_SYSTEM
         FASTBOOT_CONTINUE_TRY_NUMNER=1
         FASTBOOT_CONTINUE_TRY() {
-            if fastboot -s "$SELEC_FASTBOOT_DEVICE" continue &>>$MST_LOG
-            then
-                return 0
-            elif [ "$FASTBOOT_CONTINUE_TRY_NUMNER" = 3 ]
-            then
-                return 1
-            else
-                echo -e "${COLOR_35}[Trying]${COLOR_31}执行失败${COLOR_33}正在进行第(${COLOR_36}$FASTBOOT_CONTINUE_TRY_NUMNER${COLOR_33}/2)次尝试...${COLOR_0}"
-                FASTBOOT_CONTINUE_TRY_NUMNER=$((FASTBOOT_CONTINUE_TRY_NUMNER + 1))
-                FASTBOOT_CONTINUE_TRY
-            fi
+            while true
+            do
+                if fastboot -s "$SELEC_FASTBOOT_DEVICE" continue &>>$MST_LOG
+                then
+                    return 0
+                elif [ "$FASTBOOT_CONTINUE_TRY_NUMNER" -ge 3 ]
+                then
+                    return 1
+                else
+                    echo -e "${COLOR_35}[Trying]${COLOR_31}执行失败${COLOR_33}正在进行第(${COLOR_36}$FASTBOOT_CONTINUE_TRY_NUMNER${COLOR_33}/2)次尝试...${COLOR_0}"
+                    FASTBOOT_CONTINUE_TRY_NUMNER=$((FASTBOOT_CONTINUE_TRY_NUMNER + 1))
+                    break
+                fi
+            done
         }
         case "$YN_CONTINUE_SYSTEM" in
         1 | y | Y)
