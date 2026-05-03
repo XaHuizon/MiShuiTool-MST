@@ -11,8 +11,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='26.2.3 Official'
-NOW_VERSION=10019
+MST_UPDATE_TIME='26.3 Official'
+NOW_VERSION=10020
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -71,9 +71,9 @@ check | -c | --check)
         echo -e "${COLOR_31}ERROR:${COLOR_36}adb${COLOR_0}命令未安装/不可用!${COLOR_0}"
     fi
     echo -e -n "${COLOR_35}Bash版本: ${COLOR_36}"
-    if BASH_VERSION="$(bash --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)" && [ "$BASH_VERSION" > 5.2.0 ]
+    if CHUCK_BASH_VERSION="$(sed 's/(.*//g' <<< "$BASH_VERSION")" && [[ "$CHUCK_BASH_VERSION" > 5.2.0 ]]
     then
-        echo -e "$BASH_VERSION ${COLOR_0}---------------- ${COLOR_32}[OKAY]${COLOR_0}"
+        echo -e "$CHUCK_BASH_VERSION ${COLOR_0}---------------- ${COLOR_32}[OKAY]${COLOR_0}"
     else
         echo -e "${COLOR_31}[OLD]${COLOR_0}"
         echo -e "${COLOR_31}ERROR:${COLOR_0}Bash版本过低 MST运行需要bash5.2+"
@@ -120,16 +120,16 @@ REBOOT_FL() {
     read -s
     echo
     echo -e -n "${COLOR_34}[BACK]${COLOR_33}返回主页...${COLOR_0}"
-    ALL_REBOOT || return 0
+    ALL_REBOOT; return 0
 }
 SU_REBOOT_FL() {
     echo
     echo -e -n "${COLOR}[MST]${COLOR_33}返回主页...${COLOR_0}"
-    ALL_REBOOT || return 0
+    ALL_REBOOT; return 0
 }
 MAIN_REBOOT() {
     echo -e -n "${COLOR}[MST]${COLOR_33}返回主页...${COLOR_0}"
-    ALL_REBOOT || return 0
+    ALL_REBOOT; return 0
 }
 EXIT_SHELL() {
     local EXIT_CODE="${1:-0}"
@@ -211,7 +211,7 @@ SELEC_ADB_FB_DEVICE() {
         USR_DEVICES_NUM=$((USR_DEVICES_NUM + 1))
     done <<< "$ADB_DEVICES"
     case "$ADB_OR_FASTBOOT_SELEC_MODEL" in
-    'any"')
+    'any')
         echo -e "${COLOR_35}[SELE]${COLOR_33}输入要选择的设备序号(多选以'${COLOR_36}-${COLOR_33}'符号分隔)${COLOR_0}"
         read -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' SELE_NEED_DEVICES
         if [[ "$SELE_NEED_DEVICES" =~ ^[0-9]+(-[0-9]+)*$ ]]
@@ -222,7 +222,7 @@ SELEC_ADB_FB_DEVICE() {
             USR_OKAY_DEVICES="$(sed -n ${SELE_NEED_DEVICES}p <<< "$ALL_SEARCH")"
         else
             echo -e "${COLOR_31}[!]${COLOR_33}无法解析的输入(${COLOR_36}$SELE_NEED_DEVICES${COLOR_33}) 若要多选必须以'${COLOR_36}-${COLOR_36}'符号分隔${COLOR_0}"
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
         fi
         ;;
     'only')
@@ -234,7 +234,7 @@ SELEC_ADB_FB_DEVICE() {
             ;;
         *)
             echo -e "${COLOR_31}[!]${COLOR_33}无法解析的输入(${COLOR_36}$SELE_NEED_DEVICES${COLOR_33}) 当前功能不支持多选${COLOR_0}"
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
             ;;
         esac
         ;;
@@ -243,7 +243,7 @@ SELEC_ADB_FB_DEVICE() {
     then
         echo -e "${COLOR_31}[!]${COLOR_33}无法解析的内容:${COLOR_36}$SELE_NEED_DEVICES${COLOR_0}"
         echo -e "${COLOR_35}[Tip]${COLOR_33}ADB设备支持输入单数字进行单选以及通过'${COLOR_36}-${COLOR_33}'符号分隔数字进行多选 Fastboot设备为了安全仅支持单选${COLOR_0}"
-        REBOOT_FL || return 0
+        REBOOT_FL; return 0
     fi
     echo -e "${COLOR_32}[OKAY]${COLOR_33}已选中设备列表 >>${COLOR_0}"
     while IFS= read -r ONE_ADB_DEVICE
@@ -346,18 +346,29 @@ USB_DEVICES_ADB() {
     do
         [ -z "$ONE_SELEC_ADB_DEVICE" ] && continue
         SELEC_ADB_DEVICES_NUMBER=$((SELEC_ADB_DEVICES_NUMBER + 1))
-        CPU_GHZ=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell "MAX_GHZ=\$(cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_max_freq | sort -n | tail -1); echo \"scale=2; \$MAX_GHZ / 1000000\" | bc" 2>>$MST_LOG)
-        CPUNAME=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell getprop ro.soc.model 2>>$MST_LOG)
+        ALL_ADB_DEVICE_INFO="$(adb -s "$ONE_SELEC_ADB_DEVICE" shell "getprop ro.build.version.release
+grep -c 'processor' /proc/cpuinfo
+getprop ro.product.device
+settings get global device_name
+getprop ro.build.version.incremental
+uname -r
+getprop gsm.version.baseband
+getprop ro.build.version.sdk
+getprop ro.product.brand
+MAX_GHZ=\$(cat /sys/devices/system/cpu/cpu*/cpufreq/cpuinfo_max_freq | sort -n | tail -1); echo \"scale=2; \$MAX_GHZ / 1000000\" | bc
+getprop ro.soc.model" 2>>$MST_LOG)"
+        OSV="$(sed -n 1p <<< "$ALL_ADB_DEVICE_INFO")"
+        CPUUN="$(sed -n 2p <<< "$ALL_ADB_DEVICE_INFO")"
+        DEVONE="$(sed -n 3p <<< "$ALL_ADB_DEVICE_INFO")"
+        DEVTWO="$(sed -n 4p <<< "$ALL_ADB_DEVICE_INFO")"
+        UINAME="$(sed -n 5p <<< "$ALL_ADB_DEVICE_INFO")"
+        KERNEL="$(sed -n 6p <<< "$ALL_ADB_DEVICE_INFO")"
+        WIFI="$(sed -n 7p <<< "$ALL_ADB_DEVICE_INFO")"
+        DEV_SDK="$(sed -n 8p <<< "$ALL_ADB_DEVICE_INFO")"
+        DEV_NAME="$(sed -n 9p <<< "$ALL_ADB_DEVICE_INFO")"
+        CPU_GHZ="$(sed -n 10p <<< "$ALL_ADB_DEVICE_INFO")"
+        CPUNAME="$(sed -n 11p <<< "$ALL_ADB_DEVICE_INFO")"
         [ -z "$CPUNAME" ] && CPUNAME=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell grep 'Hardware' /proc/cpuinfo 2>>$MST_LOG | sed 's/.*: //g; s/, /-/g' 2>>$MST_LOG)
-        OSV=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell getprop ro.build.version.release 2>>$MST_LOG)
-        CPUUN=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell grep -c "processor" /proc/cpuinfo 2>>$MST_LOG)
-        DEVONE=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell getprop ro.product.device 2>>$MST_LOG)
-        DEVTWO=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell settings get global device_name 2>>$MST_LOG)
-        UINAME=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell getprop ro.build.version.incremental 2>>$MST_LOG)
-        KERNEL=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell uname -r 2>>$MST_LOG)
-        WIFI=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell getprop gsm.version.baseband 2>>$MST_LOG)
-        DEV_SDK=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell getprop ro.build.version.sdk 2>>$MST_LOG)
-        DEV_NAME=$(adb -s "$ONE_SELEC_ADB_DEVICE" shell getprop ro.product.brand 2>>$MST_LOG)
         local ALL_ABC=("CPUNAME" "OSV" "CPUUN" "DEVONE" "DEVTWO" "UINAME" "KERNEL" "WIFI" "DEV_SDK" "DEV_NAME" "CPU_GHZ")
         for ABC in "${ALL_ABC[@]}"
         do
@@ -390,7 +401,7 @@ CLEAR_READ_INPUT() {
 }
 ERROR_CONT() {
     echo -e "${COLOR_31}[!]${COLOR_33}异常选项:${COLOR_36}$FUNC_CONT${COLOR_0}"
-    REBOOT_FL || return 0
+    REBOOT_FL; return 0
 }
 BACK_TO_SHELL() {
     local EXIT_YN
@@ -447,7 +458,7 @@ REBOOT_USB_DEVICES() {
         REBOOT_TAP=''
         ;;
     '4')
-        MAIN_REBOOT || return 0
+        MAIN_REBOOT; return 0
         ;;
     *)
         ERROR_CONT
@@ -479,7 +490,7 @@ INSTALL_THE_MUST_CMD() {
             if bash -c "$INSTALL_ITS_CMD" && CLEAR_READ_INPUT
             then
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}工具包'${COLOR_36}$NOT_INSTALL_TOOLS${COLOR_33}'安装成功${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             else
                 echo -e "${COLOR_31}[ERROR]${COLOR_36}$NOT_INSTALL_TOOLS${COLOR_33}安装失败 尝试连接魔法或手动执行命令 >>${COLOR_0}"
                 echo -e "${COLOR_33} - 命令1: ${COLOR_36}pkg update -y && pkg upgrade -y${COLOR_0}"
@@ -499,7 +510,7 @@ SEE_USB_DEVICES() {
     then
         echo -e "${COLOR_31}[!]${COLOR_33}没有设备连接无法继续${COLOR_0}"
         echo -e "${COLOR_35}[Tip]${COLOR_33}在主页中使用'${COLOR_36}连接设备${COLOR_33}'功能连接设备后再试${COLOR_0}"
-        REBOOT_FL || return 0
+        REBOOT_FL; return 0
     fi
     echo
 }
@@ -562,7 +573,7 @@ CA_FLASH_MAIN() {
             then
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}工具包'${COLOR_36}ADB&Fastboot${COLOR_33}'安装成功${COLOR_0}"
                 ADB_FASTBOOT_VER
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             else
                 unset INSTALL_ADB_FB_CLI
                 echo -e "${COLOR_31}[ERROR]${COLOR_36}$NOT_INSTALL_TOOLS${COLOR_33}安装失败 尝试手动执行命令 >>${COLOR_0}"
@@ -581,7 +592,7 @@ CA_FLASH_MAIN() {
     echo -e "${COLOR_35}[&]${COLOR_33}›5*-${COLOR_36}关于/帮助/更新${COLOR_35}[EXIT]${COLOR_33}›6*-${COLOR_36}退出MST工具箱${COLOR_0}"
     echo -e -n "${COLOR}[-${COLOR_32}CA${COLOR}-]${COLOR_33}输入选项*ᐷ${COLOR_0}"
     CLEAR_READ_INPUT
-    read INPUT_USR
+    read -r INPUT_USR
     echo -e "${COLOR_30}-------------------------------------------------${COLOR_0}"
     case "$INPUT_USR" in
     '1' | 'DEV' | '管理连接设备')
@@ -607,10 +618,10 @@ CA_FLASH_MAIN() {
         then
             echo -e "${COLOR_31}[!]${COLOR_33}此处不可为空${COLOR_0}"
             sleep 0.3
-            MAIN_REBOOT || return 0
+            MAIN_REBOOT; return 0
         fi
         echo -e "${COLOR_31}[!]${COLOR_33}'${COLOR_36}$INPUT_USR${COLOR_33}'非菜单中的选项${COLOR_0}"
-        REBOOT_FL || return 0
+        REBOOT_FL; return 0
     ;;
     esac
 }
@@ -627,7 +638,8 @@ MiShuiTool_DEV_main() {
                 ;;
             *)
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}$FASTBOOT_OR_ADB_NAME设备已就绪无需重复连接${COLOR_0}"
-                REBOOT_FL || return 0
+                BACK_MAIN=CA_FLASH_MAIN
+                REBOOT_FL; return 0
                 ;;
             esac
         else
@@ -641,14 +653,15 @@ MiShuiTool_DEV_main() {
                 if USB_DEVICES_$FASTBOOT_OR_ADB_NAME
                 then
                     echo -e "${COLOR_32}[OKAY]${COLOR_33}设备连接成功${COLOR_0}"
+                    BACK_MAIN=CA_FLASH_MAIN
                 else
                     echo -e "${COLOR_31}[ERROR]${COLOR_33}设备连接失败 重试一次或使用ROOT模式执行${COLOR_0}"
-                    REBOOT_FL || return 0
+                    REBOOT_FL; return 0
                 fi
             else
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}没有发现可连接设备${COLOR_0}"
                 echo -e "${COLOR_35}[Tip]${COLOR_36}重新插入USB设备${COLOR_33}/${COLOR_36}重启Termux${COLOR_33}/${COLOR_36}检查数据线是否正确连接${COLOR_33}/${COLOR_36}重启目标设备${COLOR_33}以尝试解决问题${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             fi
         fi
     }
@@ -668,22 +681,20 @@ MiShuiTool_DEV_main() {
         MISHUI_MAIN_TIP=连接FASTBOOT设备
         MISHUI_MAIN
         CNT_ANY_DEVICED FASTBOOT
-        REBOOT_FL || return 0
+        REBOOT_FL; return 0
         ;;
     '2')
         REBOOT_THE_ADB
         MISHUI_MAIN_TIP=连接ADB设备
         MISHUI_MAIN
         CNT_ANY_DEVICED ADB
-        REBOOT_FL || return 0
+        REBOOT_FL; return 0
         ;;
     '3')
         REBOOT_THE_ADB
         MISHUI_MAIN_TIP=连接无线调试ADB设备
         MISHUI_MAIN
         FASTBOOT_OR_ADB_NAME=ADB
-        WARIN_TIP="${COLOR_31}[!]${COLOR_33}输入格式不正确 正确格式应为:${COLOR_36}192.168.00.00:0000${COLOR_0}"
-        echo -e "${COLOR_35}[WLAN]${COLOR_33}无线ADB连接必须保证本机与目标设备处于同一Wi-Fi局域网下${COLOR_0}"
         echo
         echo -e "${COLOR_35}[OS]${COLOR_33}选择目标设备的Android系统版本 >>${COLOR_0}"
         echo -e -n "${COLOR_36}[+][1›Android11以上/2›Android11以下]*ᐷ${COLOR_0}"
@@ -692,45 +703,48 @@ MiShuiTool_DEV_main() {
         case "$THE_CONNNECT_VERSION" in
         '1' | 'Android11以上')
             echo -e "${COLOR_35}[Tip]${COLOR_33}在目标设备上按照以下步骤打开'${COLOR_36}无线调试${COLOR_33}'选项 >>${COLOR_0}"
-            echo -e "${COLOR_35}[STEP]${COLOR_36}系统设置 ${COLOR_33}-> ${COLOR_36}开发者选项 ${COLOR_33}->${COLOR_36} 无线调试${COLOR_33} -> ${COLOR_36}使用配对码配对${COLOR_0}"
+            echo -e "${COLOR_35}[STEP]${COLOR_36}系统设置 ${COLOR_33}-> ${COLOR_36}开发者选项 ${COLOR_33}->${COLOR_36} 无线调试${COLOR_0}"
             ENTER_ANY_CONTINUE 打开后
             echo
-            echo -e "${COLOR_35}[IP]${COLOR_33}输入'${COLOR_36}与设备配对${COLOR_33}'中显示的'${COLOR_36}IP地址:端口${COLOR_33}' >>${COLOR_0}"
-            echo -e -n "${COLOR_33}(格式:${COLOR_36}192.168.00.00:00000${COLOR_33})*ᐷ${COLOR_01}"
-            read IP_AND_PORT
-            if [ -n "$IP_AND_PORT" ] && grep ':' <<< "$IP_AND_PORT" &>>$MST_LOG
+            echo -e "${COLOR_35}[IP]${COLOR_33}输入'${COLOR_36}无线调试${COLOR_33}'页面显示的'${COLOR_36}IP地址:端口${COLOR_33}'以连接 >>${COLOR_0}"
+            read -e -p $'\001\033[0;33;1m\002(格式:\001\033[0;36;1m\002192.168.00.00:00000\001\033[0;33;1m\002)*ᐷ \001\033[0;1m\002' IP_AND_PORT
+            ONLY_IP="$(sed 's/:.*//g' <<< "$IP_AND_PORT")"
+            if ! ping -c 1 "$ONLY_IP" &>>$MST_LOG
             then
+                echo -e "${COLOR_31}[!]${COLOR_33}无法连接至'${COLOR_36}$ONLY_IP${COLOR_33}' 输入的IP似乎有误${COLOR_0}"
+                REBOOT_FL; return 0
+            fi
+            if ! grep -w "$ONLY_IP" $MST_HOME/Pair_devices.txt &>>$MST_LOG
+            then
+                echo
+                echo -e "${COLOR_35}[Tip]${COLOR_33}此IP(${COLOR_36}$ONLY_IP${COLOR_33})需要配对 在目标设备打开'${COLOR_36}使用配对码配对设备${COLOR_33}'界面进行配对后继续${COLOR_0}"
+                echo -e "${COLOR_35}[NEW]${COLOR_33}输入'${COLOR_36}与设备配对${COLOR_33}'页面显示的'IP地址:${COLOR_36}端口${COLOR_33}'以配对 >>${COLOR_0}"
+                read -e -p $'\001\033[0;33;1m\002*ᐷ\001\033[0;36;1m\002'"$ONLY_IP:"$'\001\033[0;1m\002' ONLY_PORT
+                if [ "${#ONLY_PORT}" != 5 ]
+                then
+                    echo -e  "${COLOR_31}[!]${COLOR_33}输入的内容有误 此处只需要输入'${COLOR_36}5位数端口${COLOR_33}(${COLOR_31}${COLOR_RM}192.168.00.00:${COLOR_32}00000${COLOR_33})'无需输入IP${COLOR_0}"
+                    REBOOT_FL; return 0
+                fi
                 echo -e -n "${COLOR_35}[PAIR]${COLOR_33}输入'${COLOR_36}WLAN配对码${COLOR_33}':${COLOR_01}"
                 read INPUT_PAIR_CODE
                 if [ "${#INPUT_PAIR_CODE}" != 6 ]
                 then
                     echo -e "${COLOR_31}[!]${COLOR_33}此配对码有误 正确配对码应为${COLOR_36}六位数${COLOR_0}"
-                    REBOOT_FL || return 0
+                    REBOOT_FL; return 0
                 fi
                 echo
-                echo -e "${COLOR_35}[Connecting]${COLOR_33}正在与'${COLOR_36}$IP_AND_PORT${COLOR_33}'配对...${COLOR_0}"
-                if grep -q paired <<< "$(adb pair "$IP_AND_PORT" <<< "$INPUT_PAIR_CODE" 2>&1)" &>>$MST_LOG
+                echo -e "${COLOR_35}[Connecting]${COLOR_33}正在与'${COLOR_36}$ONLY_IP${COLOR_33}'配对...${COLOR_0}"
+                if ! grep -q paired <<< "$(adb pair "$ONLY_IP:$ONLY_PORT" <<< "$INPUT_PAIR_CODE" 2>&1)" &>>$MST_LOG
                 then
-                    echo -e "${COLOR_32}[OKAY]${COLOR_33}已成功与'${COLOR_36}$IP_AND_PORT${COLOR_33}'配对${COLOR_0}"
-                    ONLY_IP="$(sed 's/:.*//g' <<< "$IP_AND_PORT")"
-                    echo -e "${COLOR_35}[NEW]${COLOR_33}输入'${COLOR_36}无线调试${COLOR_33}'页面的'IP地址:${COLOR_36}端口${COLOR_33}'以连接 >>${COLOR_0}"
-                    echo -e -n "${COLOR_33}*ᐷ ${COLOR_32}$ONLY_IP:${COLOR_01}"
-                    read ONLY_PORT
-                    if [ "${#ONLY_PORT}" != 5 ]
-                    then
-                        echo -e  "${COLOR_31}[!]${COLOR_33}输入的内容有误 此处只需要输入'${COLOR_36}5位数端口${COLOR_33}(${COLOR_31}${COLOR_RM}192.168.00.00:${COLOR_32}00000${COLOR_33})'无需输入IP${COLOR_0}"
-                        REBOOT_FL || return 0
-                    fi
-                    NEW_IP_AND_PORT="$ONLY_IP:$ONLY_PORT"
-                else
                     echo -e "${COLOR_31}[ERROR]${COLOR_33}无法与'${COLOR_36}$IP_AND_PORT${COLOR_33}'配对${COLOR_0}"
                     echo -e "${COLOR_35}[Tip]${COLOR_33}配对开始时应保持'${COLOR_36}与设备配对${COLOR_33}'页面的开启状态 除非配对完毕后自动退出${COLOR_0}"
-                    REBOOT_FL || return 0
+                    REBOOT_FL; return 0
                 fi
-            else
-                echo -e "$WARIN_TIP"
-                REBOOT_FL || return 0
+                echo -e "${COLOR_32}[OKAY]${COLOR_33}已成功与'${COLOR_36}$IP_AND_PORT${COLOR_33}'配对 正在连接...${COLOR_0}"
+                echo "$ONLY_IP" >> $MST_HOME/Pair_devices.txt
             fi
+            echo
+            NEW_IP_AND_PORT="$IP_AND_PORT"
             ;;
         '2' | 'Android11以下')
             echo -e "${COLOR_35}[USB]${COLOR_33}要无线连接Android11以下的设备必须先进行一次有线连接 现在先将本机与目标设备使用OTG转接线连接${COLOR_0}"
@@ -752,14 +766,14 @@ MiShuiTool_DEV_main() {
             if [ "$THE_TCP_NUMBER" -lt 1024 ] || [ "$THE_TCP_NUMBER" -gt 49151 ]
             then
                 echo -e "${COLOR_31}[!]${COLOR_33}输入的端口'${COLOR_36}$THE_TCP_NUMBER${COLOR_33}'不在规范的范围(${COLOR_36}1024-49151${COLOR_33}) 为保证安全已终止操作${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             fi
             if adb tcpip $THE_TCP_NUMBER &>>$MST_LOG
             then
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}监听端口'${COLOR_36}$THE_TCP_NUMBER${COLOR_33}'已启动${COLOR_0}"
             else
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}监听端口'${COLOR_36}$THE_TCP_NUMBER${COLOR_33}'启动失败 可能目标设备意外断开USB连接或系统不支持 再试一次或使用有线ADB调试${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             fi
             echo
             echo -e "${COLOR_35}[IP]${COLOR_33}正在获取目标设备IP地址...${COLOR_0}"
@@ -773,29 +787,25 @@ MiShuiTool_DEV_main() {
                 echo
                 echo -e -n "${COLOR_35}[Input]${COLOR_33}输入IP:${COLOR_01}"
                 read ONLY_USB_IP
-                if [ "$(echo "$ONLY_USB_IP" | tr -cd '.' | wc -c)" = 3 ]
+                if ! ping -c 1 "$ONLY_USB_IP" &>>$MST_LOG
                 then
-                    NEW_IP_AND_PORT="$ONLY_USB_IP:$THE_TCP_NUMBER"
-                else
-                    echo -e "${COLOR_31}[!]${COLOR_33}输入的内容不符合标准的IP地址规格${COLOR_0}"
-                    REBOOT_FL || return 0
+                    echo -e "${COLOR_31}[!]${COLOR_33}无法连接至'${COLOR_36}$ONLY_IP${COLOR_33}' 输入的IP似乎有误${COLOR_0}"
+                    REBOOT_FL; return 0
                 fi
+                echo
+                NEW_IP_AND_PORT="$ONLY_USB_IP:$THE_TCP_NUMBER"
+                echo -e "${COLOR_35}[Connecting]${COLOR_33}正在连接'${COLOR_36}$NEW_IP_AND_PORT${COLOR_33}'...${COLOOR_0}"
             fi
             ;;
         '')
             echo -e "${COLOR_31}[!]${COLOR_33}此处不可为空${COLOR_0}"
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
             ;;
         *)
             echo -e "${COLOR_31}[!]${COLOR_33}'${COLOR_36}$THE_CONNNECT_VERSION${COLOR_33}'不是预设的选项${COLOR_0}"
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
             ;;
         esac
-        if [ -z "$NEW_IP_AND_PORT" ] && ! grep ':' <<< "$NEW_IP_AND_PORT" &>>$MST_LOG
-        then
-            echo -e "$WARIN_TIP"
-            REBOOT_FL || return 0
-        fi
         CONNECT_ERROR="${COLOR_31}[ERROR]${COLOR_33}设备连接失败 检查'${COLOR_36}IP地址:端口${COLOR_33}(${COLOR_32}$NEW_IP_AND_PORT${COLOR_33})'是否有误/网络环境是否变化后重试一次或使用有线模式进行ADB调试${COLOR_0}"
         if grep connected <<< "$(adb connect $NEW_IP_AND_PORT)"
         then
@@ -803,19 +813,19 @@ MiShuiTool_DEV_main() {
             if USB_DEVICES_$FASTBOOT_OR_ADB_NAME
             then
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}设备连接成功${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             else
                 echo -e "$CONNECT_ERROR"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             fi
         else
             echo -e "$CONNECT_ERROR"
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
         fi
         ;;
     '4')
         BACK_MAIN=CA_FLASH_MAIN
-        MAIN_REBOOT || return 0
+        MAIN_REBOOT; return 0
         ;;
     *)
         ERROR_CONT
@@ -840,7 +850,7 @@ MiShuiTool_FB_main() {
         'no')
             echo -e "${COLOR_35}[WARN]${COLOR_31}当前Fastboot设备BootLoader未解锁${COLOR_0}"
             echo -e "${COLOR_31}[!]${COLOR_33}要继续操作必须先为Fastboot设备${COLOR_36}解锁BootLoader${COLOR_33}(BL锁)${COLOR_0}"
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
             ;;
         *)
             echo -e "${COLOR_35}[WARN]${COLOR_31}刷入不兼容的$TIP_TEXT_2文件可能导致设备无法开机${COLOR_0}"
@@ -873,7 +883,7 @@ MiShuiTool_FB_main() {
             read YN_FLASH_ERROR_SLOT
             case "$YN_FLASH_ERROR_SLOT" in
             '2' | 'n' | 'N')
-                MAIN_REBOOT || return 0
+                MAIN_REBOOT; return 0
                 ;;
             esac
         fi
@@ -891,11 +901,11 @@ MiShuiTool_FB_main() {
             if [ -z "$IMG_FILE_PATH" ]
             then
                 echo -e "${COLOR_31}[!]${COLOR_33}输入不可为空${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             elif [ ! -f "$IMG_FILE_PATH" ]
             then
                 echo -e "${COLOR_31}[!]${COLOR_33}文件'${COLOR_36}$IMG_FILE_NAME${COLOR_33}'路径不存在/无法读取${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             fi
             echo -e "$COLOR_35[Flashing]${COLOR_33}正在将'${COLOR_36}$IMG_FILE_NAME${COLOR_33}'刷入'${COLOR_36}$FLASH_IMG_NAME${COLOR_33}'分区...${COLOR_30}"
             if fastboot -s "$SELEC_FASTBOOT_DEVICE" flash $FLASH_IMG_SLOT "$IMG_FILE_PATH"
@@ -905,7 +915,7 @@ MiShuiTool_FB_main() {
             else
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}刷入失败 检查设备是否正确连接或镜像文件是否正确${COLOR_0}"
             fi
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
         }
         MISHUI_MAIN_TIP=分区镜像刷入
         SEE_USB_DEVICES
@@ -945,7 +955,7 @@ MiShuiTool_FB_main() {
             FLASH_IMG_TO_SLOT RECOVERY_b recovery_b
             ;;
         '10')
-            echo -e - n "${COLOR_35}[SLOT]${COLOR_33}输入要刷入的分区名称*ᐷ${COLOR_01}"
+            echo -e -n "${COLOR_35}[SLOT]${COLOR_33}输入要刷入的分区名称*ᐷ${COLOR_01}"
             read FLASH_IMG_SLOT
             CHUCK_SLOT_FLASH "$FLASH_IMG_SLOT"
             echo -e "${COLOR_35}[Y/N]${COLOR_33}是否确定指定分区为:${COLOR_36}$FLASH_IMG_SLOT${COLOR_0}"
@@ -958,7 +968,7 @@ MiShuiTool_FB_main() {
                 FLASH_IMG_TO_SLOT "$FLASH_IMG_NAME" "$FLASH_IMG_SLOT"
                 ;;
             *)
-                MAIN_REBOOT || return 0
+                MAIN_REBOOT; return 0
                 ;;
             esac
             ;;
@@ -966,10 +976,10 @@ MiShuiTool_FB_main() {
             if [ -z "$YN_SLOT_AB" ]
             then
                 echo -e "${COLOR_31}[!]${COLOR_33}此处不可为空${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             fi
             echo -e "${COLOR_31}[!]${COLOR_33}不支持的选项:${COLOR_36}$YN_SLOT_AB${COLOR_0}"
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
             ;;
         esac
         ;;
@@ -978,7 +988,7 @@ MiShuiTool_FB_main() {
         SEE_USB_DEVICES
         ALL_TIP_TION="${COLOR_32}[RE]${COLOR_33}选择需要重启的目标模式 >>${COLOR_0}"
         REBOOT_USB_DEVICES
-        REBOOT_FL || return 0
+        REBOOT_FL; return 0
         ;;
     '3' | 'UBL' | '解锁BL锁(第三方工具')
         ADB_FASTBOOT_NAME=FASTBOOT
@@ -998,7 +1008,7 @@ MiShuiTool_FB_main() {
                 echo -e "${COLOR_35}[INFO]${COLOR_33}即将开始解锁 确保目标设备已开启'${COLOR_36}OEM解锁${COLOR_33}'选项${COLOR_0}"
                 ;;
             *)
-                MAIN_REBOOT || return 0
+                MAIN_REBOOT; return 0
                 ;;
             esac
         }
@@ -1016,10 +1026,10 @@ MiShuiTool_FB_main() {
             then
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}命令执行成功${COLOR_0}"
                 echo -e "${COLOR_35}[Tip]${COLOR_33}目标设备跳转页面后点击目标设备'${COLOR_36}音量-${COLOR_33}'键选择'${COLOR_36}UNLOCK THE BOOTLOADER${COLOR_33}'选项并使用关机键确定即可完成解锁${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             else
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}命令执行失败 可能因为Termux没有足够权限或者设备意外断开${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             fi
             ;;
         '2')
@@ -1046,22 +1056,22 @@ MiShuiTool_FB_main() {
                     sleep 0.5
                     miunlock
                     echo -e "${COLOR_35}[BACK]${COLOR_33}已返回脚本${COLOR_0}"
-                    REBOOT_FL || return 0
+                    REBOOT_FL; return 0
                 else
                     unset INSTALL_ADB_FB_CLI
                     echo -e "${COLOR_31}[ERROR]${COLOR_36}$NOT_INSTALL_TOOLS${COLOR_33}安装失败 尝试手动执行命令 >>${COLOR_0}"
                     echo -e "${COLOR_33} - 命令: ${COLOR_36}curl -sS https://raw.githubusercontent.com/offici5l/MiUnlockTool/main/.install | bash${COLOR_0}"
-                    REBOOT_FL || return 0
+                    REBOOT_FL; return 0
                 fi
                 ;;
             *)
-                MAIN_REBOOT || return 0
+                MAIN_REBOOT; return 0
                 ;;
             esac
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
             ;;
         '3')
-            MAIN_REBOOT || return 0
+            MAIN_REBOOT; return 0
             ;;
         *)
             ERROR_CONT
@@ -1088,7 +1098,7 @@ MiShuiTool_FB_main() {
                 '2')
                     echo
                     echo -e "${COLOR_31}[WARN]${COLOR_33}设备电量过低可能导致刷入过程中意外断电 需将当前设备充至${COLOR_36}80%${COLOR_33}以上才可继续操作${COLOR_0}"
-                    REBOOT_FL || return 0
+                    REBOOT_FL; return 0
                     ;;
                  esac
             elif [ "$NOW_PEAGE" -ge '80' ]
@@ -1098,7 +1108,7 @@ MiShuiTool_FB_main() {
             then
                 echo -e "$NUMBER_PEAGR${COLOR_31}严重不足${COLOR_0}"
                 echo -e "${COLOR_35}[WARN]${COLOR_31}本机当前电量严重不足 必须保证本机电量高于${COLOR_36}40%${COLOR_31}才能顺利完成刷入${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             else
                 echo -e "$NUMBER_PEAGR${COLOR_34}电量较足${COLOR_0}"
                 echo -e "${COLOR_35}[INFO]${COLOR_33}本机当前电量较为充足但仍然存在断电风险 是否继续 >>${COLOR_0}"
@@ -1109,7 +1119,7 @@ MiShuiTool_FB_main() {
                     echo -e "${COLOR_35}[CONTINUE]${COLOR_33}已确认继续操作${COLOR_0}"
                     ;;
                 *)
-                    MAIN_REBOOT || return 0
+                    MAIN_REBOOT; return 0
                     ;;
                 esac
             fi
@@ -1123,7 +1133,7 @@ MiShuiTool_FB_main() {
                 if [ "$USER_INPUT_CONTINUE_NUMBER" -ge 3 ]
                 then
                     echo -e "${COLOR_31}[ERROR]${COLOR_33}超过三次无效确认已终止操作${COLOR_0}"
-                    REBOOT_FL || return 0
+                    REBOOT_FL; return 0
                     break
                 else
                     USER_INPUT_CONTINUE_NUMBER=$((USER_INPUT_CONTINUE_NUMBER + 1))
@@ -1147,7 +1157,7 @@ MiShuiTool_FB_main() {
             echo -e "${COLOR_35}[COMP]${COLOR_33}消耗电量:${COLOR_36}$(awk "BEGIN {printf \"%.2f\", $NOW_PEAGE - $OKAY_PEAGE}")%${COLOR_33}/耗时:${COLOR_36}$(awk "BEGIN {printf \"%.2f\", $FLASH_END - $FLASH_START}")s${COLOR_0}"
             ALL_TIP_TION="${COLOR_35}[ROM]${COLOR_33}Rom已完成刷入 是否立即重启设备 >>${COLOR_0}"
             REBOOT_USB_DEVICES
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
         }
         echo -e "${COLOR_35}[PATH]${COLOR_33}输入${COLOR_36}'线刷包${COLOR_33}'或'${COLOR_36}解压后文件夹${COLOR_33}'的完整路径 >>${COLOR_0}"
         read -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' ZIP_DIR_PATH
@@ -1178,7 +1188,7 @@ MiShuiTool_FB_main() {
                     else
                         echo -e "${COLOR_31}[ERROR]${COLOR_33}刷入失败 检查刷机包是否与设备相符或刷入过程中数据线是否意外断开${COLOR_0}"
                     fi
-                    REBOOT_FL || return 0
+                    REBOOT_FL; return 0
                     ;;
                 esac
             fi
@@ -1186,7 +1196,7 @@ MiShuiTool_FB_main() {
             then
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}无法创建存放解压后镜像文件的文件夹 MST工具箱无法自动解压该压缩包:${COLOR_36}$THE_FILE_FLASH_NAME${COLOR_0}"
                 echo -e "${COLOR_35}[Tip]${COLOR_33}手动解压后输入'${COLOR_36}解压后文件夹${COLOR_33}'路径以继续${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             fi
             case "$THE_FILE_EXT_NAME" in
             'zip')
@@ -1214,7 +1224,7 @@ MiShuiTool_FB_main() {
             *)
                 echo -e "${COLOR_31}[?]${COLOR_33}未知的文件后缀:${COLOR_36}$THE_FILE_EXT_NAME${COLOR_0}"
                 echo -e "${COLOR_35}[Tip]${COLOR_33}目前仅支持对'${COLOR_36}.zip${COLOR_33}'与'${COLOR_36}.tgz${COLOR_33}'压缩文件自动解压 其他格式需手动解压${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
                 ;;
             esac
             echo -e "${COLOR_35}[Uziping]${COLOR_33}正在解压'${COLOR_36}$THE_FILE_FLASH_NAME${COLOR_33}'文件...${COLOR_30}"
@@ -1223,7 +1233,7 @@ MiShuiTool_FB_main() {
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}已将线刷包解压至文件夹:${COLOR_36}$THE_PATH_FLASH_NAME${COLOR_0}"
             else
                  echo -e "${COLOR_31}[ERROR]${COLOR_33}线刷包解压失败 尝试手动解压并输入${COLOR_36}文件夹${COLOR_33}路径${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             fi
         elif [ -d "$ZIP_DIR_PATH" ]
         then
@@ -1231,7 +1241,7 @@ MiShuiTool_FB_main() {
             THE_PATH_FLASH_NAME="${ZIP_DIR_PATH%%/}"
         else
             echo -e "${COLOR_31}[ERROR]${COLOR_33}路径不存在或无法访问${COLOR_0}"
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
         fi
         SH_FILE_NUM=1
         echo
@@ -1251,7 +1261,7 @@ MiShuiTool_FB_main() {
         then
             echo -e "${COLOR_31}[!]${COLOR_33}没有找到'${COLOR_36}.sh${COLOR_33}'刷机脚本${COLOR_0}"
             echo -e "${COLOR_35}[Tip]${COLOR_33}检查该文件夹(${COLOR_36}$THE_PATH_FLASH_NAME${COLOR_33})是否指向刷机包解压后的文件夹${COLOR_0}"
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
         fi
         echo -e -n "${COLOR_35}[SH]${COLOR_33}输入需要使用的脚本选项*ᐷ${COLOR_01}"
         read USR_SH_NUMBER
@@ -1261,14 +1271,14 @@ MiShuiTool_FB_main() {
             if [ -z "$USR_SH_FALSH" ]
             then
                 echo -e "${COLOR_31}[!]${COLOR_33}'${COLOR_36}$USR_SH_NUMBER${COLOR_33}'非菜单中的选项${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             else
                 echo -e "${COLOR_35}[USR]${COLOR_33}是否使用'${COLOR_36}$(basename "$USR_SH_FALSH")${COLOR_33}'脚本进行刷机 >>${COLOR_0}"
                 echo -e -n "${COLOR_36}[+][1›确认使用/2›取消并返回主页]*ᐷ${COLOR_01}"
                 read YN_CONTINUE_FLASH
                 case "$YN_CONTINUE_FLASH" in
                 '2' | 'n' | 'N')
-                    MAIN_REBOOT || return 0
+                    MAIN_REBOOT; return 0
                     ;;
                 esac
             fi
@@ -1277,10 +1287,10 @@ MiShuiTool_FB_main() {
             if [ -z "$USR_SH_NUMBER" ]
             then
                 echo -e "${COLOR_31}[!]${COLOR_33}此处不可为空${COLOR_0}"
-                MAIN_REBOOT || return 0
+                MAIN_REBOOT; return 0
             fi
             echo -e "${COLOR_34}[INFO]${COLOR_33}'${COLOR_36}$USR_SH_NUMBERL_YN${COLOR_33}'非菜单中的选项${COLOR_0}"
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
             ;;
         esac
         echo
@@ -1304,7 +1314,7 @@ MiShuiTool_FB_main() {
             unset -f fastboot
             echo -e "${COLOR_31}[ERROR]${COLOR_33}刷入失败 检查刷机包是否与设备相符或刷入过程中数据线是否意外断开${COLOR_0}"
         fi
-        REBOOT_FL || return 0
+        REBOOT_FL; return 0
         ;;
     '5' | 'CMD' | '执行fastboot命令')
         MISHUI_MAIN_TIP=执行Fastboot命令
@@ -1319,7 +1329,7 @@ MiShuiTool_FB_main() {
                 continue
             elif [[ "$FASTBOOT_SHELL_CMD" == exit* ]]
             then
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             else
                 if [[ "$FASTBOOT_SHELL_CMD" == fastboot* ]]
                 then
@@ -1334,11 +1344,11 @@ MiShuiTool_FB_main() {
                 continue
             fi
         done
-        REBOOT_FL || return 0
+        REBOOT_FL; return 0
         ;;
     '6' | 'HOME' | '返回主页')
         BACK_MAIN=CA_FLASH_MAIN
-        MAIN_REBOOT || return 0
+        MAIN_REBOOT; return 0
         ;;
     *)
         ERROR_CONT
@@ -1385,6 +1395,7 @@ MiShuiTool_ADB_main() {
         ALL_OPTION=("1*-Shizuku-ADB" "2*-Scene6-ADB" "3*-黑阈-ADB" "4*-全部激活-3个" "5*-返回主页")
         NOW_LINE
         SHOW_FUNC_MENU
+        [ "$FUNC_CONT" = 5 ] && MAIN_REBOOT; return 0
         while IFS= read -r ONE_SELEC_ADB_DEVICE
         do
             [ -z "$ONE_SELEC_ADB_DEVICE" ] && continue
@@ -1403,15 +1414,12 @@ MiShuiTool_ADB_main() {
                 ACT_ADB_APP 'Scene6-ADB' "sh $STORAGE/Android/data/com.omarea.vtools/up.sh" 'com.omarea.vtools/com.omarea.vtools.activities.ActivityStartSplash'
                 ACT_ADB_APP '黑阈-ADB' "$(adb -s "$ONE_SELEC_ADB_DEVICE" shell pm path me.piebridge.brevent | sed 's/package://g; s|base.apk|lib/arm64/libbrevent.so|g')" 'me.piebridge.brevent/me.piebridge.brevent.ui.BreventActivity'
                 ;;
-            '5')
-                MAIN_REBOOT || return 0
-                ;;
             *)
                 ERROR_CONT
             ;;
             esac
         done <<< "$SELEC_ADB_DEVICE"
-        REBOOT_FL || return 0
+        REBOOT_FL; return 0
         ;;
     '2' | 'APP' | '应用管理')
         MISHUI_MAIN_TIP=应用管理
@@ -1427,7 +1435,7 @@ MiShuiTool_ADB_main() {
             if [ -z "$INPUT_PKGE_NAME" ]
             then
                 echo -e "${COLOR_31}[!]${COLOR_33}此处不可为空${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             else
                 IFS='-' read -ra INPUT_PKGE_NAME <<< "$INPUT_PKGE_NAME"
             fi
@@ -1459,7 +1467,7 @@ MiShuiTool_ADB_main() {
             if [ -z "$ALL_SEARCH" ]
             then
                 echo -e "${COLOR_31}[!]${COLOR_33}没有发现包含'${COLOR_36}${INPUT_PKGE_NAME[*]}${COLOR_33}'的包名${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             else
                 echo -e -n "${COLOR_35}[NUM]${COLOR_33}输入选定序号(多选以'${COLOR_36}-${COLOR_33}'符号分隔)*ᐷ${COLOR_01}"
                 read INPUT_PKGE_NUMBER
@@ -1467,7 +1475,7 @@ MiShuiTool_ADB_main() {
             if [ -z "$INPUT_PKGE_NUMBER" ]
             then
                 echo -e "${COLOR_35}[!]${COLOR_33}此处输入不可为空${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             fi
             INPUT_PKGE_NUMBER="$(sed 's/-/p; /g' <<< "${INPUT_PKGE_NUMBER%%-}" 2>>$MST_LOG)"
             if USR_OKAY_PKGE="$(sed -n "${INPUT_PKGE_NUMBER}p;" <<< "$ALL_SEARCH" | awk '!a[$0]++')" && [ -n "$USR_OKAY_PKGE" ]
@@ -1476,7 +1484,7 @@ MiShuiTool_ADB_main() {
                 echo -e "${COLOR_36}$USR_OKAY_PKGE${COLOR_0}"
             else
                 echo -e "${COLOR_31}[!]${COLOR_33}无法解析输入的内容 要进行多选只能使用'${COLOR_36}-${COLOR_33}'符号分隔${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             fi
             echo
             echo -e "${COLOR_35}[>>]${COLOR_33}是否继续操作:${COLOR_36}$MISHUI_MAIN_TIP${COLOR_33} >>${COLOR_0}"
@@ -1487,7 +1495,7 @@ MiShuiTool_ADB_main() {
                 echo -e "${COLOR_30}"
                 ;;
             *)
-                MAIN_REBOOT || return 0
+                MAIN_REBOOT; return 0
                 ;;
             esac
         }
@@ -1512,7 +1520,7 @@ MiShuiTool_ADB_main() {
                     echo -e "${COLOR_35}[CMD]${COLOR_33}命令: ${COLOR_36}adb -s $SELEC_ADB_DEVICE shell pm disable-user $ICE_THE_APP${COLOR_0}"
                 fi
             done <<< "$USR_OKAY_PKGE"
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
             }
             echo -e "${COLOR_35}[ICE]${COLOR_33}选择需要对选定应用进行的冻结/解冻操作 >>${COLOR_0}"
             echo -e -n "${COLOR_36}[+][1›冻结选定应用/2›解冻选定应用]*ᐷ${COLOR_0}"
@@ -1535,13 +1543,13 @@ MiShuiTool_ADB_main() {
                 then
                     echo -e "${COLOR_31}[!]${COLOR_33}此处不可为空${COLOR_0}"
                     sleep 0.3
-                    MAIN_REBOOT || return 0
+                    MAIN_REBOOT; return 0
                 fi
                 echo -e "${COLOR_31}[!]${COLOR_33}'${COLOR_36}$YN_ICE_USR${COLOR_33}'非菜单中的选项${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
                 ;;
             esac
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
             ;;
         '2')
             echo -e "${COLOR_35}[IU]${COLOR_33}选择需要进行的安装/卸载操作 >>${COLOR_0}"
@@ -1558,11 +1566,11 @@ MiShuiTool_ADB_main() {
                 if [ -z "$APK_INSTALL_PATH" ]
                 then
                     echo -e "${COLOR_31}[!]${COLOR_33}此处输入不可为空${COLOR_0}"
-                    REBOOT_FL || return 0
+                    REBOOT_FL; return 0
                 elif [ ! -f "$APK_INSTALL_PATH" ]
                 then
                     echo -e "${COLOR_31}[!]${COLOR_33}文件'${COLOR_36}$INSTALL_APK_NAMR${COLOR_33}'不存在${COLOR_0}"
-                    REBOOT_FL || return 0
+                    REBOOT_FL; return 0
                 fi
                 echo -e "${COLOR_35}[Installing]${COLOR_33}正在安装'${COLOR_36}$INSTALL_APK_NAMR${COLOR_33}'...${COLOR_30}"
                 if adb -s "$SELEC_ADB_DEVICE" install "$APK_INSTALL_PATH" </dev/null
@@ -1590,20 +1598,20 @@ MiShuiTool_ADB_main() {
                         echo -e "${COLOR_35}[CMD]${COLOR_33}命令: ${COLOR_36}adb -s $SELEC_ADB_DEVICE uninstall -k $ICE_THE_APP${COLOR_0}"
                     fi
                 done <<< "$USR_OKAY_PKGE"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
                 ;;
             *)
                 if [ -z "$UNINSTALL_YN" ]
                 then
                     echo -e "${COLOR_31}[!]${COLOR_33}此处不可为空${COLOR_0}"
                     sleep 0.3
-                    MAIN_REBOOT || return 0
+                    MAIN_REBOOT; return 0
                 fi
                 echo -e "${COLOR_31}[!]${COLOR_33}'${COLOR_36}$UNINSTALL_YN${COLOR_33}'非菜单中的选项${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
                 ;;
             esac
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
             ;;
         '3')
             echo -e "${COLOR_35}[SK]${COLOR_33}选择需要进行的打开/关闭操作 >>${COLOR_0}"
@@ -1633,7 +1641,7 @@ MiShuiTool_ADB_main() {
                         echo -e "${COLOR_31}[ERROR]${COLOR_33}应用'${COLOR_36}$ICE_THE_APP${COLOR_33}'Activity获取失败${COLOR_0}"
                     fi
                 done <<< "$USR_OKAY_PKGE"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
                 ;;
             '2' | '关闭选定应用' | '关闭')
                 MISHUI_MAIN_TIP=关闭选定应用
@@ -1649,16 +1657,16 @@ MiShuiTool_ADB_main() {
                         echo -e "${COLOR_31}[ERROR]${COLOR_33}进程关闭失败 检查是否正确与目标设备连接${COLOR_0}"
                     fi
                 done <<< "$USR_OKAY_PKGE"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
                 ;;
             *)
                 if [ -z "$KILL_YN_START" ]
                 then
                     echo -e "${COLOR_31}[!]${COLOR_33}此处不可为空${COLOR_0}"
-                    MAIN_REBOOT || return 0
+                    MAIN_REBOOT; return 0
                 fi
                 echo -e "${COLOR_31}[!]${COLOR_33}'${COLOR_36}$KILL_YN_START${COLOR_33}'非菜单中的选项${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
                 ;;
             esac
             ;;
@@ -1677,7 +1685,7 @@ MiShuiTool_ADB_main() {
             else
                 echo -e "${COLOR_31}[!]${COLOR_33}无法在本机找到路径:${COLOR_36}$THE_DOWNLOAD_PATH${COLOR_0}"
                 echo -e "${COLOR_35}[Tip]${COLOR_33}检查路径是否正确或是否已授予Termux访问存储目录权限后再试 若此文件夹位于高权限文件夹那么需使用Root权限启动MST${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             fi
             DOWNLOAD_APK_FILE() {
                 local ONE_PULL_APK_PATH="$1"
@@ -1717,7 +1725,7 @@ MiShuiTool_ADB_main() {
                     echo -e "${COLOR_31}[ERROR]${COLOR_33}路径获取失败 尝试手动定位并复制APK文件${COLOR_0}"
                 fi
             done <<< "$USR_OKAY_PKGE"
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
             ;;
         '5')
             MISHUI_MAIN_TIP=清理指定应用所有数据
@@ -1743,10 +1751,10 @@ MiShuiTool_ADB_main() {
                     echo -e "${COLOR_35}[CMD]${COLOR_33}尝试手动执行命令: ${COLOR_36}adb -s "$SELEC_ADB_DEVICE" shell pm clear "$ONE_CLEAN_APP"${COLOR_0}"
                fi
             done <<< "$USR_OKAY_PKGE"
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
             ;;
         '6')
-            MAIN_REBOOT || return 0
+            MAIN_REBOOT; return 0
             ;;
         *)
             ERROR_CONT
@@ -1766,7 +1774,7 @@ MiShuiTool_ADB_main() {
                 continue
             elif [[ "$ADB_SHELL_CMD" == exit* ]]
             then
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             else
                 [[ "$ADB_SHELL_CMD" == adb* ]] && ADB_SHELL_CMD="${ADB_SHELL_CMD#adb}"
                 if eval "adb -s $SELEC_ADB_DEVICE $ADB_SHELL_CMD"
@@ -1778,7 +1786,7 @@ MiShuiTool_ADB_main() {
                 continue
             fi
         done
-        REBOOT_FL || return 0
+        REBOOT_FL; return 0
         ;;
     '4' | 'SET' | '高级系统设置')
         MISHUI_MAIN_TIP=高级系统设置
@@ -1803,7 +1811,7 @@ MiShuiTool_ADB_main() {
                         echo -e "${COLOR_32}[CONTINUE]${COLOR_33}已确认继续操作 >>${COLOR_0}"
                         ;;
                     *)
-                        MAIN_REBOOT || return 0
+                        MAIN_REBOOT; return 0
                         ;;
                     esac
                 fi
@@ -1814,11 +1822,11 @@ MiShuiTool_ADB_main() {
                 if adb -s "$SELEC_ADB_DEVICE" shell wm size $BAK_ADB_SIZE
                 then
                     echo -e "${COLOR_32}[OKAY]${COLOR_33}原分辨率恢复成功:${COLOR_36}$BAK_ADB_SIZE${COLOR_0}"
-                    REBOOT_FL || return 0
+                    REBOOT_FL; return 0
                 else
                     echo -e "${COLOR_31}[ERROR]${COLOR_33}原分辨率恢复失败${COLOR_0}"
                     echo -e "${COLOR_35}[Tip]${COLOR_33}尝试手动执行命令以恢复 必要/极端情况下可前往'${COLOR_36}主页>ADB调试工具>重启连接设备>重启至系统模式${COLOR_33}'功能强制重启目标设备以恢复${COLOR_0}"
-                    REBOOT_FL || return 0
+                    REBOOT_FL; return 0
                 fi
             }
             echo -e "${COLOR_35}[DPI]${COLOR_33}可恢复/修改目标设备的屏幕分辨率(比例) >>${COLOR_0}"
@@ -1867,7 +1875,7 @@ MiShuiTool_ADB_main() {
             *)
                 echo -e "${COLOR_31}[!]${COLOR_33}无法识别的格式:${COLOR_36}$SETTING_SIZE${COLOR_0}"
                 echo -e "${COLOR_35}[Tip]${COLOR_33}输入必须为'${COLOR_36}1080/1920${COLOR_33}'或'${COLOR_36}1080x1920${COLOR_33}'或'${COLOR_36}1080×1920${COLOR_33}'三种格式其中一种${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
                 ;;
             esac
             if adb -s "$SELEC_ADB_DEVICE" shell wm size $SETTING_SIZE
@@ -1883,11 +1891,11 @@ MiShuiTool_ADB_main() {
                     SET_THE_BAK_SIZE
                     ;;
                 esac
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             else
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}设置失败 尝试手动执行命令 >>${COLOR_0}"
                 echo -e "${COLOR_35}[CMD]${COLOR_33}命令: ${COLOR_36}adb -s $SELEC_ADB_DEVICE shell wm size $SETTING_SIZE${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             fi
             ;;
         '2')
@@ -1904,15 +1912,15 @@ MiShuiTool_ADB_main() {
                     then
                         echo -e "${COLOR_32}[OKAY]${COLOR_33}已修改 重启后生效${COLOR_0}"
                         echo -e "${COLOR_35}[STEP]${COLOR_33}重启:${COLOR_36}MST主页 ${COLOR_33}-> ${COLOR_36}ADB调试工具 ${COLOR_33}-> ${COLOR_36}重启连接设备 ${COLOR_33}-> ${COLOR_36}重启至系统${COLOR_0}"
-                        REBOOT_FL || return 0
+                        REBOOT_FL; return 0
                     else
                         echo -e "${COLOR_31}[ERROR]${COLOR_33}修改失败 尝试手动执行命令${COLOR_0}"
                         echo -e "${COLOR_35}[CMD]${COLOR_33}命令:${COLOR_36}adb -s "$SELEC_ADB_DEVICE" shell settings put global cached_apps_freezer $1${COLOR_0}"
-                        REBOOT_FL || return 0
+                        REBOOT_FL; return 0
                     fi
                     ;;
                 *)
-                    MAIN_REBOOT || return 0
+                    MAIN_REBOOT; return 0
                     ;;
                 esac
             }
@@ -1928,39 +1936,39 @@ MiShuiTool_ADB_main() {
                 ;;
             *)
                 echo -e "${COLOR_31}设备不支持${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
                 ;;
             esac
             ;;
         '3')
-            MAIN_REBOOT || return 0
+            MAIN_REBOOT; return 0
             ;;
         *)
             ERROR_CONT
             ;;
         esac
-        REBOOT_FL || return 0
+        REBOOT_FL; return 0
         ;;
     '5' | 'RE' | '重启连接设备')
         MISHUI_MAIN_TIP=重启连接设备
         SEE_USB_DEVICES
         ALL_TIP_TION="${COLOR_35}[RE]${COLOR_33}选择需要重启的目标模式 >>${COLOR_0}"
         REBOOT_USB_DEVICES
-        REBOOT_FL || return 0
+        REBOOT_FL; return 0
         ;;
     '6' | 'HOME' | '返回主页')
         BACK_MAIN=CA_FLASH_MAIN
-        MAIN_REBOOT || return 0
+        MAIN_REBOOT; return 0
         ;;
     *)
         if [ -z "$FUNC_CONT" ]
         then
             echo -e "${COLOR_31}[!]${COLOR_33}此处不可为空${COLOR_0}"
             sleep 0.3
-            MAIN_REBOOT || return 0
+            MAIN_REBOOT; return 0
         fi
         echo -e "${COLOR_31}[!]${COLOR_33}'${COLOR_36}$FUNC_CONT${COLOR_33}'非菜单中的选项${COLOR_0}"
-        REBOOT_FL || return 0
+        REBOOT_FL; return 0
         ;;
     esac
 }
@@ -1989,7 +1997,7 @@ MiShuiTool_AUTO_main() {
             read YN_CONTINUE_ROOT
             case "$YN_CONTINUE_ROOT" in
             2 | n | N)
-                MAIN_REBOOT || return 0
+                MAIN_REBOOT; return 0
                 ;;
             esac
         }
@@ -2018,7 +2026,7 @@ MiShuiTool_AUTO_main() {
             read YN_DL_KERNELSU
             case "$YN_DL_KERNELSU" in
             2 | n | N)
-                MAIN_REBOOT || return 0
+                MAIN_REBOOT; return 0
                 ;;
             esac
             echo
@@ -2026,14 +2034,14 @@ MiShuiTool_AUTO_main() {
             if ! curl --progress-bar -L -o  "$DOWNLOAD_PATH/KernelSU_v3.2.0_32389-Releases.apk" 'https://github.com/tiann/KernelSU/releases/download/v3.2.0/KernelSU_v3.2.0_32389-release.apk'
             then
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}下载失败 尝试连接魔法或手动下载安装后重试${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             fi
             echo -e "${COLOR_35}[Installing]${COLOR_33}下载完毕正在安装KernelSU...${COLOR_30}"
             if ! adb -s "$SELEC_ADB_DEVICE" install "$DOWNLOAD_PATH/KernelSU_v3.2.0_32389-Releases.apk"
             then
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}自动安装失败 若目标设备有安装授权弹窗需点击允许${COLOR_0}"
                 echo -e "${COLOR_35}[Tip]${COLOR_33}此前下载的KernelSU安装包位于本机路径:${COLOR_36}$DOWNLOAD_PATH/KernelSU_v3.2.0_32389-Releases.apk${COLOR_33} 尝试在目标设备上安装后再试${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             fi
         fi
         REBOOT_USB_DEVICES fastboot
@@ -2047,7 +2055,7 @@ MiShuiTool_AUTO_main() {
             echo -e "${COLOR_31}[ERROR]${COLOR_33}设置失败 该漏洞在目标设备上可能已修复${COLOR_0}"
             ALL_TIP_TION="${COLOR_35}[RE]${COLOR_33}选择需要重启的目标模式 >>${COLOR_0}"
             REBOOT_USB_DEVICES
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
         fi
         echo -e "${COLOR_31}[OKAY]${COLOR_33}操作成功 目标设备的SELinux已被设置为宽容模式${COLOR_0}"
         echo
@@ -2079,7 +2087,7 @@ MiShuiTool_AUTO_main() {
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}命令执行失败 无法直接启动系统 可能设备意外断开${COLOR_0}"
                 ALL_TIP_TION="${COLOR_35}[RE]${COLOR_33}选择需要重启的目标模式 >>${COLOR_0}"
                 REBOOT_USB_DEVICES
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             fi
             echo -e "${COLOR_32}[OKAY]${COLOR_33}命令执行成功 系统正在启动${COLOR_0}"
             echo -e "${COLOR_35}[Tip]${COLOR_33}当启动完成后只需要进入${COLOR_36}KernelSU${COLOR_33}点击${COLOR_36}越狱${COLOR_33}按钮便可以获取Root权限${COLOR_0}"
@@ -2090,7 +2098,7 @@ MiShuiTool_AUTO_main() {
             REBOOT_USB_DEVICES
             ;;
         esac
-        REBOOT_FL || return 0
+        REBOOT_FL; return 0
         ;;
     2)
         ADB_FASTBOOT_NAME=ADB
@@ -2101,7 +2109,7 @@ MiShuiTool_AUTO_main() {
         then
             echo -e "${COLOR_35}[WARN]${COLOR_31}目标设备似乎没有解锁BootLoader${COLOR_0}"
             echo -e "${COLOR_31}[!]${COLOR_33}要继续操作必须先为目标设备${COLOR_36}解锁BootLoader${COLOR_33}(BL锁)${COLOR_0}"
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
         fi
         ALL_SLOT_ROOT="$(adb -s "$SELEC_ADB_DEVICE" shell ls /dev/block/by-name/ 2>>$MST_LOG | grep 'boot')"
         ROOT_SLOT_A_B="$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.boot.slot_suffix)"
@@ -2125,7 +2133,7 @@ MiShuiTool_AUTO_main() {
             if grep -q '\.zip$'
             then
                 echo -e "${COLOR_31}[!]${COLOR_33}该链接(${COLOR_36}$IMG_OR_URL_FOR_FILE${COLOR_33})指向的文件似乎不是${COLOR_36}zip卡刷包${COLOR_33} MST无法从该链接提取需要的镜像文件${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             fi
             if grep 'xiaomi' <<< "$IMG_OR_URL_FOR_FILE" &>>$MST_LOG
             then
@@ -2142,7 +2150,7 @@ MiShuiTool_AUTO_main() {
             read YN_USR_ZIP_LINK
             case "$YN_USR_ZIP_LINK" in
             2)
-                MAIN_REBOOT || return 0
+                MAIN_REBOOT; return 0
                 ;;
             esac
             INSTALL_THE_MUST_CMD 'pkg install python -y' 'Python' 'python'
@@ -2154,7 +2162,7 @@ MiShuiTool_AUTO_main() {
             then
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}无法从链接'${COLOR_36}$IMG_OR_URL_FOR_FILE${COLOR_33}'提取需要的镜像文件${COLOR_0}"
                 echo -e "${COLOR_35}[Tip]${COLOR_33}尝试重新获取下载链接后再使用此功能或者手动提取${COLOR_36}$DOWNLOAD_IMG_NAME.img${COLOR_33}'文件${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             fi
             echo -e "${COLOR_32}[OKAY]${COLOR_33}下载完毕 文件位于本机目录:${COLOR_36}$THE_LOCAL_IMG_PATH${COLOR_0}"
             ECHO_DOWNLOAD_OR_LOCAL_FILE_TIP=下载
@@ -2167,13 +2175,13 @@ MiShuiTool_AUTO_main() {
         then
             echo -e "${COLOR_31}[!]${COLOR_33}文件'${COLOR_36}$THE_LOCAL_IMG_PATH${COLOR_33}'不存在或无法访问${COLOR_0}"
             echo -e "${COLOR_35}[Tip]${COLOR_33}尝试再试一次或授予Termux本地文件访问权限/Root权限后再试${COLOR_0}"
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
         fi
         echo -e "${COLOR_35}[PUSH]${COLOR_33}正在将$ECHO_DOWNLOAD_OR_LOCAL_FILE_TIP的镜像文件推送至目标设备...${COLOR_0}"
         if adb -s "$SELEC_ADB_DEVICE" push "$THE_LOCAL_IMG_PATH" "$THE_LOCAL_IMG_PATH" &>>$MST_LOG
         then
             echo -e "${COLOR_31}[ERROR]${COLOR_33}镜像文件推送失败 检查设备是否意外断开后再试一次${COLOR_0}"
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
         fi
         echo -e "${COLOR_32}[OKAY]${COLOR_33}推送完毕 文件位于目标设备目录:${COLOR_36}$THE_LOCAL_IMG_PATH${COLOR_0}"
         echo
@@ -2197,14 +2205,14 @@ MiShuiTool_AUTO_main() {
         then
             echo -e "${COLOR_31}[!]${COLOR_33}文件'${COLOR_36}$THE_NEED_PATCH_IMG${COLOR_33}'在目标设备上不存在或无法访问${COLOR_0}"
             echo -e "${COLOR_35}[Tip]${COLOR_33}尝试将修补后的镜像文件移动至ADB权限可读取的文件夹例如'${COLOR_36}/data/local/tmp${COLOR_33}'后再试一次${COLOR_0}"
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
         fi
         echo
         echo -e "${COLOR_35}[PATCH]${COLOR_33}正在从目标设备提取修补后的镜像文件:${COLOR_36}$THE_NEED_PATCH_IMG${COLOR_33}...${COLOR_0}"
         if ! adb -s "$SELEC_ADB_DEVICE" pull "$THE_NEED_PATCH_IMG" "$THE_NEED_PATCH_IMG" 2>>$MST_LOG || ! [ -f "$THE_NEED_PATCH_IMG" ]
         then
             echo -e "${COLOR_31}[ERROR]${COLOR_33}镜像文件提取失败 检查设备是否意外断开后再试一次${COLOR_0}"
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
         fi
         echo -e "${COLOR_32}[OKAY]${COLOR_33}提取成功 文件位于本机目录:${COLOR_36}$THE_NEED_PATCH_IMG${COLOR_0}"
         echo
@@ -2231,7 +2239,7 @@ MiShuiTool_AUTO_main() {
             then
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}已尝试3此均未能识别到Fastboot设备${COLOR_0}"
                 echo -e "${COLOR_35}[Tip]${COLOR_33}接下来操作较为简单 可检查设备连接是否断开后再返回主页进入'${COLOR_36}[FB]›2*-Fastboot刷机工具 -> [SLOT]›1*-刷入分区镜像 -> 选择$NEED_FLASH_SLOT_NAME分区${COLOR_33}'功能输入镜像文件路径:${COLOR_36}$THE_NEED_PATCH_IMG${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             fi
             echo -e -n "$COLOR_35[Flashing]${COLOR_33}正在将'${COLOR_36}$THE_NEED_PATCH_IMG${COLOR_33}'刷入'${COLOR_36}$NEED_FLASH_SLOT_NAME${COLOR_33}'分区...${COLOR_0}"
             if fastboot -s "$SELEC_FASTBOOT_DEVICE" flash $NEED_FLASH_SLOT_NAME "$THE_NEED_PATCH_IMG" &>>$MST_LOG
@@ -2241,7 +2249,7 @@ MiShuiTool_AUTO_main() {
             else
                 echo
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}刷入失败 检查设备是否意外断开后再试一次${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             fi
         }
         CLANER_AUTO_ROOT_FILE() {
@@ -2283,17 +2291,17 @@ MiShuiTool_AUTO_main() {
             THE_NEED_PATCH_IMG="$THE_LOCAL_IMG_PATH"
             REBOOT_TO_FASTBOOT_FLASH
             CLANER_AUTO_ROOT_FILE
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
             ;;
         esac
         echo
         echo -e "${COLOR_32}[AllDone]${COLOR_33}所有操作已全部完成 现在可进入Root管理器查看Root状态${COLOR_0}"
         CLANER_AUTO_ROOT_FILE
-        REBOOT_FL || return 0
+        REBOOT_FL; return 0
         ;;
     3)
         BACK_MAIN=CA_FLASH_MAIN
-        MAIN_REBOOT || return 0
+        MAIN_REBOOT; return 0
         ;;
     *)
         ERROR_CONT
@@ -2339,7 +2347,7 @@ MiShuiTool_i_main() {
         echo -e "${COLOR_35}[GitHub]${COLOR_33}仓库地址: ${COLOR_32}https://github.com/nohajc/termux-adb${COLOR_0}"
         echo -e "${COLOR_33} - 开发者:${COLOR_36}nohajc${COLOR_0}"
         echo
-        REBOOT_FL || return 0
+        REBOOT_FL; return 0
         ;;
     '2')
         MISHUI_MAIN_TIP=常见问题解答
@@ -2354,7 +2362,7 @@ MiShuiTool_i_main() {
         echo -e "${COLOR_33}问:${COLOR_36}刷入boot后开不了机只能进Fastboot模式怎么办?${COLOR_0}"
         echo -e "${COLOR_33}答:${COLOR_32}检查BOOT文件是否是对应目标机型的文件 若确定文件与机型匹配则尝试通过脚本中的 [FB]›2*-Fastboot刷机工具 -> [BOOT]›1*-刷入BOOT 功能刷入原版BOOT后再尝试开机${COLOR_0}"
         echo
-        REBOOT_FL || return 0
+        REBOOT_FL; return 0
         ;;
     '3')
         MISHUI_MAIN_TIP=云更新MST工具箱
@@ -2367,14 +2375,14 @@ MiShuiTool_i_main() {
         if ! mkdir -p $MST_HOME/Update && rm -rf $MST_HOME/Update/* &>>$MST_LOG
         then
             echo -e "${COLOR_31}[ERROR]${COLOR_33}无法创建云更新所需要的文件夹:${COLOR_36}$MST_HOME/Update${COLOR_0}"
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
         fi
         echo -e -n " ${COLOR_35}[CU]${COLOR_33}正在检测更新...${COLOR_0}\r"
         if ! curl -o $MST_HOME/Update/version.txt "$(base64 -d <<< aHR0cHM6Ly9yYXcuZ2l0aHVidXNlcmNvbnRlbnQuY29tL1hhSHVpem9uL01pU2h1aVRvb2wtTVNUL21haW4vVmVyc2lvbi9HaXRIdWItVmVyc2lvbgo=)" &>>$MST_LOG || ! [ -f "$MST_HOME/Update/version.txt" ]
         then
             rm -rf $MST_HOME/Update/
             echo -e "${COLOR_31}[ERROR]${COLOR_33}检测更新失败 检查网络是否连接或使用魔法再试一次${COLOR_0}"
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
         fi
         NEW_VERSION_NUMB="$(sed -n 1p "$MST_HOME/Update/version.txt")"
         NEW_VERSION_TIME="$(sed -n 2p "$MST_HOME/Update/version.txt")"
@@ -2387,7 +2395,7 @@ MiShuiTool_i_main() {
             case "$YN_CURL" in
             '2' | 'n' | 'N' | '否')
                 rm -rf $MST_HOME/Update/* &>>$MST_LOG
-                MAIN_REBOOT || return 0
+                MAIN_REBOOT; return 0
                 ;;
             esac
             echo -e "${COLOR_35}[Download]${COLOR_33}正在下载云端最新MiShuiTool进行覆盖更新...${COLOR_0}"
@@ -2398,7 +2406,7 @@ MiShuiTool_i_main() {
             else
                 rm $MST_HOME/Update/MiShuiTool
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}下载失败 检查网络连接或使用魔法后再试一次${COLOR_0}"
-                REBOOT_FL || return 0
+                REBOOT_FL; return 0
             fi
             echo
             echo -e "${COLOR_35}[RE]${COLOR_33}覆盖更新后需要重启MST才能应用 >>${COLOR_0}"
@@ -2441,13 +2449,13 @@ MiShuiTool_i_main() {
         ;;
     '4')
         BACK_MAIN=CA_FLASH_MAIN
-        MAIN_REBOOT || return 0
+        MAIN_REBOOT; return 0
         ;;
     *)
         ERROR_CONT
         ;;
     esac
-    REBOOT_FL || return 0
+    REBOOT_FL; return 0
 }
 trap wait EXIT
 if [ ! -d $MST_HOME/ ]
