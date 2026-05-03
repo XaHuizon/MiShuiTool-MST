@@ -11,8 +11,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='26.3 Official'
-NOW_VERSION=10020
+MST_UPDATE_TIME='26.3.1 Official'
+NOW_VERSION=10021
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -806,7 +806,11 @@ MiShuiTool_DEV_main() {
             REBOOT_FL; return 0
             ;;
         esac
-        CONNECT_ERROR="${COLOR_31}[ERROR]${COLOR_33}设备连接失败 检查'${COLOR_36}IP地址:端口${COLOR_33}(${COLOR_32}$NEW_IP_AND_PORT${COLOR_33})'是否有误/网络环境是否变化后重试一次或使用有线模式进行ADB调试${COLOR_0}"
+        CONNECT_ERROR() {
+            echo -e "${COLOR_31}[ERROR]${COLOR_33}设备连接失败 检查'${COLOR_36}IP地址:端口${COLOR_33}(${COLOR_32}$NEW_IP_AND_PORT${COLOR_33})'是否有误/网络环境是否变化后重试一次或使用有线模式进行ADB调试${COLOR_0}"
+            sed -i s/$ONLY_IP//g $MST_HOME/Pair_devices.txt
+            REBOOT_FL || return 0
+        }
         if grep connected <<< "$(adb connect $NEW_IP_AND_PORT)"
         then
             echo -e "${COLOR_32}[OKAY]${COLOR_33}连接成功 正在校验...${COLOR_0}"
@@ -815,12 +819,10 @@ MiShuiTool_DEV_main() {
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}设备连接成功${COLOR_0}"
                 REBOOT_FL; return 0
             else
-                echo -e "$CONNECT_ERROR"
-                REBOOT_FL; return 0
+                CONNECT_ERROR
             fi
         else
-            echo -e "$CONNECT_ERROR"
-            REBOOT_FL; return 0
+            CONNECT_ERROR
         fi
         ;;
     '4')
