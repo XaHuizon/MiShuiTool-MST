@@ -12,7 +12,7 @@ MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
 MST_UPDATE_TIME='26.3.2 Official'
-NOW_VERSION=10022
+NOW_VERSION=10023
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -1578,7 +1578,6 @@ MiShuiTool_ADB_main() {
                 SEE_USB_DEVICES
                 echo -e "${COLOR_35}[PATH]${COLOR_33}输入需要安装的apk文件位于本机的完整路径 >>${COLOR_0}"
                 read -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' APK_INSTALL_PATH
-                read APK_INSTALL_PATH
                 INSTALL_APK_NAMR="$(basename "$APK_INSTALL_PATH")"
                 if [ -z "$APK_INSTALL_PATH" ]
                 then
