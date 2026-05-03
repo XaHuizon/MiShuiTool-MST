@@ -11,8 +11,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='26.3.1 Official'
-NOW_VERSION=10021
+MST_UPDATE_TIME='26.3.2 Official'
+NOW_VERSION=10022
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -817,6 +817,7 @@ MiShuiTool_DEV_main() {
             if USB_DEVICES_$FASTBOOT_OR_ADB_NAME
             then
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}设备连接成功${COLOR_0}"
+                BACK_MAIN=CA_FLASH_MAIN
                 REBOOT_FL; return 0
             else
                 CONNECT_ERROR
@@ -1378,7 +1379,7 @@ MiShuiTool_ADB_main() {
             local ACT_APP_NAME="$1"
             local ACT_APP_PATH="$2"
             local START_APP_CMD="$3"
-            if ! adb -s "$SELEC_ADB_DEVICE" shell ls $STORAGE/Android/data/$(sed 's|/.*||g' <<< "$START_APP_CMD") &>>$MST_LOG
+            if ! adb -s "$ONE_SELEC_ADB_DEVICE" shell ls $STORAGE/Android/data/$(sed 's|/.*||g' <<< "$START_APP_CMD") &>>$MST_LOG
             then
                 echo -e "${COLOR_31}[!]${COLOR_33}目标设备暂未安装应用'${COLOR_36}$ACT_APP_NAME${COLOR_33}'无法激活${COLOR_0}"
                 echo -e "${COLOR_35}[Tip]${COLOR_33}前往应用官网或可信渠道下载后安装至目标设备 也可以将APK文件下载至本机后使用'${COLOR_36}[ADB]›3*-ADB调试工具${COLOR_33} -> ${COLOR_36}[APP]›2*-应用管理 ${COLOR_33}-> ${COLOR_36}安装APK/卸载选定应用 ${COLOR_33}-> ${COLOR_36}安装APK${COLOR_33}'功能将APK安装至目标设备${COLOR_0}"
@@ -1397,30 +1398,44 @@ MiShuiTool_ADB_main() {
         ALL_OPTION=("1*-Shizuku-ADB" "2*-Scene6-ADB" "3*-黑阈-ADB" "4*-全部激活-3个" "5*-返回主页")
         NOW_LINE
         SHOW_FUNC_MENU
-        [ "$FUNC_CONT" = 5 ] && MAIN_REBOOT; return 0
-        while IFS= read -r ONE_SELEC_ADB_DEVICE
-        do
-            [ -z "$ONE_SELEC_ADB_DEVICE" ] && continue
-            case "$FUNC_CONT" in
-            '1')
+        case "$FUNC_CONT" in
+        '1')
+            while IFS= read -r ONE_SELEC_ADB_DEVICE
+            do
+                [ -z "$ONE_SELEC_ADB_DEVICE" ] && continue
                 ACT_ADB_APP 'Shizuku-ADB' "$(adb -s "$ONE_SELEC_ADB_DEVICE" shell pm path moe.shizuku.privileged.api | sed 's/package://g; s|base.apk|lib/arm64/libshizuku.so|g')" 'moe.shizuku.privileged.api/moe.shizuku.manager.MainActivity'
-                ;;
-            '2')
-                ACT_ADB_APP 'Scene6-ADB' "sh $STORAGE/Android/data/com.omarea.vtools/up.sh" 'com.omarea.vtools/com.omarea.vtools.activities.ActivityStartSplash'
-                ;;
-            '3')
-                ACT_ADB_APP '黑阈-ADB' "$(adb -s "$ONE_SELEC_ADB_DEVICE" shell pm path me.piebridge.brevent | sed 's/package://g; s|base.apk|lib/arm64/libbrevent.so|g')" 'me.piebridge.brevent/me.piebridge.brevent.ui.BreventActivity'
-                ;;
-            '4')
-                ACT_ADB_APP 'Shizuku-ADB' "$(adb -s "$ONE_SELEC_ADB_DEVICE" shell pm path moe.shizuku.privileged.api | sed 's/package://g; s|base.apk|lib/arm64/libshizuku.so|g')" 'moe.shizuku.privileged.api/moe.shizuku.manager.MainActivity'
-                ACT_ADB_APP 'Scene6-ADB' "sh $STORAGE/Android/data/com.omarea.vtools/up.sh" 'com.omarea.vtools/com.omarea.vtools.activities.ActivityStartSplash'
-                ACT_ADB_APP '黑阈-ADB' "$(adb -s "$ONE_SELEC_ADB_DEVICE" shell pm path me.piebridge.brevent | sed 's/package://g; s|base.apk|lib/arm64/libbrevent.so|g')" 'me.piebridge.brevent/me.piebridge.brevent.ui.BreventActivity'
-                ;;
-            *)
-                ERROR_CONT
+            done <<< "$SELEC_ADB_DEVICE"
             ;;
-            esac
-        done <<< "$SELEC_ADB_DEVICE"
+        '2')
+            while IFS= read -r ONE_SELEC_ADB_DEVICE
+            do
+                [ -z "$ONE_SELEC_ADB_DEVICE" ] && continue
+                ACT_ADB_APP 'Scene6-ADB' "sh $STORAGE/Android/data/com.omarea.vtools/up.sh" 'com.omarea.vtools/com.omarea.vtools.activities.ActivityStartSplash'
+            done <<< "$SELEC_ADB_DEVICE"
+            ;;
+        '3')
+            while IFS= read -r ONE_SELEC_ADB_DEVICE
+            do
+                [ -z "$ONE_SELEC_ADB_DEVICE" ] && continue
+                ACT_ADB_APP '黑阈-ADB' "$(adb -s "$ONE_SELEC_ADB_DEVICE" shell pm path me.piebridge.brevent | sed 's/package://g; s|base.apk|lib/arm64/libbrevent.so|g')" 'me.piebridge.brevent/me.piebridge.brevent.ui.BreventActivity'
+            done <<< "$SELEC_ADB_DEVICE"
+            ;;
+        '4')
+            while IFS= read -r ONE_SELEC_ADB_DEVICE
+            do
+                [ -z "$ONE_SELEC_ADB_DEVICE" ] && continue
+                ACT_ADB_APP 'Shizuku-ADB' "$(adb -s "$ONE_SELEC_ADB_DEVICE" shell pm path moe.shizuku.privileged.api | sed 's/package://g; s|base.apk|lib/arm64/libshizuku.so|g')" 'moe.shizuku.privileged.api/moe.shizuku.manager.MainActivity'
+                ACT_ADB_APP 'Scene6-ADB' "sh $STORAGE/Android/data/com.omarea.vtools/up.sh" 'com.omarea.vtools/com.omarea.vtools.activities.ActivityStartSplash'
+                ACT_ADB_APP '黑阈-ADB' "$(adb -s "$ONE_SELEC_ADB_DEVICE" shell pm path me.piebridge.brevent | sed 's/package://g; s|base.apk|lib/arm64/libbrevent.so|g')" 'me.piebridge.brevent/me.piebridge.brevent.ui.BreventActivity'
+            done <<< "$SELEC_ADB_DEVICE"
+            ;;
+        5)
+            MAIN_REBOOT; return 0
+            ;;
+        *)
+            ERROR_CONT
+            ;;
+        esac
         REBOOT_FL; return 0
         ;;
     '2' | 'APP' | '应用管理')
@@ -1433,7 +1448,7 @@ MiShuiTool_ADB_main() {
             local SEARCH_LINR OKAY_SEARCH
             local START_YN_APP ONE_SEARCH
             echo -e "${COLOR_35}[PKGE]${COLOR_33}输入'${COLOR_36}包名${COLOR_33}'或'${COLOR_36}包名关键词${COLOR_33}'以搜索应用(多选以'${COLOR_36}-${COLOR_33}'符号分隔) >>${COLOR_0}"
-            read -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' INPUT_PKGE_NAME
+            read -e -p $'\001\033[0;33;1m\002*ᐷ\001\033[0;1m\002 ' INPUT_PKGE_NAME
             if [ -z "$INPUT_PKGE_NAME" ]
             then
                 echo -e "${COLOR_31}[!]${COLOR_33}此处不可为空${COLOR_0}"
