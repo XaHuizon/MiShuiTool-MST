@@ -12,7 +12,7 @@ MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
 MST_UPDATE_TIME='26.3.3 Official'
-NOW_VERSION=10024
+NOW_VERSION=10025
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -490,6 +490,7 @@ INSTALL_THE_MUST_CMD() {
             if bash -c "$INSTALL_ITS_CMD" && CLEAR_READ_INPUT
             then
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}工具包'${COLOR_36}$NOT_INSTALL_TOOLS${COLOR_33}'安装成功${COLOR_0}"
+                return 0
             else
                 echo -e "${COLOR_31}[ERROR]${COLOR_36}$NOT_INSTALL_TOOLS${COLOR_33}安装失败 尝试连接魔法或手动执行命令 >>${COLOR_0}"
                 echo -e "${COLOR_33} - 命令1: ${COLOR_36}pkg update -y && pkg upgrade -y${COLOR_0}"
@@ -585,8 +586,7 @@ CA_FLASH_MAIN() {
             ;;
         esac
     fi
-    INSTALL_THE_MUST_CMD 'pkg install termux-api -y' 'Termux-API' 'termux-usb'
-    REBOOT_FL; return 0
+    INSTALL_THE_MUST_CMD 'pkg install termux-api -y' 'Termux-API' 'termux-usb' && REBOOT_FL; return 0
     echo -e "${COLOR_35}[DEV]${COLOR_33}›1*-${COLOR_36}管理连接设备${COLOR_35}[FB]${COLOR_33}›2*-${COLOR_36}Fastboot刷机工具${COLOR_0}"
     echo -e "${COLOR_35}[ADB]${COLOR_33}›3*-${COLOR_36}ADB调试工具 ${COLOR_35}[AUTO]${COLOR_33}›4*-${COLOR_36}自动联合操作${COLOR_0}"
     echo -e "${COLOR_35}[&]${COLOR_33}›5*-${COLOR_36}关于/帮助/更新${COLOR_35}[EXIT]${COLOR_33}›6*-${COLOR_36}退出MST工具箱${COLOR_0}"
