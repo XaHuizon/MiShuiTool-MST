@@ -11,8 +11,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='26.3.2 Official'
-NOW_VERSION=10023
+MST_UPDATE_TIME='26.3.3 Official'
+NOW_VERSION=10024
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -162,7 +162,7 @@ SHOW_FUNC_MENU() {
             fi
         done
         echo -e -n "${COLOR_35} [Tip]${COLOR_33}上下/数字键选择 空格/回车键确定${COLOR_0}\r"
-        read -s -n1 ALL_CON
+        read -r -s -n1 ALL_CON
         case "$ALL_CON" in
         "A")
             FUNC_CONT=$((FUNC_CONT - 1))
@@ -213,7 +213,7 @@ SELEC_ADB_FB_DEVICE() {
     case "$ADB_OR_FASTBOOT_SELEC_MODEL" in
     'any')
         echo -e "${COLOR_35}[SELE]${COLOR_33}输入要选择的设备序号(多选以'${COLOR_36}-${COLOR_33}'符号分隔)${COLOR_0}"
-        read -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' SELE_NEED_DEVICES
+        read -r -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' SELE_NEED_DEVICES
         if [[ "$SELE_NEED_DEVICES" =~ ^[0-9]+(-[0-9]+)*$ ]]
         then
             USR_OKAY_DEVICES="$(sed -n "$(sed 's/-/p;/g' <<< "${SELE_NEED_DEVICES%%-}")p" <<< "$ALL_SEARCH")"
@@ -227,7 +227,7 @@ SELEC_ADB_FB_DEVICE() {
         ;;
     'only')
         echo -e -n "${COLOR_35}[SELE]${COLOR_33}输入要选择的设备序号*ᐷ${COLOR_01} "
-        read SELE_NEED_DEVICES
+        read -r SELE_NEED_DEVICES
         case "$SELE_NEED_DEVICES" in
         [1-9]*)
             USR_OKAY_DEVICES="$(sed -n ${SELE_NEED_DEVICES}p <<< "$ALL_SEARCH")"
@@ -407,7 +407,7 @@ BACK_TO_SHELL() {
     local EXIT_YN
     echo -e "${COLOR_35}[BACK]${COLOR_33}已从命令提示符返回脚本${COLOR_0}"
     echo -e -n "${COLOR_36}[1›返回主页/2›退出脚本]*ᐷ${COLOR_01}"
-    read EXIT_YN
+    read -r EXIT_YN
     case "$EXIT_YN" in     
     1)
         CA_FLASH_MAIN
@@ -483,14 +483,13 @@ INSTALL_THE_MUST_CMD() {
         echo
         echo -e "${COLOR_35}[GET]${COLOR_33}是否安装'${COLOR_36}$NOT_INSTALL_TOOLS${COLOR_33}'工具包 >>${COLOR_0}"
         echo -e -n "${COLOR_36}[+][1›立即安装/2›取消并退出]*ᐷ${COLOR_01}"
-        read YN_INSTALL_CMD
+        read -r YN_INSTALL_CMD
         case "$YN_INSTALL_CMD" in
         '1' | 'y' | 'Y')
             echo -e "${COLOR_35}[Installing]${COLOR_33}正在安装...${COLOR_0}"
             if bash -c "$INSTALL_ITS_CMD" && CLEAR_READ_INPUT
             then
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}工具包'${COLOR_36}$NOT_INSTALL_TOOLS${COLOR_33}'安装成功${COLOR_0}"
-                REBOOT_FL; return 0
             else
                 echo -e "${COLOR_31}[ERROR]${COLOR_36}$NOT_INSTALL_TOOLS${COLOR_33}安装失败 尝试连接魔法或手动执行命令 >>${COLOR_0}"
                 echo -e "${COLOR_33} - 命令1: ${COLOR_36}pkg update -y && pkg upgrade -y${COLOR_0}"
@@ -516,7 +515,7 @@ SEE_USB_DEVICES() {
 }
 CONTINUE_YN() {
     echo -e -n "${COLOR_35}[Continue]${COLOR_33}按任意键继续 回车键取消${COLOR_0}"
-    read -s -n1 CONTINUE
+    read -r -s -n1 CONTINUE
     echo
 }
 MAIN_HAED_TIP() {
@@ -562,7 +561,7 @@ CA_FLASH_MAIN() {
         echo
         echo -e "${COLOR_35}[NE]${COLOR_33}是否立即安装第三方${COLOR_36}ADB&Fastboot${COLOR_33}命令 >>${COLOR_0}"
         echo -e -n "${COLOR_36}[+][1›立即安装/2›退出MST]*ᐷ${COLOR_01}"
-        read YN_UPDATE
+        read -r YN_UPDATE
         case "$YN_UPDATE" in
         '1' | 'y' | 'Y')
             echo -e "${COLOR_35}[Tip]${COLOR_33}长时间未开始安装尝试连接魔法再试${COLOR_0}"
@@ -587,6 +586,7 @@ CA_FLASH_MAIN() {
         esac
     fi
     INSTALL_THE_MUST_CMD 'pkg install termux-api -y' 'Termux-API' 'termux-usb'
+    REBOOT_FL; return 0
     echo -e "${COLOR_35}[DEV]${COLOR_33}›1*-${COLOR_36}管理连接设备${COLOR_35}[FB]${COLOR_33}›2*-${COLOR_36}Fastboot刷机工具${COLOR_0}"
     echo -e "${COLOR_35}[ADB]${COLOR_33}›3*-${COLOR_36}ADB调试工具 ${COLOR_35}[AUTO]${COLOR_33}›4*-${COLOR_36}自动联合操作${COLOR_0}"
     echo -e "${COLOR_35}[&]${COLOR_33}›5*-${COLOR_36}关于/帮助/更新${COLOR_35}[EXIT]${COLOR_33}›6*-${COLOR_36}退出MST工具箱${COLOR_0}"
@@ -698,7 +698,7 @@ MiShuiTool_DEV_main() {
         echo
         echo -e "${COLOR_35}[OS]${COLOR_33}选择目标设备的Android系统版本 >>${COLOR_0}"
         echo -e -n "${COLOR_36}[+][1›Android11以上/2›Android11以下]*ᐷ${COLOR_0}"
-        read THE_CONNNECT_VERSION
+        read -r THE_CONNNECT_VERSION
         echo
         case "$THE_CONNNECT_VERSION" in
         '1' | 'Android11以上')
@@ -707,7 +707,7 @@ MiShuiTool_DEV_main() {
             ENTER_ANY_CONTINUE 打开后
             echo
             echo -e "${COLOR_35}[IP]${COLOR_33}输入'${COLOR_36}无线调试${COLOR_33}'页面显示的'${COLOR_36}IP地址:端口${COLOR_33}'以连接 >>${COLOR_0}"
-            read -e -p $'\001\033[0;33;1m\002(格式:\001\033[0;36;1m\002192.168.00.00:00000\001\033[0;33;1m\002)*ᐷ \001\033[0;1m\002' IP_AND_PORT
+            read -r -e -p $'\001\033[0;33;1m\002(格式:\001\033[0;36;1m\002192.168.00.00:00000\001\033[0;33;1m\002)*ᐷ \001\033[0;1m\002' IP_AND_PORT
             ONLY_IP="$(sed 's/:.*//g' <<< "$IP_AND_PORT")"
             if ! ping -c 1 "$ONLY_IP" &>>$MST_LOG
             then
@@ -719,14 +719,14 @@ MiShuiTool_DEV_main() {
                 echo
                 echo -e "${COLOR_35}[Tip]${COLOR_33}此IP(${COLOR_36}$ONLY_IP${COLOR_33})需要配对 在目标设备打开'${COLOR_36}使用配对码配对设备${COLOR_33}'界面进行配对后继续${COLOR_0}"
                 echo -e "${COLOR_35}[NEW]${COLOR_33}输入'${COLOR_36}与设备配对${COLOR_33}'页面显示的'IP地址:${COLOR_36}端口${COLOR_33}'以配对 >>${COLOR_0}"
-                read -e -p $'\001\033[0;33;1m\002*ᐷ\001\033[0;36;1m\002'"$ONLY_IP:"$'\001\033[0;1m\002' ONLY_PORT
+                read -r -e -p $'\001\033[0;33;1m\002*ᐷ\001\033[0;36;1m\002'"$ONLY_IP:"$'\001\033[0;1m\002' ONLY_PORT
                 if [ "${#ONLY_PORT}" != 5 ]
                 then
                     echo -e  "${COLOR_31}[!]${COLOR_33}输入的内容有误 此处只需要输入'${COLOR_36}5位数端口${COLOR_33}(${COLOR_31}${COLOR_RM}192.168.00.00:${COLOR_32}00000${COLOR_33})'无需输入IP${COLOR_0}"
                     REBOOT_FL; return 0
                 fi
                 echo -e -n "${COLOR_35}[PAIR]${COLOR_33}输入'${COLOR_36}WLAN配对码${COLOR_33}':${COLOR_01}"
-                read INPUT_PAIR_CODE
+                read -r INPUT_PAIR_CODE
                 if [ "${#INPUT_PAIR_CODE}" != 6 ]
                 then
                     echo -e "${COLOR_31}[!]${COLOR_33}此配对码有误 正确配对码应为${COLOR_36}六位数${COLOR_0}"
@@ -754,7 +754,7 @@ MiShuiTool_DEV_main() {
             echo
             echo -e "${COLOR_35}[TCP]${COLOR_33}设备已连接 输入要设置的${COLOR_36}ADB监听端口${COLOR_33}(留空自动使用'${COLOR_36}5555${COLOR_33}'端口) >>${COLOR_0}"
             echo -e -n "${COLOR_33}(范围:${COLOR_36}1024-49151${COLOR_33})*ᐷ${COLOR_01}"
-            read THE_TCP_NUMBER
+            read -r THE_TCP_NUMBER
             if [ -z "$THE_TCP_NUMBER" ]
             then
                 THE_TCP_NUMBER=5555
@@ -786,7 +786,7 @@ MiShuiTool_DEV_main() {
                 echo -e "${COLOR_35}[STEP]${COLOR_36}系统设置 ${COLOR_33}->${COLOR_36} WLAN(Wi-Fi)${COLOR_33} -> ${COLOR_36}已连接网络 ${COLOR_33}-> ${COLOR_36}IP地址${COLOR_0}"
                 echo
                 echo -e -n "${COLOR_35}[Input]${COLOR_33}输入IP:${COLOR_01}"
-                read ONLY_USB_IP
+                read -r ONLY_USB_IP
                 if ! ping -c 1 "$ONLY_USB_IP" &>>$MST_LOG
                 then
                     echo -e "${COLOR_31}[!]${COLOR_33}无法连接至'${COLOR_36}$ONLY_IP${COLOR_33}' 输入的IP似乎有误${COLOR_0}"
@@ -809,7 +809,7 @@ MiShuiTool_DEV_main() {
         CONNECT_ERROR() {
             echo -e "${COLOR_31}[ERROR]${COLOR_33}设备连接失败 检查'${COLOR_36}IP地址:端口${COLOR_33}(${COLOR_32}$NEW_IP_AND_PORT${COLOR_33})'是否有误/网络环境是否变化后重试一次或使用有线模式进行ADB调试${COLOR_0}"
             sed -i s/$ONLY_IP//g $MST_HOME/Pair_devices.txt
-            REBOOT_FL || return 0
+            REBOOT_FL; return 0
         }
         if grep connected <<< "$(adb connect $NEW_IP_AND_PORT)"
         then
@@ -874,7 +874,7 @@ MiShuiTool_FB_main() {
     echo -e "${COLOR_35}[CMD]${COLOR_33}›5*-${COLOR_36}执行Fastboot命令${COLOR_35}[HOME]${COLOR_33}›6*-${COLOR_36}返回主页${COLOR_0}"
     echo -e -n "${COLOR}[-${COLOR_32}FB${COLOR}-]${COLOR_33}输入选项*ᐷ${COLOR_0}"
     CLEAR_READ_INPUT
-    read FUNC_CONT
+    read -r FUNC_CONT
     echo -e "${COLOR_30}-------------------------------------------------${COLOR_0}"
     CHUCK_SLOT_FLASH() {
         CHUCK_SLOT="$1"
@@ -883,7 +883,7 @@ MiShuiTool_FB_main() {
             echo -e "${COLOR_31}[WARN]${COLOR_33}MST检测到分区'${COLOR_36}$FLASH_IMG_SLOT${COLOR_33}'在目标设备上不存在 继续操作可能造成不可预知的后果${COLOR_0}"
             echo -e "${COLOR_35}[Continue]${COLOR_33}需慎重考虑是否继续 >>${COLOR_0}"
             echo -e -n "${COLOR_36}[+][1›无视风险继续操作/2›取消操作]*ᐷ${COLOR_01}"
-            read YN_FLASH_ERROR_SLOT
+            read -r YN_FLASH_ERROR_SLOT
             case "$YN_FLASH_ERROR_SLOT" in
             '2' | 'n' | 'N')
                 MAIN_REBOOT; return 0
@@ -899,7 +899,7 @@ MiShuiTool_FB_main() {
             local IMG_FILE_PA IMG_FILE_NAME IMG_FILE_PATH
             CHUCK_SLOT_FLASH
             echo -e "${COLOR_35}[FILE]${COLOR_33}输入要刷入'${COLOR_36}$FLASH_IMG_NAME${COLOR_33}'分区的镜像文件路径 >>${COLOR_0}"
-            read -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' IMG_FILE_PATH
+            read -r -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' IMG_FILE_PATH
             IMG_FILE_NAME=$(basename "$IMG_FILE_PATH" 2>>$MST_LOG)
             if [ -z "$IMG_FILE_PATH" ]
             then
@@ -928,7 +928,7 @@ MiShuiTool_FB_main() {
         echo -e "${COLOR_36}›5*-Init_Boot_a ›6*-Init_boot_b ›7*-Recovery${COLOR_01}"
         echo -e "${COLOR_36}›8*-Recovery_a  ›9*-Recovery_b  ›10*-自定义分区${COLOR_01}"
         echo -e -n "${COLOR_35}[ST]${COLOR_33}输入选项*ᐷ${COLOR_01}"
-        read YN_SLOT_AB
+        read -r YN_SLOT_AB
         case "$YN_SLOT_AB" in
         '1' | 'Boot')
             FLASH_IMG_TO_SLOT BOOT boot
@@ -959,11 +959,11 @@ MiShuiTool_FB_main() {
             ;;
         '10')
             echo -e -n "${COLOR_35}[SLOT]${COLOR_33}输入要刷入的分区名称*ᐷ${COLOR_01}"
-            read FLASH_IMG_SLOT
+            read -r FLASH_IMG_SLOT
             CHUCK_SLOT_FLASH "$FLASH_IMG_SLOT"
             echo -e "${COLOR_35}[Y/N]${COLOR_33}是否确定指定分区为:${COLOR_36}$FLASH_IMG_SLOT${COLOR_0}"
             echo -e -n "${COLOR_36}[+][1›确定分区/2›返回主页]*ᐷ${COLOR_01}"
-            read YN_INPUT_SLOT
+            read -r YN_INPUT_SLOT
             case "$YN_INPUT_SLOT" in
             '1' | 'y' | 'Y')
                 FLASH_IMG_NAME="${FLASH_IMG_NAME^^}"
@@ -1005,7 +1005,7 @@ MiShuiTool_FB_main() {
             local UNLOCK_BOOTLOADER_YN
             echo -e "${COLOR_35}[WARN]${COLOR_31}解锁设备的BootLoader将使设备失去保修/安全性下降 ${COLOR_33}是否继续 >>${COLOR_0}"
             echo -e -n "${COLOR_36}[+][1›已知晓并继续/2›立即中断并退出]*ᐷ${COLOR_01}"
-            read UNLOCK_BOOTLOADER_YN
+            read -r UNLOCK_BOOTLOADER_YN
             case "$UNLOCK_BOOTLOADER_YN" in
             '1' | 'y' | 'Y')
                 echo -e "${COLOR_35}[INFO]${COLOR_33}即将开始解锁 确保目标设备已开启'${COLOR_36}OEM解锁${COLOR_33}'选项${COLOR_0}"
@@ -1045,7 +1045,7 @@ MiShuiTool_FB_main() {
             echo
             echo -e "${COLOR_35}[NE]${COLOR_33}是否立即安装第三方${COLOR_36}miunlock${COLOR_33}解锁工具 >>${COLOR_0}"
             echo -e -n "${COLOR_36}[+][1›立即安装/2›返回主页]*ᐷ${COLOR_01}"
-            read YN_UPDATE
+            read -r YN_UPDATE
             case "$YN_UPDATE" in
             '1' | 'y' | 'Y')
                 echo -e "${COLOR_35}[Tip]${COLOR_33}长时间未开始安装尝试连接魔法后再试${COLOR_0}"
@@ -1096,7 +1096,7 @@ MiShuiTool_FB_main() {
                 echo -e "${COLOR_31}无法读取${COLOR_0}"
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}MST无法读取本机电量执行判断 若本机电量高于${COLOR_36}45%${COLOR_33}则可以继续操作 >>${COLOR_0}"
                 echo -e "${COLOR_36}[+][1›高于45%/2›低于45%]*ᐷ${COLOR_01}"
-                read PEAGE_YN_FF
+                read -r PEAGE_YN_FF
                 case "$PEAGE_YN_FF" in
                 '2')
                     echo
@@ -1116,7 +1116,7 @@ MiShuiTool_FB_main() {
                 echo -e "$NUMBER_PEAGR${COLOR_34}电量较足${COLOR_0}"
                 echo -e "${COLOR_35}[INFO]${COLOR_33}本机当前电量较为充足但仍然存在断电风险 是否继续 >>${COLOR_0}"
                 echo -e -n "${COLOR_36}[+][1›继续刷入/2›取消并返回主页]*ᐷ${COLOR_01}"
-                read PEABG_CONTINUE_YN
+                read -r PEABG_CONTINUE_YN
                 case "$PEABG_CONTINUE_YN" in
                 '1' | 'y' | 'Y')
                     echo -e "${COLOR_35}[CONTINUE]${COLOR_33}已确认继续操作${COLOR_0}"
@@ -1142,7 +1142,7 @@ MiShuiTool_FB_main() {
                     USER_INPUT_CONTINUE_NUMBER=$((USER_INPUT_CONTINUE_NUMBER + 1))
                 fi
                 local CONTINUE_FLASH_ROM
-                read CONTINUE_FLASH_ROM
+                read -r CONTINUE_FLASH_ROM
                 if [ "$CONTINUE_FLASH_ROM" = "已确认并继续" ]
                 then
                     echo -e -n " ${COLOR_35}[START]${COLOR_33}3秒后开始刷入${COLOR_0}\r"
@@ -1163,7 +1163,7 @@ MiShuiTool_FB_main() {
             REBOOT_FL; return 0
         }
         echo -e "${COLOR_35}[PATH]${COLOR_33}输入${COLOR_36}'线刷包${COLOR_33}'或'${COLOR_36}解压后文件夹${COLOR_33}'的完整路径 >>${COLOR_0}"
-        read -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' ZIP_DIR_PATH
+        read -r -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' ZIP_DIR_PATH
         if [ -f "$ZIP_DIR_PATH" ]
         then
             echo -e "${COLOR_35}[ZIP]${COLOR_33}该路径指向为:${COLOR_36}压缩包${COLOR_0}"
@@ -1179,7 +1179,7 @@ MiShuiTool_FB_main() {
                 echo
                 echo -e "${COLOR_35}[Update]${COLOR_33}是否以'${COLOR_33}fastboot update${COLOR_33}'命令刷入 >>${COLOR_0}"
                 echo -e -n "${COLOR_36}[+][1›使用Update/2›使用刷机脚本]*ᐷ${COLOR_0}"
-                read YN_UPDATE_FLASH
+                read -r YN_UPDATE_FLASH
                 case "$YN_UPDATE_FLASH" in
                 1 | y | Y)
                     CHECK_DEVICE_FLASH_OK
@@ -1267,7 +1267,7 @@ MiShuiTool_FB_main() {
             REBOOT_FL; return 0
         fi
         echo -e -n "${COLOR_35}[SH]${COLOR_33}输入需要使用的脚本选项*ᐷ${COLOR_01}"
-        read USR_SH_NUMBER
+        read -r USR_SH_NUMBER
         case "$USR_SH_NUMBER" in
         [1-9])
             USR_SH_FALSH="$(sed -n ${USR_SH_NUMBER}p <<< "$ALL_SH_FILE")"
@@ -1278,7 +1278,7 @@ MiShuiTool_FB_main() {
             else
                 echo -e "${COLOR_35}[USR]${COLOR_33}是否使用'${COLOR_36}$(basename "$USR_SH_FALSH")${COLOR_33}'脚本进行刷机 >>${COLOR_0}"
                 echo -e -n "${COLOR_36}[+][1›确认使用/2›取消并返回主页]*ᐷ${COLOR_01}"
-                read YN_CONTINUE_FLASH
+                read -r YN_CONTINUE_FLASH
                 case "$YN_CONTINUE_FLASH" in
                 '2' | 'n' | 'N')
                     MAIN_REBOOT; return 0
@@ -1326,7 +1326,7 @@ MiShuiTool_FB_main() {
         echo
         while true
         do
-            read -e -p $'\001\033[0;35;1m\002[>_]\001\033[0;33;1m\002输入命令:\001\033[0;32;1m\002fastboot -s '"$SELEC_FASTBOOT_DEVICE"$' \001\033[0;1m\002' FASTBOOT_SHELL_CMD
+            read -r -e -p $'\001\033[0;35;1m\002[>_]\001\033[0;33;1m\002输入命令:\001\033[0;32;1m\002fastboot -s '"$SELEC_FASTBOOT_DEVICE"$' \001\033[0;1m\002' FASTBOOT_SHELL_CMD
             if [ -z "$FASTBOOT_SHELL_CMD" ]
             then
                 continue
@@ -1369,7 +1369,7 @@ MiShuiTool_ADB_main() {
     echo -e "${COLOR_35}[SET]${COLOR_33}›4*-${COLOR_36}高级系统设置${COLOR_35}[RE]${COLOR_33}›5*-${COLOR_36}重启连接设备${COLOR_35}[HOME]${COLOR_33}›6*-${COLOR_36}返回主页${COLOR_0}"
     echo -e -n "${COLOR}[-${COLOR_32}ADB${COLOR}-]${COLOR_33}输入选项*ᐷ${COLOR_0}"
     CLEAR_READ_INPUT
-    read FUNC_CONT
+    read -r FUNC_CONT
     echo -e "${COLOR_30}-------------------------------------------------${COLOR_0}"
     case "$FUNC_CONT" in
     '1' | 'ACT' | '激活ADB应用')
@@ -1448,7 +1448,7 @@ MiShuiTool_ADB_main() {
             local SEARCH_LINR OKAY_SEARCH
             local START_YN_APP ONE_SEARCH
             echo -e "${COLOR_35}[PKGE]${COLOR_33}输入'${COLOR_36}包名${COLOR_33}'或'${COLOR_36}包名关键词${COLOR_33}'以搜索应用(多选以'${COLOR_36}-${COLOR_33}'符号分隔) >>${COLOR_0}"
-            read -e -p $'\001\033[0;33;1m\002*ᐷ\001\033[0;1m\002 ' INPUT_PKGE_NAME
+            read -r -e -p $'\001\033[0;33;1m\002*ᐷ\001\033[0;1m\002 ' INPUT_PKGE_NAME
             if [ -z "$INPUT_PKGE_NAME" ]
             then
                 echo -e "${COLOR_31}[!]${COLOR_33}此处不可为空${COLOR_0}"
@@ -1487,7 +1487,7 @@ MiShuiTool_ADB_main() {
                 REBOOT_FL; return 0
             else
                 echo -e -n "${COLOR_35}[NUM]${COLOR_33}输入选定序号(多选以'${COLOR_36}-${COLOR_33}'符号分隔)*ᐷ${COLOR_01}"
-                read INPUT_PKGE_NUMBER
+                read -r INPUT_PKGE_NUMBER
             fi
             if [ -z "$INPUT_PKGE_NUMBER" ]
             then
@@ -1506,7 +1506,7 @@ MiShuiTool_ADB_main() {
             echo
             echo -e "${COLOR_35}[>>]${COLOR_33}是否继续操作:${COLOR_36}$MISHUI_MAIN_TIP${COLOR_33} >>${COLOR_0}"
             echo -e -n "${COLOR_36}[+][1›继续操作/2›取消并返回主页]*ᐷ${COLOR_0}"
-            read START_YN_APP
+            read -r START_YN_APP
             case "$START_YN_APP" in
             '1' | 'y' | 'Y')
                 echo -e "${COLOR_30}"
@@ -1541,7 +1541,7 @@ MiShuiTool_ADB_main() {
             }
             echo -e "${COLOR_35}[ICE]${COLOR_33}选择需要对选定应用进行的冻结/解冻操作 >>${COLOR_0}"
             echo -e -n "${COLOR_36}[+][1›冻结选定应用/2›解冻选定应用]*ᐷ${COLOR_0}"
-            read YN_ICE_USR
+            read -r YN_ICE_USR
             case "$YN_ICE_USR" in
             '1' | '冻结' | '冻结选定应用')
                 MISHUI_MAIN_TIP=冻结选定应用
@@ -1571,13 +1571,13 @@ MiShuiTool_ADB_main() {
         '2')
             echo -e "${COLOR_35}[IU]${COLOR_33}选择需要进行的安装/卸载操作 >>${COLOR_0}"
             echo -e -n "${COLOR_36}[+][1›安装APK/2›卸载选定应用]*ᐷ${COLOR_01}"
-            read UNINSTALL_YN
+            read -r UNINSTALL_YN
             case "$UNINSTALL_YN" in
             '1' | '安装' | '安装APK')
                 MISHUI_MAIN_TIP=安装APK
                 SEE_USB_DEVICES
                 echo -e "${COLOR_35}[PATH]${COLOR_33}输入需要安装的apk文件位于本机的完整路径 >>${COLOR_0}"
-                read -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' APK_INSTALL_PATH
+                read -r -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' APK_INSTALL_PATH
                 INSTALL_APK_NAMR="$(basename "$APK_INSTALL_PATH")"
                 if [ -z "$APK_INSTALL_PATH" ]
                 then
@@ -1632,7 +1632,7 @@ MiShuiTool_ADB_main() {
         '3')
             echo -e "${COLOR_35}[SK]${COLOR_33}选择需要进行的打开/关闭操作 >>${COLOR_0}"
             echo -e -n "${COLOR_36}[+][1›打开选定应用/2›关闭选定应用]*ᐷ${COLOR_01}"
-            read KILL_YN_START
+            read -r KILL_YN_START
             case "$KILL_YN_START" in
             '1' | '打开选定应用' | '打开')
                 MISHUI_MAIN_TIP=打开选定应用
@@ -1691,7 +1691,7 @@ MiShuiTool_ADB_main() {
             SEE_USB_DEVICES
             SEARCH_THE_NEED_APPS
             echo -e "${COLOR_35}[DL]${COLOR_33}输入存放Apk文件的文件夹路径(留空自动存储至'${COLOR_36}Download${COLOR_33}'文件夹) >>${COLOR_0}"
-            read -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' THE_DOWNLOAD_PATH
+            read -r -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' THE_DOWNLOAD_PATH
             if [ -n "$THE_DOWNLOAD_PATH" ] && [ -d "$THE_DOWNLOAD_PATH" ]
             then
                 THE_DOWNLOAD_PATH="${THE_DOWNLOAD_PATH%%/}"
@@ -1714,7 +1714,7 @@ MiShuiTool_ADB_main() {
                     echo -e "${COLOR_35}[PATH]${COLOR_33}APK文件路径:${COLOR_36}$THE_APK_PULL_PATH${COLOR_0}"
                 fi
             }
-            while IFS= read PULL_THE_APK
+            while IFS= read -r PULL_THE_APK
             do
                 echo
                 echo -e "${COLOR_35}[DATA]${COLOR_33}正在获取'${COLOR_36}$PULL_THE_APK${COLOR_33}'的APK文件路径...${COLOR_0}"
@@ -1733,7 +1733,7 @@ MiShuiTool_ADB_main() {
                         echo -e "${COLOR_31}[ERROR]${COLOR_36}自动创建'${COLOR_36}$THE_DOWNLOAD_PATH/$PULL_THE_APK${COLOR_33}'文件夹失败 无法提取'${COLOR_36}$PULL_THE_APK${COLOR_33}'的所有Apk文件${COLOR_0}"
                         continue
                     fi
-                    while IFS= read ONE_PULL_APK
+                    while IFS= read -r ONE_PULL_APK
                     do
                         DOWNLOAD_APK_FILE "$ONE_PULL_APK" "$THE_DOWNLOAD_PATH/$PULL_THE_APK/$(basename "$ONE_PULL_APK")"
                     done <<< "$THE_APK_PULL_PATH"
@@ -1750,7 +1750,7 @@ MiShuiTool_ADB_main() {
             local ALL_CLEAN_APP=0
             local OKAY_CLEAN_APP=0
             local ERROR_CLEAN_APP=0
-            while IFS= read ONE_CLEAN_APP
+            while IFS= read -r ONE_CLEAN_APP
             do
                 echo -e "${COLOR_35}[Cleaning]${COLOR_33}正在清理应用'${COLOR_36}$ONE_CLEAN_APP${COLOR_33}'的全部数据...${COLOR_0}"
                 [ -z "$SELEC_ADB_DEVICE" ] && continue
@@ -1784,7 +1784,7 @@ MiShuiTool_ADB_main() {
         while true
         do
             
-            read -e -p $'\001\033[0;35;1m\002[>_]\001\033[0;33;1m\002输入命令:\001\033[0;32;1m\002adb -s '"$SELEC_ADB_DEVICE"$' \001\033[0;1m\002' ADB_SHELL_CMD
+            read -r -e -p $'\001\033[0;35;1m\002[>_]\001\033[0;33;1m\002输入命令:\001\033[0;32;1m\002adb -s '"$SELEC_ADB_DEVICE"$' \001\033[0;1m\002' ADB_SHELL_CMD
             if [ -z "$ADB_SHELL_CMD" ]
             then
                 continue
@@ -1821,7 +1821,7 @@ MiShuiTool_ADB_main() {
                 then
                     echo -e "${COLOR_35}[WARN]${COLOR_31}无法备份目标设备当前屏幕分辨率 继续执行可能含有风险${COLOR_33} 是否继续 >>${COLOR_0}"
                     echo -e "${COLOR_36}[+][1›确认风险并继续/2›取消并返回主页]*ᐷ${COLOR_01}"
-                    read CONTINUE_SET_SIZE
+                    read -r CONTINUE_SET_SIZE
                     case "$CONTINUE_SET_SIZE" in
                         '1' | 'y' | 'Y')
                         echo -e "${COLOR_32}[CONTINUE]${COLOR_33}已确认继续操作 >>${COLOR_0}"
@@ -1850,7 +1850,7 @@ MiShuiTool_ADB_main() {
             then
                 echo -e "${COLOR_35}[BAK]${COLOR_33}发现备份的屏幕分辨率:${COLOR_36}$BAK_ADB_SIZE${COLOR_33} 是否恢复至该分辨率 >>${COLOR_0}"
                 echo -e "${COLOR_36}[+][1›恢复该分辨率/2›设置新分辨率]*ᐷ${COLOR_01}"
-                read YN_TO_BAK_SIZE
+                read -r YN_TO_BAK_SIZE
                 case "$YN_TO_BAK_SIZE" in
                 '1' | 'y' | 'Y')
                     SET_THE_BAK_SIZE
@@ -1858,7 +1858,7 @@ MiShuiTool_ADB_main() {
                 *)
                     echo -e "${COLOR_35}[SAVE]${COLOR_33}是否保留最初备份的分辨率:${COLOR_36}$BAK_ADB_SIZE${COLOR_0}"
                     echo -e "${COLOR_36}[+][1›保留原分辨率/2›备份当前分辨率]*ᐷ${COLOR_01}"
-                    read SAVE_THE_NEW_YN
+                    read -r SAVE_THE_NEW_YN
                     case "$SAVE_THE_NEW_YN" in
                     '1' | 'y' | 'Y')
                         echo -e "${COLOR_35}[TURE]${COLOR_33}已保留原分辨率:${COLOR_36}$BAK_ADB_SIZE${COLOR_0}"
@@ -1874,7 +1874,7 @@ MiShuiTool_ADB_main() {
             fi
             echo -e "${COLOR_33}[SIZE]${COLOR_33}输入欲设置的屏幕分辨率(比例) >>${COLOR_0}"
             echo -e -n "${COLOR_33}[格式:${COLOR_36}1080/2400${COLOR_33}]:${COLOR_01}"
-            read SETTING_SIZE
+            read -r SETTING_SIZE
             TIP_THE_ECHO_SIZE="${COLOR_35}[Setting]${COLOR_33}正在将目标设备分辨率设置为'${COLOR_36}$SETTING_SIZE${COLOR_33}'...${COLOR_30}"
             case "$SETTING_SIZE" in
             *[0-9]x[0-9]*)
@@ -1898,7 +1898,7 @@ MiShuiTool_ADB_main() {
             then
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}设置成功 现在测试目标设备能否正常操作触摸并依据测试结果选择操作 >>${COLOR_0}"
                 echo -e "${COLOR_36}[+][1›屏幕正常并确认修改/2›屏幕失效立即恢复]*ᐷ${COLOR_01}"
-                read INPUT_THE_SIZE_YN
+                read -r INPUT_THE_SIZE_YN
                 case "$CONTINUE_SET_SIZE" in
                 '1' | 'y' | 'Y')
                     echo -e "${COLOR_32}[DONE]${COLOR_33}操作已全部完成 目标设备原始分辨率(${COLOR_36}$BAK_ADB_SIZE${COLOR_33})已保存至当前进程 在未重启/未结束当前脚本进程前均可通过再次进入该功能恢复原分辨率${COLOR_0}"
@@ -1921,7 +1921,7 @@ MiShuiTool_ADB_main() {
                 local FALSE_PAS
                 echo -e "${COLOR_35}[$3]${COLOR_33}是否$2墓碑模式 >>${COLOR_0}"
                 echo -e -n "${COLOR_36}[+][1›$2墓碑模式/2›保持现状并返回主页]*ᐷ${COLOR_01}"
-                read FALSE_PAS
+                read -r FALSE_PAS
                 case "$FALSE_PAS" in
                 '1' | 'y' | 'Y')
                     if adb -s "$SELEC_ADB_DEVICE" shell settings put global cached_apps_freezer $1
@@ -2010,7 +2010,7 @@ MiShuiTool_AUTO_main() {
             echo -e "${COLOR_31}$2${COLOR_0}"
             echo -e "$1"
             echo -e -n "${COLOR_36}[+][1›继续操作/2›返回主页]*ᐷ${COLOR_01}"
-            read YN_CONTINUE_ROOT
+            read -r YN_CONTINUE_ROOT
             case "$YN_CONTINUE_ROOT" in
             2 | n | N)
                 MAIN_REBOOT; return 0
@@ -2039,7 +2039,7 @@ MiShuiTool_AUTO_main() {
             echo
             echo -e "${COLOR_35}[D&I]${COLOR_33}是否立即下载并安装${COLOR_36}KernelSU${COLOR_33}正式版(将消耗'${COLOR_36}10MB${COLOR_33}'流量) >>${COLOR_0}"
             echo -e -n "${COLOR_36}[+][1›立即下载并安装/2›返回主页]*ᐷ${COLOR_01}"
-            read YN_DL_KERNELSU
+            read -r YN_DL_KERNELSU
             case "$YN_DL_KERNELSU" in
             2 | n | N)
                 MAIN_REBOOT; return 0
@@ -2077,7 +2077,7 @@ MiShuiTool_AUTO_main() {
         echo
         echo -e "${COLOR_35}[PERM]${COLOR_33}是否立即使目标设备以SELinux的宽容模式启动系统 >>${COLOR_0}"
         echo -e -n "${COLOR_36}[+][1›立即启动系统/2›撤销设置并冷重启]*ᐷ${COLOR_01}"
-        read YN_CONTINUE_SYSTEM
+        read -r YN_CONTINUE_SYSTEM
         FASTBOOT_CONTINUE_TRY_NUMNER=1
         FASTBOOT_CONTINUE_TRY() {
             while true
@@ -2143,7 +2143,7 @@ MiShuiTool_AUTO_main() {
             DOWNLOAD_IMG_NAME=boot
         fi
         echo -e "${COLOR_35}[URL/IMG]${COLOR_33}输入适用于目标设备当前系统版本的${COLOR_36}zip卡刷包${COLOR_33}下载链接或'${COLOR_36}$DOWNLOAD_IMG_NAME.img${COLOR_33}'文件位于本机的完整路径 >>${COLOR_0}"
-        read -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' IMG_OR_URL_FOR_FILE
+        read -r -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' IMG_OR_URL_FOR_FILE
         if [[ "$IMG_OR_URL_FOR_FILE" == https://* ]]
         then
             if grep -q '\.zip$'
@@ -2163,7 +2163,7 @@ MiShuiTool_AUTO_main() {
             echo
             echo -e "${COLOR_35}[LINK]${COLOR_33}是否使用该链接(${COLOR_36}$IMG_OR_URL_FOR_FILE${COLOR_33})提取所需的镜像文件 >>${COLOR_0}"
             echo -e "${COLOR_36}[+][1›使用该链接/2›取消并返回主页]*ᐷ${COLOR_01}"
-            read YN_USR_ZIP_LINK
+            read -r YN_USR_ZIP_LINK
             case "$YN_USR_ZIP_LINK" in
             2)
                 MAIN_REBOOT; return 0
@@ -2208,11 +2208,11 @@ MiShuiTool_AUTO_main() {
         if [ -z "$ALL_PATCH_IMG_FILE" ]
         then
             echo -e "${COLOR_35}[PATH]${COLOR_33}没有找到已修补的文件 输入修补后的镜像文件在目标设备上的完整路径 >>${COLOR_0}"
-            read -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' THE_NEED_PATCH_IMG
+            read -r -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' THE_NEED_PATCH_IMG
         elif [ -n "$ALL_PATCH_IMG_FILE" ] && [ "$(wc -l <<< "$ALL_PATCH_IMG_FILE")" -ge 2 ]
         then
             ALL_TIP_TION="${COLOR_35}[PATCH]${COLOR_33}选择本次修补后的镜像文件 >>${COLOR_0}"
-            read -a ALL_OPTION <<< "$ALL_PATCH_IMG_FILE"
+            read -r -a ALL_OPTION <<< "$ALL_PATCH_IMG_FILE"
             NOW_LINE
             SHOW_FUNC_MENU
             THE_NEED_PATCH_IMG="$DOWNLOAD_PATH/$(sed -n ${FUNC_CONT}p <<< "$ALL_PATCH_IMG_FILE")"
@@ -2273,7 +2273,7 @@ MiShuiTool_AUTO_main() {
             ENTER_ANY_CONTINUE 正常开机后
             echo -e "${COLOR_35}[CLEAR]${COLOR_33}是否删除本次操作产生的所有镜像文件(包括本机与目标设备) >>${COLOR_0}"
             echo -e "${COLOR_36}[+][1›清理全部临时文件/2›取消并返回主页]*ᐷ${COLOR_01}"
-            read YN_CLANER_AUTO_ROOT_FILE
+            read -r YN_CLANER_AUTO_ROOT_FILE
             case "$YN_CLANER_AUTO_ROOT_FILE" in
             1)
                 if rm $THE_LOCAL_IMG_PATH &>>$MST_LOG && rm $THE_NEED_PATCH_IMG &>>$MST_LOG
@@ -2299,7 +2299,7 @@ MiShuiTool_AUTO_main() {
         echo
         echo -e "${COLOR_35}[STATUS]${COLOR_33}选择目标设备目前状态(若处于第二屏建议耐心等待${COLOR_36}30秒-1分钟${COLOR_33}后再选) >>${COLOR_0}"
         echo -e -n "${COLOR_36}[+][1›正常开机/2›卡第二屏]*ᐷ${COLOR_01}"
-        read INPUT_DEVICE_STATUS_NOW
+        read -r INPUT_DEVICE_STATUS_NOW
         case "$INPUT_DEVICE_STATUS_NOW" in
         2)
             echo -e "${COLOR_35}[Tip]${COLOR_33}若长时间处于第二屏可尝试长按目标设备的${COLOR_36}电源+音量-${COLOR_33}键强制重启至Fastboot 稍候将刷入原版未修补${COLOR_36}$DOWNLOAD_IMG_NAME.img${COLOR_33}镜像文件${COLOR_0}"
@@ -2407,7 +2407,7 @@ MiShuiTool_i_main() {
             echo
             echo -e "${COLOR_35}[$1]${COLOR_33}$2 >>${COLOR_0}"
             echo -e -n "${COLOR_36}[+][1›$3/2›返回主页]*ᐷ${COLOR_01}"
-            read YN_CURL
+            read -r YN_CURL
             case "$YN_CURL" in
             '2' | 'n' | 'N' | '否')
                 rm -rf $MST_HOME/Update/* &>>$MST_LOG
@@ -2427,7 +2427,7 @@ MiShuiTool_i_main() {
             echo
             echo -e "${COLOR_35}[RE]${COLOR_33}覆盖更新后需要重启MST才能应用 >>${COLOR_0}"
             echo -e -n "${COLOR_36}[+][1›重启MST/2›退出MST]*ᐷ${COLOR_01}"
-            read YN_FIX_RE_MST
+            read -r YN_FIX_RE_MST
             case "$YN_FIX_RE_MST" in
             '1' | 'y' | 'Y')
                 echo -e -n " ${COLOR_35}[Rebooting]${COLOR_33}正在重启MST...${COLOR_0}\r"
@@ -2455,7 +2455,7 @@ MiShuiTool_i_main() {
         else
             echo -e "\033[K${COLOR_35}[LOG]${COLOR_33}本次更新内容 >>${COLOR_0}"
             sleep 0.02
-            while IFS= read READ_ONE_LOG
+            while IFS= read -r READ_ONE_LOG
             do
                 echo -e "${COLOR_36}$READ_ONE_LOG${COLOR_0}"
                 sleep 0.03
