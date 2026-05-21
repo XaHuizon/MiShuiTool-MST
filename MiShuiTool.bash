@@ -12,7 +12,7 @@ MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
 MST_UPDATE_TIME='26.3.4 Official'
-NOW_VERSION=10027
+NOW_VERSION=10028
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -1380,11 +1380,12 @@ MiShuiTool_ADB_main() {
             local ACT_APP_NAME="$1"
             local ACT_APP_PATH="$2"
             local START_APP_CMD="$3"
-            if ! adb -s "$SELEC_ADB_DEVICE" shell ls $STORAGE/Android/data/$(sed 's|/.*||g' <<< "$START_APP_CMD") &>>$MST_LOG
+            if ! adb -s "$ONE_SELEC_ADB_DEVICE" shell test -f "$ACT_APP_PATH" &>>$MST_LOG
             then
-                echo -e "${COLOR_31}[!]${COLOR_33}目标设备暂未安装应用'${COLOR_36}$ACT_APP_NAME${COLOR_33}'无法激活${COLOR_0}"
-                echo -e "${COLOR_35}[Tip]${COLOR_33}前往应用官网或可信渠道下载后安装至目标设备 也可以将APK文件下载至本机后使用'${COLOR_36}[ADB]›3*-ADB调试工具${COLOR_33} -> ${COLOR_36}[APP]›2*-应用管理 ${COLOR_33}-> ${COLOR_36}安装APK/卸载选定应用 ${COLOR_33}-> ${COLOR_36}安装APK${COLOR_33}'功能将APK安装至目标设备${COLOR_0}"
+                echo -e "${COLOR_31}[!]${COLOR_33}目标设备暂未安装应用'${COLOR_36}$ACT_APP_NAME${COLOR_33}'或缺少可执行文件无法激活${COLOR_0}"
+                echo -e "${COLOR_35}[Tip]${COLOR_33}前往应用官网或可信渠道下载最新版本后安装至目标设备 也可以将APK文件下载至本机后使用'${COLOR_36}[ADB]›3*-ADB调试工具${COLOR_33} -> ${COLOR_36}[APP]›2*-应用管理 ${COLOR_33}-> ${COLOR_36}安装APK/卸载选定应用 ${COLOR_33}-> ${COLOR_36}安装APK${COLOR_33}'功能将APK安装至目标设备${COLOR_0}"
                 echo
+                REBOOT_FL; return 0
             fi
             echo -e "${COLOR_35}[P-ACT]${COLOR_33}正在激活'${COLOR_36}$ACT_APP_NAME${COLOR_33}'...${COLOR_30}"
             if adb -s "$SELEC_ADB_DEVICE" shell am start -n $START_APP_CMD 2>>$MST_LOG; adb -s "$SELEC_ADB_DEVICE" shell "$ACT_APP_PATH"

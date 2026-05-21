@@ -23,14 +23,15 @@
 - 支持对应用进行冻结/解冻、安装/卸载应用、提取应用Apk等简单应用管理
 - 支持修改/恢复连接设备分辨率、设置目标设备墓碑模式等简单系统设设置
 - 支持重启处于ADB模式的设备
-> 另外MiShuiTool还可以连接任何处于ADB/Fastboot模式的设备（需允许USB调试）
+### 自动联合操作简介:
+ - 支持获取免解锁临时Root(正在测试)
+ - 支持在已解锁BL的前提下全自动获取Root权限
+> MiShuiTool可以连接任何处于ADB/Fastboot模式的Android设备（需允许USB调试）
 ## 安装与使用
 ### 在终端中执行以下命令以一键安装/更新:
 ```shell
 curl -sS https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/install | bash 
 ```
-### 一些使用中的小技巧
-
 - **安装完成后执行 `mishuitool` 命令即可启动MST工具箱**
 # 鸣谢
 > 本项目引用了以下开源项目的安装命令，如果您认为他们还不错，请为他们点上一颗Star！
