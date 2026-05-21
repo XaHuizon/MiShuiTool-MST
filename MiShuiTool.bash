@@ -569,7 +569,7 @@ CA_FLASH_MAIN() {
             echo
             echo -e "${COLOR_35}[Installing]${COLOR_33}正在安装第三方${COLOR_36}ADB&Fastboot${COLOR_33}命令...${COLOR_0}"
             NOW_LINE
-            if pkg install android-tools; CLEAR_READ_INPUT && curl -sS https://raw.githubusercontent.com/nohajc/termux-adb/master/install.sh | bash; CLEAR_READ_INPUT
+            if pkg update; CLEAR_READ_INPUT && pkg upgrade; CLEAR_READ_INPUT && pkg install android-tools; CLEAR_READ_INPUT && curl -sS https://raw.githubusercontent.com/nohajc/termux-adb/master/install.sh | bash; CLEAR_READ_INPUT
             then
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}工具包'${COLOR_36}ADB&Fastboot${COLOR_33}'安装成功${COLOR_0}"
                 ADB_FASTBOOT_VER
