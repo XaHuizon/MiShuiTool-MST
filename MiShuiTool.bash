@@ -12,7 +12,7 @@ MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
 MST_UPDATE_TIME='26.3.5 Official'
-NOW_VERSION=10029
+NOW_VERSION=10030
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -797,7 +797,7 @@ MiShuiTool_DEV_main() {
                 fi
                 echo
                 NEW_IP_AND_PORT="$ONLY_USB_IP:$THE_TCP_NUMBER"
-                echo -e "${COLOR_35}[Connecting]${COLOR_33}正在连接'${COLOR_36}$NEW_IP_AND_PORT${COLOR_33}'...${COLOOR_0}"
+                echo -e "${COLOR_35}[Connecting]${COLOR_33}正在连接'${COLOR_36}$NEW_IP_AND_PORT${COLOR_33}'...${COLOR_0}"
             fi
             ;;
         '')
@@ -1170,9 +1170,9 @@ MiShuiTool_FB_main() {
         if [ -f "$ZIP_DIR_PATH" ]
         then
             echo -e "${COLOR_35}[ZIP]${COLOR_33}该路径指向为:${COLOR_36}压缩包${COLOR_0}"
-            THE_FILE_EXT_NAME="${THE_FILE_FLASH_NAME##*.}"
             THE_FILE_FLASH_NAME="$(basename "$ZIP_DIR_PATH")"
             THE_PATH_FLASH_NAME="$(dirname "$ZIP_DIR_PATH")/线刷包-MST"
+            THE_FILE_EXT_NAME="${THE_FILE_FLASH_NAME##*.}"
             INSTALL_THE_MUST_CMD 'pkg install unzip -y' 'unzip' 'unzip'
             
             if unzip -t "$ZIP_DIR_PATH" android-info.txt &>>$MST_LOG
@@ -1295,7 +1295,7 @@ MiShuiTool_FB_main() {
                 echo -e "${COLOR_31}[!]${COLOR_33}此处不可为空${COLOR_0}"
                 MAIN_REBOOT; return 0
             fi
-            echo -e "${COLOR_34}[INFO]${COLOR_33}'${COLOR_36}$USR_SH_NUMBERL_YN${COLOR_33}'非菜单中的选项${COLOR_0}"
+            echo -e "${COLOR_34}[INFO]${COLOR_33}'${COLOR_36}$USR_SH_NUMBER${COLOR_33}'非菜单中的选项${COLOR_0}"
             REBOOT_FL; return 0
             ;;
         esac
@@ -1615,7 +1615,7 @@ MiShuiTool_ADB_main() {
                     else
                         echo -e "${COLOR_31}[ERROR]${COLOR_33}应用'${COLOR_36}$UN_THE_APP${COLOR_33}'卸载失败${COLOR_0}"
                         echo -e "${COLOR_35}[Tip]${COLOR_33}检查设备是否正确连接或手动执行命令 >>${COLOR_0}"
-                        echo -e "${COLOR_35}[CMD]${COLOR_33}命令: ${COLOR_36}adb -s $SELEC_ADB_DEVICE uninstall -k $ICE_THE_APP${COLOR_0}"
+                        echo -e "${COLOR_35}[CMD]${COLOR_33}命令: ${COLOR_36}adb -s $SELEC_ADB_DEVICE uninstall -k $UN_THE_APP${COLOR_0}"
                     fi
                 done <<< "$USR_OKAY_PKGE"
                 REBOOT_FL; return 0
@@ -1658,7 +1658,7 @@ MiShuiTool_ADB_main() {
                             echo -e "${COLOR_35}[CMD]${COLOR_33}命令: ${COLOR_36}adb -s $SELEC_ADB_DEVICE shell am start -n $START_THE_APP/<Activity>${COLOR_0}"
                         fi
                     else
-                        echo -e "${COLOR_31}[ERROR]${COLOR_33}应用'${COLOR_36}$ICE_THE_APP${COLOR_33}'Activity获取失败${COLOR_0}"
+                        echo -e "${COLOR_31}[ERROR]${COLOR_33}应用'${COLOR_36}$START_THE_APP${COLOR_33}'Activity获取失败${COLOR_0}"
                     fi
                 done <<< "$USR_OKAY_PKGE"
                 REBOOT_FL; return 0
@@ -2111,7 +2111,7 @@ MiShuiTool_AUTO_main() {
             fi
             echo -e "${COLOR_32}[OKAY]${COLOR_33}命令执行成功 系统正在启动${COLOR_0}"
             echo -e "${COLOR_35}[Tip]${COLOR_33}当启动完成后只需要进入${COLOR_36}KernelSU${COLOR_33}点击${COLOR_36}越狱${COLOR_33}按钮便可以获取Root权限${COLOR_0}"
-            echo -e "${COLOR_35}[INFO]${COLOR_33}通过此方法获取ROOT权限后不可修改${COLOR_36}/system /vndor${COLOR_33}以及所有受AVB保护的分区如:${COLOR_36}Boot Recovery ...${COLOR_0}"
+            echo -e "${COLOR_35}[INFO]${COLOR_33}通过此方法获取ROOT权限后不可修改${COLOR_36}/system /vendor${COLOR_33}以及所有受AVB保护的分区如:${COLOR_36}Boot Recovery ...${COLOR_0}"
             ;;
         *)
             ALL_TIP_TION="${COLOR_35}[RE]${COLOR_33}选择需要重启的目标模式 >>${COLOR_0}"
@@ -2141,7 +2141,7 @@ MiShuiTool_AUTO_main() {
         then
             NEED_FLASH_SLOT_NAME="vendor_boot$ROOT_SLOT_A_B"
             DOWNLOAD_IMG_NAME=vendor_boot
-        elif grep "boot$ROOT_SLOT_A_B" <<< "$ALL_SLOT_ROOT" &>>MST_LOG
+        elif grep "boot$ROOT_SLOT_A_B" <<< "$ALL_SLOT_ROOT" &>>$MST_LOG
         then
             NEED_FLASH_SLOT_NAME="boot$ROOT_SLOT_A_B"
             DOWNLOAD_IMG_NAME=boot
