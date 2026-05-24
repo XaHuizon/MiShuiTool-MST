@@ -12,7 +12,7 @@ MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
 MST_UPDATE_TIME='26.3.5 Official'
-NOW_VERSION=10030
+NOW_VERSION=10031
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -2133,7 +2133,7 @@ MiShuiTool_AUTO_main() {
         fi
         ALL_SLOT_ROOT="$(adb -s "$SELEC_ADB_DEVICE" shell ls /dev/block/by-name/ 2>>$MST_LOG | grep 'boot')"
         ROOT_SLOT_A_B="$(adb -s "$SELEC_ADB_DEVICE" shell getprop ro.boot.slot_suffix)"
-        if grep "init_boot$ROOT_SLOT_A_B" <<< "$ALL_SLOT_ROOT" &>>$MST_LOG
+        if grep -w "init_boot$ROOT_SLOT_A_B" <<< "$ALL_SLOT_ROOT" &>>$MST_LOG
         then
             NEED_FLASH_SLOT_NAME="init_boot$ROOT_SLOT_A_B"
             DOWNLOAD_IMG_NAME=init_boot
