@@ -11,8 +11,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='26.3.4 Official'
-NOW_VERSION=10028
+MST_UPDATE_TIME='26.3.5 Official'
+NOW_VERSION=10029
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -108,13 +108,43 @@ check | -c | --check)
     exit 1
     ;;
 esac
-ALL_REBOOT() {
+CLEAR_READ_INPUT() {
+    while read -r -t 0
+    do
+        read -r
+    done
+}
+ENTER_ANY_CONTINUE() {
     CLEAR_READ_INPUT
+    echo
+    echo -e -n "${COLOR_35}[Enter]${COLOR_33}$1点按任意键继续${COLOR_0}"
+    read -s -n1
+    echo
+}
+CONTINUE_YN() {
+    CLEAR_READ_INPUT
+    echo -e -n "${COLOR_35}[Continue]${COLOR_33}按任意键继续 回车键取消${COLOR_0}"
+    read -r -s -n1 CONTINUE
+    echo
+}
+ERROR_CONT() {
+    echo -e "${COLOR_31}[!]${COLOR_33}异常选项:${COLOR_36}$FUNC_CONT${COLOR_0}"
+    REBOOT_FL; return 0
+}
+START_CMD_TIME() {
+    CMD_START=$(date +%s.%N)
+}
+END_CMD_TIME() {
+    CMD_END=$(date +%s.%N)
+    ALL_CMD_TIME=$(awk "BEGIN {printf \"%.2f\", $CMD_END - $CMD_START}")
+}
+ALL_REBOOT() {
     sleep 0.4
     $BACK_MAIN
     return 0
 }
 REBOOT_FL() {
+    CLEAR_READ_INPUT
     echo
     echo -e -n "${COLOR}[MST]${COLOR_33}点按回车返回主页${COLOR_0}"
     read -s
@@ -136,13 +166,13 @@ EXIT_SHELL() {
     echo -e "${COLOR_35}[EXIT]${COLOR_33}退出脚本(退出码:${COLOR_36}$EXIT_CODE${COLOR_33})...${COLOR_0}"
     exit "$EXIT_CODE"
 }
-CLEAR_LINE() {
-    echo -e -n "\033[$NOW_LINE;1H"
-    echo -e -n "\033[J"
-}
 NOW_LINE() {
     IFS=';' read -sdR -p $'\E[6n' NOW_LINE COL
     NOW_LINE="${NOW_LINE#*[}"
+}
+CLEAR_LINE() {
+    echo -e -n "\033[$NOW_LINE;1H"
+    echo -e -n "\033[J"
 }
 SHOW_FUNC_MENU() {
     local ALL_CON ALL_INPUT
@@ -387,22 +417,6 @@ getprop ro.soc.model" 2>>$MST_LOG)"
     echo -e "${COLOR_35}[NUM]${COLOR_33}共选择${COLOR_36}$SELEC_ADB_DEVICES_NUMBER${COLOR_33}台设备执行操作${COLOR_0}"
     return 0
 }
-ENTER_ANY_CONTINUE() {
-    echo
-    echo -e -n "${COLOR_35}[Enter]${COLOR_33}$1点按任意键继续${COLOR_0}"
-    read -s -n1
-    echo
-}
-CLEAR_READ_INPUT() {
-    while read -r -t 0
-    do
-        read -r
-    done
-}
-ERROR_CONT() {
-    echo -e "${COLOR_31}[!]${COLOR_33}异常选项:${COLOR_36}$FUNC_CONT${COLOR_0}"
-    REBOOT_FL; return 0
-}
 BACK_TO_SHELL() {
     local EXIT_YN
     echo -e "${COLOR_35}[BACK]${COLOR_33}已从命令提示符返回脚本${COLOR_0}"
@@ -416,13 +430,6 @@ BACK_TO_SHELL() {
         EXIT_SHELL
         ;;
     esac
-}
-START_CMD_TIME() {
-    CMD_START=$(date +%s.%N)
-}
-END_CMD_TIME() {
-    CMD_END=$(date +%s.%N)
-    ALL_CMD_TIME=$(awk "BEGIN {printf \"%.2f\", $CMD_END - $CMD_START}")
 }
 ADB_FASTBOOT_VER() {
     echo -e "${COLOR_35}[ADB]${COLOR_33}当前版本 >>${COLOR_32}"
@@ -477,6 +484,7 @@ INSTALL_THE_MUST_CMD() {
     local INSTALL_ITS_CMD="$1"
     local NOT_INSTALL_TOOLS="$2"
     local NOT_INSTALL_CMD="$3"
+    local LOCAL_REBOOT_FL="$4"
     if ! command -v $NOT_INSTALL_CMD &>>$MST_LOG
     then
         echo -e "${COLOR_31}[ERROR]${COLOR_33}没有在当前环境(${COLOR_36}$PATH${COLOR_33})中找到'${COLOR_36}$NOT_INSTALL_CMD${COLOR_33}'命令${COLOR_0}"
@@ -490,7 +498,7 @@ INSTALL_THE_MUST_CMD() {
             if bash -c "$INSTALL_ITS_CMD" && CLEAR_READ_INPUT
             then
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}工具包'${COLOR_36}$NOT_INSTALL_TOOLS${COLOR_33}'安装成功${COLOR_0}"
-                [ -n "$GL_REBOOT_CMD_FOR_INSTALL_THE_MUST_CMD" ] && $GL_REBOOT_CMD_FOR_INSTALL_THE_MUST_CMD; unset GL_REBOOT_CMD_FOR_INSTALL_THE_MUST_CMD
+                [ -n "$LOCAL_REBOOT_FL" ] && $LOCAL_REBOOT_FL
             else
                 echo -e "${COLOR_31}[ERROR]${COLOR_36}$NOT_INSTALL_TOOLS${COLOR_33}安装失败 尝试连接魔法或手动执行命令 >>${COLOR_0}"
                 echo -e "${COLOR_33} - 命令1: ${COLOR_36}pkg update -y && pkg upgrade -y${COLOR_0}"
@@ -512,11 +520,6 @@ SEE_USB_DEVICES() {
         echo -e "${COLOR_35}[Tip]${COLOR_33}在主页中使用'${COLOR_36}连接设备${COLOR_33}'功能连接设备后再试${COLOR_0}"
         REBOOT_FL; return 0
     fi
-    echo
-}
-CONTINUE_YN() {
-    echo -e -n "${COLOR_35}[Continue]${COLOR_33}按任意键继续 回车键取消${COLOR_0}"
-    read -r -s -n1 CONTINUE
     echo
 }
 MAIN_HAED_TIP() {
@@ -569,7 +572,7 @@ CA_FLASH_MAIN() {
             echo
             echo -e "${COLOR_35}[Installing]${COLOR_33}正在安装第三方${COLOR_36}ADB&Fastboot${COLOR_33}命令...${COLOR_0}"
             NOW_LINE
-            if pkg update; CLEAR_READ_INPUT && pkg upgrade; CLEAR_READ_INPUT && pkg install android-tools; CLEAR_READ_INPUT && curl -sS https://raw.githubusercontent.com/nohajc/termux-adb/master/install.sh | bash; CLEAR_READ_INPUT
+            if pkg update; CLEAR_LINE && pkg upgrade; CLEAR_LINE && pkg install android-tools; CLEAR_LINE && curl -sS https://raw.githubusercontent.com/nohajc/termux-adb/master/install.sh | bash; CLEAR_LINE
             then
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}工具包'${COLOR_36}ADB&Fastboot${COLOR_33}'安装成功${COLOR_0}"
                 ADB_FASTBOOT_VER
@@ -586,8 +589,7 @@ CA_FLASH_MAIN() {
             ;;
         esac
     fi
-    GL_REBOOT_CMD_FOR_INSTALL_THE_MUST_CMD='REBOOT_FL; return 0'
-    INSTALL_THE_MUST_CMD 'pkg install termux-api -y' 'Termux-API' 'termux-usb'
+    INSTALL_THE_MUST_CMD 'pkg install termux-api -y' 'Termux-API' 'termux-usb' 'REBOOT_FL; return 0'
     echo -e "${COLOR_35}[DEV]${COLOR_33}›1*-${COLOR_36}管理连接设备${COLOR_35}[FB]${COLOR_33}›2*-${COLOR_36}Fastboot刷机工具${COLOR_0}"
     echo -e "${COLOR_35}[ADB]${COLOR_33}›3*-${COLOR_36}ADB调试工具 ${COLOR_35}[AUTO]${COLOR_33}›4*-${COLOR_36}自动联合操作${COLOR_0}"
     echo -e "${COLOR_35}[&]${COLOR_33}›5*-${COLOR_36}关于/帮助/更新${COLOR_35}[EXIT]${COLOR_33}›6*-${COLOR_36}退出MST工具箱${COLOR_0}"
@@ -1380,7 +1382,7 @@ MiShuiTool_ADB_main() {
             local ACT_APP_NAME="$1"
             local ACT_APP_PATH="$2"
             local START_APP_CMD="$3"
-            if ! adb -s "$ONE_SELEC_ADB_DEVICE" shell test -f "$ACT_APP_PATH" &>>$MST_LOG
+            if ! adb -s "$ONE_SELEC_ADB_DEVICE" shell test -f "$(awk '{print $2}' <<< "$ACT_APP_PATH")" &>>$MST_LOG
             then
                 echo -e "${COLOR_31}[!]${COLOR_33}目标设备暂未安装应用'${COLOR_36}$ACT_APP_NAME${COLOR_33}'或缺少可执行文件无法激活${COLOR_0}"
                 echo -e "${COLOR_35}[Tip]${COLOR_33}前往应用官网或可信渠道下载最新版本后安装至目标设备 也可以将APK文件下载至本机后使用'${COLOR_36}[ADB]›3*-ADB调试工具${COLOR_33} -> ${COLOR_36}[APP]›2*-应用管理 ${COLOR_33}-> ${COLOR_36}安装APK/卸载选定应用 ${COLOR_33}-> ${COLOR_36}安装APK${COLOR_33}'功能将APK安装至目标设备${COLOR_0}"
