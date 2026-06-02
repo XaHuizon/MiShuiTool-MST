@@ -11,8 +11,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='26.3.5 Official'
-NOW_VERSION=10031
+MST_UPDATE_TIME='26.3.6 Official'
+NOW_VERSION=10032
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -485,7 +485,7 @@ INSTALL_THE_MUST_CMD() {
     local NOT_INSTALL_TOOLS="$2"
     local NOT_INSTALL_CMD="$3"
     local LOCAL_REBOOT_FL="$4"
-    if ! command -v $NOT_INSTALL_CMD &>>$MST_LOG
+    if ! command -v $NOT_INSTALL_CMD &>/dev/null
     then
         echo -e "${COLOR_31}[ERROR]${COLOR_33}没有在当前环境(${COLOR_36}$PATH${COLOR_33})中找到'${COLOR_36}$NOT_INSTALL_CMD${COLOR_33}'命令${COLOR_0}"
         echo
@@ -503,11 +503,11 @@ INSTALL_THE_MUST_CMD() {
                 echo -e "${COLOR_31}[ERROR]${COLOR_36}$NOT_INSTALL_TOOLS${COLOR_33}安装失败 尝试连接魔法或手动执行命令 >>${COLOR_0}"
                 echo -e "${COLOR_33} - 命令1: ${COLOR_36}pkg update -y && pkg upgrade -y${COLOR_0}"
                 echo -e "${COLOR_33} - 命令2: ${COLOR_36}$INSTALL_ITS_CMD${COLOR_0}"
-                EXIT_SHELL
+                [ -z "$5" ] && EXIT_SHELL || $5
             fi
             ;;
         *)
-            EXIT_SHELL
+            [ -z "$5" ] && EXIT_SHELL || $5
             ;;
         esac
     fi
@@ -1741,6 +1741,17 @@ MiShuiTool_ADB_main() {
                     do
                         DOWNLOAD_APK_FILE "$ONE_PULL_APK" "$THE_DOWNLOAD_PATH/$PULL_THE_APK/$(basename "$ONE_PULL_APK")"
                     done <<< "$THE_APK_PULL_PATH"
+                    echo
+                    echo -e "${COLOR_35}[APKS]${COLOR_33}正在压缩所有Apk文件为Apks...${COLOR_0}"
+                    INSTALL_THE_MUST_CMD 'pkg install zip -y' 'zip' 'zip'
+                    if zip -0 -r -j "$THE_DOWNLOAD_PATH/$PULL_THE_APK.apks" "$THE_DOWNLOAD_PATH/$PULL_THE_APK" 2>>$MST_LOG
+                    then
+                        echo -e "${COLOR_32}[OKAY]${COLOR_33}压缩成功 本地文件路径:${COLOR_36}$THE_DOWNLOAD_PATH/$PULL_THE_APK.apks${COLOR_0}"
+                        rm -rf "$THE_DOWNLOAD_PATH/$PULL_THE_APK" &>>$MST_LOG
+                    else
+                        echo -e "${COLOR_31}[ERROR]${COLOR_33}压缩失败 尝试手动压缩文件夹为Apks文件${COLOR_0}"
+                        echo -e "${COLOR_33}[DIR]${COLOR_33}本地文件夹路径:${COLOR_36}$THE_DOWNLOAD_PATH/$PULL_THE_APK${COLOR_0}"
+                    fi
                 else
                     echo -e "${COLOR_31}[ERROR]${COLOR_33}路径获取失败 尝试手动定位并复制APK文件${COLOR_0}"
                 fi
@@ -2419,10 +2430,11 @@ MiShuiTool_i_main() {
                 ;;
             esac
             echo -e "${COLOR_35}[Download]${COLOR_33}正在下载云端最新MiShuiTool进行覆盖更新...${COLOR_0}"
-            if curl --progress-bar -L -o "$MST_HOME/Update/MiShuiTool" "$MISHUITOOL_URL" && cp "$MST_HOME/Update/MiShuiTool" "$MST_FILE_PATH" &>>$MST_LOG && chmod 777 "$MST_FILE_PATH"
+            if curl --progress-bar -L -o "$MST_HOME/Update/MiShuiTool" "$MISHUITOOL_URL" && cp "$MST_HOME/Update/MiShuiTool" "$MST_FILE_PATH" &>>$MST_LOG && chmod 755 "$MST_FILE_PATH"
             then
                 rm $MST_HOME/Update/MiShuiTool
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}覆盖更新完成 文件路径:${COLOR_36}$MST_FILE_PATH${COLOR_0}"
+                ln -s "$MST_FILE_PATH" "$PREFIX/bin/MST${COLOR_0}" &>>$MST_LOG && chmod 777 "$PREFIX/bin/MST" &>>$MST_LOG
             else
                 rm $MST_HOME/Update/MiShuiTool
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}下载失败 检查网络连接或使用魔法后再试一次${COLOR_0}"
