@@ -11,8 +11,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='26.4 Official'
-NOW_VERSION=10034
+MST_UPDATE_TIME='26.4.1 Official'
+NOW_VERSION=10035
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -311,7 +311,7 @@ USB_DEVICES_FASTBOOT() {
         SELEC_FASTBOOT_DEVICE="$FASTBOOT_DEVICES"
     fi
     echo -e "${COLOR_36}$SELEC_FASTBOOT_DEVICE fastboot${COLOR_32}-已连接${COLOR_0}"
-    FB_DEV_BL="$(termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar unlocked 2>&1 | grep 'unlocked' | sed 's/.*: //g' &>>$MST_LOG)"
+    FB_DEV_BL_YN="$(termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar unlocked 2>&1 | grep 'unlocked' | sed 's/.*: //g' &>>$MST_LOG)"
     FB_DEV_TOKEN="$(termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar token 2>&1 | grep 'token' | sed 's/.*: //g' &>>$MST_LOG)"
     FB_DEV_SLOT="$(termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar current-slot 2>&1 | grep 'slot' | sed 's/.*slot: //g' &>>$MST_LOG)"
     [ -z "$FB_DEV_TOKEN" ] && FB_DEV_TOKEN="${COLOR_31}未知${COLOR_0}"
@@ -331,7 +331,7 @@ USB_DEVICES_FASTBOOT() {
         fi
         ;;
     esac
-    case "$FB_DEV_BL" in
+    case "$FB_DEV_BL_YN" in
     'yes')
         FB_DEV_BL="${COLOR_32}已解锁${COLOR_0}"
         ;;
@@ -870,17 +870,21 @@ MiShuiTool_FB_main() {
         else
             local TIP_TEXT_2=$2
         fi
-        case "$FB_DEV_BL" in
-        'no')
+        case "$FB_DEV_BL_YN" in
+        no)
             echo -e "${COLOR_35}[WARN]${COLOR_31}当前Fastboot设备BootLoader未解锁${COLOR_0}"
             echo -e "${COLOR_31}[!]${COLOR_33}要继续操作必须先为Fastboot设备${COLOR_36}解锁BootLoader${COLOR_33}(BL锁)${COLOR_0}"
             REBOOT_FL; return 0
             ;;
-        *)
+        yes)
             echo -e "${COLOR_35}[WARN]${COLOR_31}刷入不兼容的$TIP_TEXT_2文件可能导致设备无法开机${COLOR_0}"
             echo -e "${COLOR_32} - 刷机千万条 谨慎第一条 -${COLOR_0}"
             echo -e "${COLOR_32} - $TIP_TEXT 机主两行泪 -${COLOR_0}"
             echo
+            ;;
+        *)
+            echo -e "${COLOR_35}[?]${COLOR_33}BL锁状态异常，为确保安全已禁止使用此功能${COLOR_0}"
+            REBOOT_FL; return 0
             ;;
        esac
     }
@@ -1158,7 +1162,6 @@ MiShuiTool_FB_main() {
                 then
                     echo -e "${COLOR_31}[ERROR]${COLOR_33}超过三次无效确认已终止操作${COLOR_0}"
                     REBOOT_FL; return 0
-                    break
                 else
                     USER_INPUT_CONTINUE_NUMBER=$((USER_INPUT_CONTINUE_NUMBER + 1))
                 fi
@@ -1324,13 +1327,13 @@ MiShuiTool_FB_main() {
         fastboot() {
             if [[ "$1" == reboot* ]]
             then
-                echo -e "${COLOR_34}[INT]${COLOR_33}已拦截刷机脚本的重启命令:${COLOR_36}termux-fastboot $@${COLOR_0}"
+                echo -e "${COLOR_34}[INT]${COLOR_33}已拦截刷机脚本的重启命令:${COLOR_36}fastboot $@${COLOR_0}"
             else
                 command termux-fastboot "$@"
             fi
         }
         export -f fastboot
-        if bash "$USR_SH_FALSH" && FLASH_END=$(date +%s.%N) && unset -f termux-fastboot &>>$MST_LOG
+        if bash "$USR_SH_FALSH" && FLASH_END=$(date +%s.%N) && unset -f fastboot &>>$MST_LOG
         then
             echo -e "${COLOR_32}[OKAY]${COLOR_33}刷机脚本'${COLOR_36}$(basename "$USR_SH_FALSH")${COLOR_33}'运行结束${COLOR_0}"
             
@@ -2124,7 +2127,7 @@ MiShuiTool_AUTO_main() {
                 else
                     echo -e "${COLOR_35}[Trying]${COLOR_31}执行失败${COLOR_33}正在进行第(${COLOR_36}$FASTBOOT_CONTINUE_TRY_NUMNER${COLOR_33}/2)次尝试...${COLOR_0}"
                     FASTBOOT_CONTINUE_TRY_NUMNER=$((FASTBOOT_CONTINUE_TRY_NUMNER + 1))
-                    break
+                    continue
                 fi
             done
         }
@@ -2227,7 +2230,7 @@ MiShuiTool_AUTO_main() {
             REBOOT_FL; return 0
         fi
         echo -e "${COLOR_35}[PUSH]${COLOR_33}正在将$ECHO_DOWNLOAD_OR_LOCAL_FILE_TIP的镜像文件推送至目标设备...${COLOR_0}"
-        if termux-adb -s "$SELEC_ADB_DEVICE" push "$THE_LOCAL_IMG_PATH" "$THE_LOCAL_IMG_PATH" &>>$MST_LOG
+        if ! termux-adb -s "$SELEC_ADB_DEVICE" push "$THE_LOCAL_IMG_PATH" "$THE_LOCAL_IMG_PATH" &>>$MST_LOG
         then
             echo -e "${COLOR_31}[ERROR]${COLOR_33}镜像文件推送失败 检查设备是否意外断开后再试一次${COLOR_0}"
             REBOOT_FL; return 0
