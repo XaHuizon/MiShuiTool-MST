@@ -12,7 +12,7 @@ MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
 MST_UPDATE_TIME='26.4.1 Official'
-NOW_VERSION=10035
+NOW_VERSION=10036
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -68,7 +68,7 @@ check | -c | --check)
         echo -e " ------------- ${COLOR_32}[OKAY]${COLOR_0}"
     else
         echo -e "${COLOR_31}[Not Found]${COLOR_0}"
-        echo -e "${COLOR_31}ERROR:${COLOR_36}adb${COLOR_0}命令未安装/不可用!${COLOR_0}"
+        echo -e "${COLOR_31}ERROR:${COLOR_36}fastboot${COLOR_0}命令未安装/不可用!${COLOR_0}"
     fi
     echo -e -n "${COLOR_35}Bash版本: ${COLOR_36}"
     if CHUCK_BASH_VERSION="$(sed 's/(.*//g' <<< "$BASH_VERSION")" && [[ "$CHUCK_BASH_VERSION" > 5.2.0 ]]
@@ -79,7 +79,7 @@ check | -c | --check)
         echo -e "${COLOR_31}ERROR:${COLOR_0}Bash版本过低 MST运行需要bash5.2+"
     fi
     echo -e -n "${COLOR_35}PATH路径: ${COLOR_36}"
-    if [[ "$PATH" = **/data/data/com.termux/files/usr/bin** ]]
+    if [[ "$PATH" = *"/data/data/com.termux/files/usr/bin"* ]]
     then
         echo -e ".../com.termux/.../bin ${COLOR_32}[OKAY]${COLOR_0}"
     else
@@ -311,9 +311,9 @@ USB_DEVICES_FASTBOOT() {
         SELEC_FASTBOOT_DEVICE="$FASTBOOT_DEVICES"
     fi
     echo -e "${COLOR_36}$SELEC_FASTBOOT_DEVICE fastboot${COLOR_32}-已连接${COLOR_0}"
-    FB_DEV_BL_YN="$(termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar unlocked 2>&1 | grep 'unlocked' | sed 's/.*: //g' &>>$MST_LOG)"
-    FB_DEV_TOKEN="$(termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar token 2>&1 | grep 'token' | sed 's/.*: //g' &>>$MST_LOG)"
-    FB_DEV_SLOT="$(termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar current-slot 2>&1 | grep 'slot' | sed 's/.*slot: //g' &>>$MST_LOG)"
+    FB_DEV_BL_YN="$(termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar unlocked 2>&1 | grep 'unlocked' | sed 's/.*: //g' 2>>$MST_LOG)"
+    FB_DEV_TOKEN="$(termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar token 2>&1 | grep 'token' | sed 's/.*: //g' 2>>$MST_LOG)"
+    FB_DEV_SLOT="$(termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar current-slot 2>&1 | grep 'slot' | sed 's/.*slot: //g' 2>>$MST_LOG)"
     [ -z "$FB_DEV_TOKEN" ] && FB_DEV_TOKEN="${COLOR_31}未知${COLOR_0}"
     case "$FB_DEV_SLOT" in
     'a')
@@ -542,7 +542,7 @@ CA_FLASH_MAIN() {
     BACK_MAIN=CA_FLASH_MAIN
     MISHUI_MAIN_TIP=MiShuiTool
     MISHUI_MAIN
-    if [[ ! "$PATH" == **/data/data/com.termux/files/usr/bin** ]]
+    if [[ ! "$PATH" == *"/data/data/com.termux/files/usr/bin"* ]]
     then
         echo -e "${COLOR_31}[!]${COLOR_33}当前环境(${COLOR_36}$PATH${COLOR_33})非Termux无法运行${COLOR_0}"
         echo -e "${COLOR_35}[Tip]${COLOR_33}在Termux中使用'${COLOR_36} bash $0 ${COLOR_33}'命令执行脚本${COLOR_0}"
@@ -1276,7 +1276,7 @@ MiShuiTool_FB_main() {
         ALL_SH_FILE=''
         for ONE_SH_FILE in "$THE_PATH_FLASH_NAME"/*.sh
         do
-            if [ -n "$ONE_SH_FILE" ]
+            if [ -f "$ONE_SH_FILE" ] &>>$MST_LOG
             then
                 ALL_SH_FILE+=$ONE_SH_FILE$'\n'
                 echo -e "${COLOR_33}›$SH_FILE_NUM*-${COLOR_36}$(basename "$ONE_SH_FILE")${COLOR_0}"
