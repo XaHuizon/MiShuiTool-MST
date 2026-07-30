@@ -12,7 +12,7 @@ MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
 MST_UPDATE_TIME='26.4.1 Official'
-NOW_VERSION=10036
+NOW_VERSION=10037
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -2453,11 +2453,11 @@ MiShuiTool_i_main() {
             echo -e "${COLOR_35}[Download]${COLOR_33}正在下载云端最新MiShuiTool进行覆盖更新...${COLOR_0}"
             if curl --progress-bar -L -o "$MST_HOME/Update/MiShuiTool" "$MISHUITOOL_URL" && cp "$MST_HOME/Update/MiShuiTool" "$MST_FILE_PATH" &>>$MST_LOG && chmod 755 "$MST_FILE_PATH"
             then
-                rm $MST_HOME/Update/MiShuiTool
+                rm $MST_HOME/Update/MiShuiTool &>>$MST_LOG
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}覆盖更新完成 文件路径:${COLOR_36}$MST_FILE_PATH${COLOR_0}"
-                ln -s "$MST_FILE_PATH" "$PREFIX/bin/MST${COLOR_0}" &>>$MST_LOG && chmod 777 "$PREFIX/bin/MST" &>>$MST_LOG
+                ln -s "$MST_FILE_PATH" "$PREFIX/bin/MST" &>>$MST_LOG && chmod 777 "$PREFIX/bin/MST" &>>$MST_LOG
             else
-                rm $MST_HOME/Update/MiShuiTool
+                rm $MST_HOME/Update/MiShuiTool &>>$MST_LOG
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}下载失败 检查网络连接或使用魔法后再试一次${COLOR_0}"
                 REBOOT_FL; return 0
             fi
