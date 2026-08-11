@@ -939,7 +939,7 @@ MiShuiTool_FB_main() {
             WARN_UNLOCK_BL
             echo -e "${COLOR_35}[GitHub]${COLOR_33}此处引用GitHub仓库'${COLOR_32}https://github.com/offici5l/MiUnlockTool${COLOR_33}'中${COLOR_36}miunlock${COLOR_33}工具的安装脚本${COLOR_0}"
             echo -e "${COLOR_35}[DEV]${COLOR_33}开发者:${COLOR_36}offici5l${COLOR_0}"
-            echo -e "${COLOR_35}[MIT]${COLOR_32}Copyright (c) 2024 offici5l${COLOR_0}"
+            echo -e "${COLOR_35}[Apache-2.0]${COLOR_32}Copyright (c) 2024 offici5l${COLOR_0}"
             echo
             echo -e "${COLOR_35}[NE]${COLOR_33}是否立即安装第三方${COLOR_36}miunlock${COLOR_33}解锁工具 >>${COLOR_0}"
             echo -e -n "${COLOR_36}[+][1›立即安装/2›返回主页]*ᐷ${COLOR_01}"
@@ -2224,7 +2224,7 @@ MiShuiTool_i_main() {
         echo -e "${COLOR_35}[MST]${COLOR_33}工具名称: ${COLOR_36}MiShuitool(MST工具箱)${COLOR_33} - ${COLOR_32}CLI${COLOR_0}"
         echo -e "${COLOR_35}[BETA]${COLOR_33}当前版本: ${COLOR_32}$MST_UPDATE_TIME${COLOR_0}"
         echo -e "${COLOR_35}[CE]${COLOR_33}运行环境: ${COLOR_36}Android-Termux ${COLOR_32}Bash 5.2+${COLOR_0}"
-        echo -e "${COLOR_35}[MIT]${COLOR_32} copyright (C) 2026 XaHuizon${COLOR_0}"
+        echo -e "${COLOR_35}[Apache-2.0]${COLOR_32} copyright (C) 2026 XaHuizon${COLOR_0}"
         echo
         echo -e "${COLOR_35}[TXT]${COLOR_33}工具介绍 >>${COLOR_0}"
         echo -e "${COLOR_37}    本工具旨在为${COLOR_36}无PC环境${COLOR_37}但需要使用ADB&Fastboot功能的用户提供一个方便的${COLOR_36}Termux${COLOR_37}刷机环境 其中针对${COLOR_36}ADB${COLOR_37}及${COLOR_36}Fastboot${COLOR_37}的部分常用操作均提供了高度自动化的快捷功能${COLOR_0}"
@@ -2239,7 +2239,7 @@ MiShuiTool_i_main() {
         echo -e "${COLOR_35}[GitHub]${COLOR_33}GitHub仓库地址:${COLOR_32}https://github.com/tiann/KernelSU/${COLOR_0}"
         echo -e "${COLOR_33} - 开发者:${COLOR_36}tiann${COLOR_0}"
         echo
-        echo -e "${COLOR_35}[MIT]${COLOR_32} Copyright (c) 2024 offici5l${COLOR_0}"
+        echo -e "${COLOR_35}[Apache-2.0]${COLOR_32} Copyright (c) 2024 offici5l${COLOR_0}"
         echo -e "${COLOR_35}[GitHub]${COLOR_33}仓库地址: ${COLOR_32}https://github.com/offici5l/MiUnlockTool${COLOR_0}"
         echo -e "${COLOR_33} - 开发者:${COLOR_36}offici5l${COLOR_0}"
         echo
