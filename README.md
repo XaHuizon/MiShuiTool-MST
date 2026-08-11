@@ -1,15 +1,15 @@
 # MiShuiTool - Termux刷机工具
 ![平台](https://img.shields.io/badge/%E9%80%82%E7%94%A8%E5%B9%B3%E5%8F%B0-Android--64%20%7C%20Termux-yellow)
 ![版本](https://img.shields.io/badge/%E5%BD%93%E5%89%8D%E7%89%88%E6%9C%AC-26.4.1--Official-brightgreen)
-![协议](https://img.shields.io/badge/%E5%BC%80%E6%BA%90%E5%8D%8F%E8%AE%AE-Apache--2.0-blue)
+![协议](https://img.shields.io/badge/%E5%BC%80%E6%BA%90%E5%8D%8F%E8%AE%AE-MIT-yellow)
 ### 作者信息:
 - 作者: **Mi丶XaFlash**
 - 开发日期: **2025年3月28日**
 - Email: [@Mi丶XaFlash](mailto:311461xhl@gmail.com)
 - Gitee: [@Xa丶Hui](https://gitee.com/XaHui-GitHub/mi-shui-tool)
  - GitHub:[@Mi_XaFlash](https://github.com/XaHuizon/MiShuiTool-MST)
-- 开源协议: [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> 本项目采用 Apache-2.0 协议开源，你可以自由地使用、修改和分发本代码，但必须保留原始的版权声明，同时，本项目不提供任何形式的担保，刷机风险由使用者自行承担
+- 开源协议: [MIT License](https://opensource.org/licenses/MIT)
+> 本项目采用 MIT 协议开源，你可以自由地使用、修改和分发本代码，但必须保留原始的版权声明，同时，本项目不提供任何形式的担保，刷机风险由使用者自行承担
 ## 简介
 ![HOME_PNG](https://raw.githubusercontent.com/XaHuizon/MiShuiTool-MST/main/assets/PNG/MST-HOME.jpg)
 - **MiShuiTool**是一个用于在**无PC环境**受限场景中的临时解决方案，使用它仅需要**一部手机**(*注: 指主机设备*)与一根**OTG转接线**以及**最新版本**的[Termux](https://f-droid.org/repo/com.termux_1022.apk)与[Termux-Api](https://f-droid.org/repo/com.termux.api_1000.apk)就可以完成大部分简单的调试操
