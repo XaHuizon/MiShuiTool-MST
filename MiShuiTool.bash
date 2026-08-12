@@ -12,7 +12,7 @@ MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
 MST_UPDATE_TIME='26.4.1 Official'
-NOW_VERSION=10037
+NOW_VERSION=10038
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -1066,7 +1066,7 @@ MiShuiTool_FB_main() {
             WARN_UNLOCK_BL
             echo -e "${COLOR_35}[GitHub]${COLOR_33}此处引用GitHub仓库'${COLOR_32}https://github.com/offici5l/MiUnlockTool${COLOR_33}'中${COLOR_36}miunlock${COLOR_33}工具的安装脚本${COLOR_0}"
             echo -e "${COLOR_35}[DEV]${COLOR_33}开发者:${COLOR_36}offici5l${COLOR_0}"
-            echo -e "${COLOR_35}[MIT]${COLOR_32}Copyright (c) 2024 offici5l${COLOR_0}"
+            echo -e "${COLOR_35}[Apache-2.0]${COLOR_32}Copyright (c) 2024 offici5l${COLOR_0}"
             echo
             echo -e "${COLOR_35}[NE]${COLOR_33}是否立即安装第三方${COLOR_36}miunlock${COLOR_33}解锁工具 >>${COLOR_0}"
             echo -e -n "${COLOR_36}[+][1›立即安装/2›返回主页]*ᐷ${COLOR_01}"
@@ -2391,7 +2391,7 @@ MiShuiTool_i_main() {
         echo -e "${COLOR_35}[GitHub]${COLOR_33}GitHub仓库地址:${COLOR_32}https://github.com/tiann/KernelSU/${COLOR_0}"
         echo -e "${COLOR_33} - 开发者:${COLOR_36}tiann${COLOR_0}"
         echo
-        echo -e "${COLOR_35}[MIT]${COLOR_32} Copyright (c) 2024 offici5l${COLOR_0}"
+        echo -e "${COLOR_35}[Apache-2.0]${COLOR_32} Copyright (c) 2024 offici5l${COLOR_0}"
         echo -e "${COLOR_35}[GitHub]${COLOR_33}仓库地址: ${COLOR_32}https://github.com/offici5l/MiUnlockTool${COLOR_0}"
         echo -e "${COLOR_33} - 开发者:${COLOR_36}offici5l${COLOR_0}"
         echo
