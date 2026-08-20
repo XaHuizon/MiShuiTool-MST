@@ -1,4 +1,6 @@
  - 重构 连接设备从自动步骤连接变更为轮询连接
  - 重构 所有adb/fastboot命令替换为termux-adb/termux-fastboot
+ - 新增 '自动联合操作'重启至Faatboot前YN确认
  - 修复 Fastboot即使未解锁也显示解锁
+ - 修复 '自动联合操作'的一处语法错误
  - 修复 其他一些小问题

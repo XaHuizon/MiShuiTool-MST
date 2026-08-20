@@ -11,8 +11,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='26.4.1 Official'
-NOW_VERSION=10038
+MST_UPDATE_TIME='26.4.2 Official'
+NOW_VERSION=10039
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -2064,8 +2064,8 @@ MiShuiTool_AUTO_main() {
         else
             echo -e "${COLOR_32}通过${COLOR_0}"
         fi
-        declare "$(termux-adb -s "$SELEC_ADB_DEVICE" shell dumpsys package me.weishu.kernelsu 2>>$MST_LOG | awk $'/versionCode/ {print $1}')"
-        if [ -z "$versionCode" ] || [ "$versionCode" -lt 32389 ]
+        KERNELSU_VERSION="$(termux-adb -s "$SELEC_ADB_DEVICE" shell dumpsys package me.weishu.kernelsu 2>>$MST_LOG | awk $'/versionCode/ {print $1}' | ses 's/.*versionCode=//g')"
+        if [ -z "$KERNELSU_VERSION" ] || [ "$KERNELSU_VERSION" -lt 32389 ]
         then
             echo -e "${COLOR_35}[KSU]${COLOR_33}需要从KernrlSU的官方仓库下载Releases可越狱版本 >>${COLOR_0}"
             ADB_FASTBOOT_VER
@@ -2096,6 +2096,14 @@ MiShuiTool_AUTO_main() {
                 REBOOT_FL; return 0
             fi
         fi
+        echo -e "${COLOR_35}[REALY]${COLOR_33}ADB准备工作已完成是否立即重启至Fastboor >>${COLOR_0}"
+        echo -e -n "${COLOR_36}[+][1›立即重启/2›取消操作并返回主页]*ᐷ${COLOR_01}"
+        read -r YN_AUTO_REBOOT_FB
+        case "$YN_AUTO_REBOOT_FB" in
+        2 | n | N)
+            MAIN_REBOOT; return 0
+            ;;
+        esac
         REBOOT_USB_DEVICES fastboot
         ENTER_ANY_CONTINUE 重启至Fastboot模式后
         ADB_FASTBOOT_NAME=FASTBOOT
