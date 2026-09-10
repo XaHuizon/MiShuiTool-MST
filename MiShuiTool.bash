@@ -11,8 +11,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='26.4.2 Official'
-NOW_VERSION=10039
+MST_UPDATE_TIME='26.4.3 Official'
+NOW_VERSION=10040
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -2171,7 +2171,7 @@ MiShuiTool_AUTO_main() {
             echo -e "${COLOR_31}[!]${COLOR_33}要继续操作必须先为目标设备${COLOR_36}解锁BootLoader${COLOR_33}(BL锁)${COLOR_0}"
             REBOOT_FL; return 0
         fi
-        ALL_SLOT_ROOT="$(termux-adb -s "$SELEC_ADB_DEVICE" shell ls /dev/block/by-name/ 2>>$MST_LOG | grep 'boot')"
+        ALL_SLOT_ROOT="$(termux-adb -s "$SELEC_ADB_DEVICE" shell printf '%s\n' /dev/block/by-name/* 2>>$MST_LOG | grep 'boot')"
         ROOT_SLOT_A_B="$(termux-adb -s "$SELEC_ADB_DEVICE" shell getprop ro.boot.slot_suffix)"
         if grep -w "init_boot$ROOT_SLOT_A_B" <<< "$ALL_SLOT_ROOT" &>>$MST_LOG
         then
