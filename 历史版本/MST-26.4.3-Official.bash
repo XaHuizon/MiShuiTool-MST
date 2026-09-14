@@ -11,8 +11,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='26.4.4 Official'
-NOW_VERSION=10041
+MST_UPDATE_TIME='26.4.3 Official'
+NOW_VERSION=10040
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -433,9 +433,9 @@ BACK_TO_SHELL() {
 }
 ADB_FASTBOOT_VER() {
     echo -e "${COLOR_35}[ADB]${COLOR_33}当前版本 >>${COLOR_32}"
-    termux-adb  --version 2>&1 | grep 'version' || echo -e "\033[1A${COLOR_31}[NotFound]${COLOR_33}没有安装!${COLOR_0}\033[K"
+    termux-adb  --version | grep 'version' || echo -e "\033[1A${COLOR_31}[NotFound]${COLOR_33}没有安装!${COLOR_0}\033[K"
     echo -e "${COLOR_35}[Fastboot]${COLOR_33}当前版本 >>${COLOR_32}"
-    termux-fastboot --version 2>&1 | grep 'version' || echo -e "\033[1A${COLOR_31}[NotFound]${COLOR_33}没有安装!${COLOR_0}\033[K"
+    termux-fastboot --version | grep 'version' || echo -e "\033[1A${COLOR_31}[NotFound]${COLOR_33}没有安装!${COLOR_0}\033[K"
     echo -e "${COLOR_0}"
 }
 REBOOT_USB_DEVICES() {
@@ -572,7 +572,7 @@ CA_FLASH_MAIN() {
             echo
             echo -e "${COLOR_35}[Installing]${COLOR_33}正在安装第三方${COLOR_36}ADB&Fastboot${COLOR_33}命令...${COLOR_0}"
             NOW_LINE
-            if pkg update -y; CLEAR_LINE && pkg upgrade -y; CLEAR_LINE && pkg install android-tools -y; CLEAR_LINE && curl -sS https://raw.githubusercontent.com/nohajc/termux-adb/master/install.sh | bash; CLEAR_LINE
+            if pkg update; CLEAR_LINE && pkg upgrade; CLEAR_LINE && pkg install android-tools; CLEAR_LINE && curl -sS https://raw.githubusercontent.com/nohajc/termux-adb/master/install.sh | bash; CLEAR_LINE
             then
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}工具包'${COLOR_36}ADB&Fastboot${COLOR_33}'安装成功${COLOR_0}"
                 ADB_FASTBOOT_VER
@@ -894,7 +894,7 @@ MiShuiTool_FB_main() {
     MISHUI_MAIN
     echo
     echo -e "${COLOR}[FB]${COLOR_33}选择Fastboot刷机功能 >>${COLOR_0}"
-    echo -e "${COLOR_35}[SLOT]${COLOR_33}›1*-${COLOR_36}刷入/临时启动镜像${COLOR_35}[RE]${COLOR_33}›2*-${COLOR_36}重启连接设备${COLOR_0}"
+    echo -e "${COLOR_35}[SLOT]${COLOR_33}›1*-${COLOR_36}刷入分区镜像${COLOR_35}[RE]${COLOR_33}›2*-${COLOR_36}重启连接设备${COLOR_0}"
     echo -e "${COLOR_35}[UBL]${COLOR_33}›3*-${COLOR_36}BL解锁(第三方工具)${COLOR_35}[ROM]${COLOR_33}›4*-${COLOR_36}刷入ROM${COLOR_0}"
     echo -e "${COLOR_35}[CMD]${COLOR_33}›5*-${COLOR_36}执行Fastboot命令${COLOR_35}[HOME]${COLOR_33}›6*-${COLOR_36}返回主页${COLOR_0}"
     echo -e -n "${COLOR}[-${COLOR_32}FB${COLOR}-]${COLOR_33}输入选项*ᐷ${COLOR_0}"
@@ -903,9 +903,9 @@ MiShuiTool_FB_main() {
     echo -e "${COLOR_30}-------------------------------------------------${COLOR_0}"
     CHUCK_SLOT_FLASH() {
         CHUCK_SLOT="$1"
-        if [ "$(termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar partition-type:$CHUCK_SLOT 2>&1 | awk 'NR==1{print $2}')" != raw ] &>>$MST_LOG
+        if ! termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar partition-type:$CHUCK_SLOT &>>$MST_LOG
         then
-            echo -e "${COLOR_31}[WARN]${COLOR_33}MST检测到分区'${COLOR_36}$FLASH_IMG_NAME${COLOR_33}'在目标设备上可能不存在或不可刷入 继续操作可能造成不可预知的后果${COLOR_0}"
+            echo -e "${COLOR_31}[WARN]${COLOR_33}MST检测到分区'${COLOR_36}$FLASH_IMG_SLOT${COLOR_33}'在目标设备上不存在 继续操作可能造成不可预知的后果${COLOR_0}"
             echo -e "${COLOR_35}[Continue]${COLOR_33}需慎重考虑是否继续 >>${COLOR_0}"
             echo -e -n "${COLOR_36}[+][1›无视风险继续操作/2›取消操作]*ᐷ${COLOR_01}"
             read -r YN_FLASH_ERROR_SLOT
@@ -914,31 +914,15 @@ MiShuiTool_FB_main() {
                 MAIN_REBOOT; return 0
                 ;;
             esac
-        elif [ "$(fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar has-slot:$CHUCK_SLOT 2>&1 | awk 'NR==1{print $2}')" = yes ]
-        then
-            echo -e "${COLOR_35}[A/B]${COLOR_33}分区'${COLOR_36}$FLASH_IMG_NAME${COLOR_33}'在该设备上是${COLOR_36}A/B分区${COLOR_33} 选择需要刷入的槽位 >>${COLOR_0}"
-            echo -e -n "${COLOR_36}[+][1›自动(当前槽位)/2›A槽位/3›B槽位/4›返回主页]*ᐷ${COLOR_01}"
-            read YN_SELEC_AB
-            case "$YN_SELEC_AB" in
-              1 | AUTO | 自动) true
-                ;;
-              2 | A) FLASH_IMG_SLOT="${FLASH_IMG_SLOT}_a"
-                ;;
-              3 | B) FLASH_IMG_SLOT="${FLASH_IMG_SLOT}_b"
-                ;;
-              4 | 返回主页)
-                MAIN_REBOOT; return 0
-                ;;
-            esac
         fi
     }
     case "$FUNC_CONT" in
-    '1' | '分区/镜像管理' | 'SLOT')
+    '1' | '镜像刷入' | '分区镜像刷入')
         FLASH_IMG_TO_SLOT() {
             local FLASH_IMG_NAME=$1
             local FLASH_IMG_SLOT=$2
             local IMG_FILE_PA IMG_FILE_NAME IMG_FILE_PATH
-            CHUCK_SLOT_FLASH "$FLASH_IMG_SLOT"
+            CHUCK_SLOT_FLASH
             echo -e "${COLOR_35}[FILE]${COLOR_33}输入要刷入'${COLOR_36}$FLASH_IMG_NAME${COLOR_33}'分区的镜像文件路径 >>${COLOR_0}"
             read -r -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' IMG_FILE_PATH
             IMG_FILE_NAME=$(basename "$IMG_FILE_PATH" 2>>$MST_LOG)
@@ -961,29 +945,47 @@ MiShuiTool_FB_main() {
             fi
             REBOOT_FL; return 0
         }
-        
         MISHUI_MAIN_TIP=分区镜像刷入
         SEE_USB_DEVICES
         NOT_UNLOCK_ERROR
         echo -e "${COLOR_35}[SLOT]${COLOR_33}选择要刷入的分区 >>$COLOR_0"
-        ALL_TIP_TION="${COLOR}[DEV]${COLOR_33}选择设备管理功能 >>${COLOR_0}"
-        ALL_OPTION=("1*-刷入Boot(_a/_b)" "2*-刷入Init_boot(_a/_b)" "3*-刷入Recovery(_a/_b)" "4*-刷入自定义分区" "5*-临时启动镜像" "6*-返回主页")
-        NOW_LINE
-        SHOW_FUNC_MENU
-        case "$FUNC_CONT" in
-        '1')
+        echo -e "${COLOR_36}›1*-Boot ›2*-Boot_a  ›3*-Boot_b ›4*-Init_boot${COLOR_0}"
+        echo -e "${COLOR_36}›5*-Init_Boot_a ›6*-Init_boot_b ›7*-Recovery${COLOR_01}"
+        echo -e "${COLOR_36}›8*-Recovery_a  ›9*-Recovery_b  ›10*-自定义分区${COLOR_01}"
+        echo -e -n "${COLOR_35}[ST]${COLOR_33}输入选项*ᐷ${COLOR_01}"
+        read -r YN_SLOT_AB
+        case "$YN_SLOT_AB" in
+        '1' | 'Boot')
             FLASH_IMG_TO_SLOT BOOT boot
             ;;
-        '2')
+        '2' | 'a' | 'A' | 'Boot_a')
+            FLASH_IMG_TO_SLOT BOOT_A boot_a
+            ;;
+        '3' | 'b' | 'B' | 'Boot_b')
+            FLASH_IMG_TO_SLOT BOOT_B boot_b
+            ;;
+        '4' | 'init' | 'init_Boot')
             FLASH_IMG_TO_SLOT INIT_BOOT init_boot
             ;;
-        '3')
+        '5' | 'init_a' | 'init_boot_a')
+            FLASH_IMG_TO_SLOT INIT_BOOT_A init_boot_a
+            ;;
+        '6' | 'init_b' | 'init_boot_b')
+            FLASH_IMG_TO_SLOT INIT_BOOT_B init_boot_b
+            ;;
+        '7' | 'recovery' | 'rec')
             FLASH_IMG_TO_SLOT RECOVERY recovery
             ;;
-        '4')
+        '8' | 'recovery_a' | 'rec_a')
+            FLASH_IMG_TO_SLOT RECOVERY_A recovery_a
+            ;;
+        '9' | 'recovery_b' | 'rec_b')
+            FLASH_IMG_TO_SLOT RECOVERY_b recovery_b
+            ;;
+        '10')
             echo -e -n "${COLOR_35}[SLOT]${COLOR_33}输入要刷入的分区名称*ᐷ${COLOR_01}"
-            read -r FLASH_IMG_NAME
-            CHUCK_SLOT_FLASH "$FLASH_IMG_NAME"
+            read -r FLASH_IMG_SLOT
+            CHUCK_SLOT_FLASH "$FLASH_IMG_SLOT"
             echo -e "${COLOR_35}[Y/N]${COLOR_33}是否确定指定分区为:${COLOR_36}$FLASH_IMG_SLOT${COLOR_0}"
             echo -e -n "${COLOR_36}[+][1›确定分区/2›返回主页]*ᐷ${COLOR_01}"
             read -r YN_INPUT_SLOT
@@ -993,40 +995,19 @@ MiShuiTool_FB_main() {
                 echo -e "${COLOR_32}[CFM]${COLOR_33}已确定指定分区为:${COLOR_36}$FLASH_IMG_SLOT${COLOR_0}"
                 FLASH_IMG_TO_SLOT "$FLASH_IMG_NAME" "$FLASH_IMG_SLOT"
                 ;;
-             *)
+            *)
                 MAIN_REBOOT; return 0
                 ;;
             esac
             ;;
-        5)
-            echo -e -n "${COLOR_35}[SLOT]${COLOR_33}可临时在目标设备上启动一个镜像文件而不直接修改分区(重启后失效) >>${COLOR_01}"
-            echo
-            echo -e "${COLOR_35}[FILE]${COLOR_33}输入要临时启动的镜像文件路径 >>${COLOR_0}"
-            read -r -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' FASTBOOT_IMG_FILE_PATH
-            FASTBOOT_IMG_FILE_NAME=$(basename "$FASTBOOT_IMG_FILE_PATH" 2>>$MST_LOG)
-            if [ -z "$FASTBOOT_IMG_FILE_PATH" ]
-            then
-                echo -e "${COLOR_31}[!]${COLOR_33}输入不可为空${COLOR_0}"
-                REBOOT_FL; return 0
-            elif [ ! -f "$FASTBOOT_IMG_FILE_PATH" ]
-            then
-                echo -e "${COLOR_31}[!]${COLOR_33}文件'${COLOR_36}$FASTBOOT_IMG_FILE_NAME${COLOR_33}'路径不存在/无法读取${COLOR_0}"
-                REBOOT_FL; return 0
-            fi
-            echo -e "$COLOR_35[Booting]${COLOR_33}正在将'${COLOR_36}$FASTBOOT_IMG_FILE_NAME${COLOR_33}'推送至目标设备并启动...${COLOR_30}"
-            if termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" boot "$FASTBOOT_IMG_FILE_PATH"
-            then
-                echo -e "${COLOR_31}[OKAY]${COLOR_33}推送成功 目标设备正在重启至镜像文件${COLOR_0}"
-            else
-                echo -e "${COLOR_31}[ERROR]${COLOR_33}启动失败 镜像文件可能不可用或不适配${COLOR_0}"
-            fi
-            REBOOT_FL; return 0
-            ;;
-        '6')
-            MAIN_REBOOT; return 0
-            ;;
         *)
-            ERROR_CONT
+            if [ -z "$YN_SLOT_AB" ]
+            then
+                echo -e "${COLOR_31}[!]${COLOR_33}此处不可为空${COLOR_0}"
+                REBOOT_FL; return 0
+            fi
+            echo -e "${COLOR_31}[!]${COLOR_33}不支持的选项:${COLOR_36}$YN_SLOT_AB${COLOR_0}"
+            REBOOT_FL; return 0
             ;;
         esac
         ;;
@@ -1620,48 +1601,27 @@ MiShuiTool_ADB_main() {
             '1' | '安装' | '安装APK')
                 MISHUI_MAIN_TIP=安装APK
                 SEE_USB_DEVICES
-                echo -e "${COLOR_35}[M1]${COLOR_33}安装单个APK:${COLOR_36}输入APK完整路径${COLOR_0}"
-                echo -e "${COLOR_35}[M2]${COLOR_33}安装多个APK:${COLOR_36}输入存放多个APK文件的文件夹完整路径${COLOR_0}"
-                echo
-                echo -e "${COLOR_35}[PATH]${COLOR_33}按当前需求输入对应内容 >>${COLOR_0}"
+                echo -e "${COLOR_35}[PATH]${COLOR_33}输入需要安装的apk文件位于本机的完整路径 >>${COLOR_0}"
                 read -r -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' APK_INSTALL_PATH
-                INSTALL_APK_NAME="$(basename "$APK_INSTALL_PATH")"
+                INSTALL_APK_NAMR="$(basename "$APK_INSTALL_PATH")"
                 if [ -z "$APK_INSTALL_PATH" ]
                 then
                     echo -e "${COLOR_31}[!]${COLOR_33}此处输入不可为空${COLOR_0}"
                     REBOOT_FL; return 0
-                elif [ -f "$APK_INSTALL_PATH" ]
+                elif [ ! -f "$APK_INSTALL_PATH" ]
                 then
-                    true
-                elif [ -d "$APK_INSTALL_PATH" ]
-                then
-                    APK_INSTALL_PATH="${APK_INSTALL_PATH%/}"
-                    APK_INSTALL_PATH="$(ls "$APK_INSTALL_PATH"/*.apk 2>>$MST_LOG)"
-                else
-                    echo -e "${COLOR_31}[!]${COLOR_33}文件/文件夹'${COLOR_36}$INSTALL_APK_NAME${COLOR_33}'不存在/无法访问或不存在APK文件${COLOR_0}"
+                    echo -e "${COLOR_31}[!]${COLOR_33}文件'${COLOR_36}$INSTALL_APK_NAMR${COLOR_33}'不存在${COLOR_0}"
                     REBOOT_FL; return 0
                 fi
-                OKAY_INSTALL_APK_NUMBER=0
-                ERROR_INSTALL_APK_NUMBER=0
-                while IFS= read -r INSTALL_ONE_APK
-                do
-                    echo
-                    [ -z "$INSTALL_ONE_APK" ] && continue
-                    WHILE_INSTALL_APK_NAME="$(basename "$INSTALL_ONE_APK")"
-                    echo -e "${COLOR_35}[Installing]${COLOR_33}正在安装'${COLOR_36}$WHILE_INSTALL_APK_NAME${COLOR_33}'...${COLOR_30}"
-                    if termux-adb -s "$SELEC_ADB_DEVICE" install "$INSTALL_ONE_APK" </dev/null
-                    then
-                        echo -e "${COLOR_32}[OKAY]${COLOR_33}APK安装成功${COLOR_0}"
-                        OKAY_INSTALL_APK_NUMBER=$((OKAY_INSTALL_APK_NUMBER + 1))
-                    else
-                        echo -e "${COLOR_31}[ERROR]${COLOR_33}APK安装失败${COLOR_0}"
-                        echo -e "${COLOR_35}[Tip]${COLOR_33}检查设备是否正确连接或手动执行命令 >>${COLOR_0}"
-                        echo -e "${COLOR_35}[CMD]${COLOR_33}命令: ${COLOR_36}termux-adb -s "$SELEC_ADB_DEVICE" install $APK_INSTALL_PATH${COLOR_0}"
-                        ERROR_INSTALL_APK_NUMBER=$((ERROR_INSTALL_APK_NUMBER + 1))
-                    fi
-                done <<< "$APK_INSTALL_PATH"
-                echo
-                echo -e "${COLOR_32}[AllDone]${COLOR_33}全部安装已完成:${COLOR_36}$OKAY_INSTALL_APK_NUMBER${COLOR_32}成功${COLOR_33}/${COLOR_36}$ERROR_INSTALL_APK_NUMBER${COLOR_31}失败${COLOR_0}"
+                echo -e "${COLOR_35}[Installing]${COLOR_33}正在安装'${COLOR_36}$INSTALL_APK_NAMR${COLOR_33}'...${COLOR_30}"
+                if termux-adb -s "$SELEC_ADB_DEVICE" install "$APK_INSTALL_PATH" </dev/null
+                then
+                    echo -e "${COLOR_32}[OKAY]${COLOR_33}APK安装成功${COLOR_0}"
+                else
+                    echo -e "${COLOR_31}[ERROR]${COLOR_33}APK安装失败${COLOR_0}"
+                    echo -e "${COLOR_35}[Tip]${COLOR_33}检查设备是否正确连接或手动执行命令 >>${COLOR_0}"
+                    echo -e "${COLOR_35}[CMD]${COLOR_33}命令: ${COLOR_36}termux-adb -s "$SELEC_ADB_DEVICE" install $APK_INSTALL_PATH${COLOR_0}"
+                fi
                 ;;
             '2' | '卸载' | '卸载选定应用')
                 MISHUI_MAIN_TIP=卸载选定应用
@@ -2190,7 +2150,7 @@ MiShuiTool_AUTO_main() {
                 REBOOT_FL; return 0
             fi
             echo -e "${COLOR_32}[OKAY]${COLOR_33}命令执行成功 系统正在启动${COLOR_0}"
-            echo -e "${COLOR_35}[Tip]${COLOR_33}当启动完成后只需要进入${COLOR_36}KernelSU${COLOR_33}点击${COLOR_36}越狱${COLOR_33}便可以获取Root权限${COLOR_0}"
+            echo -e "${COLOR_35}[Tip]${COLOR_33}当启动完成后只需要进入${COLOR_36}KernelSU${COLOR_33}点击${COLOR_36}越狱${COLOR_33}按钮便可以获取Root权限${COLOR_0}"
             echo -e "${COLOR_35}[INFO]${COLOR_33}通过此方法获取ROOT权限后不可修改${COLOR_36}/system /vendor${COLOR_33}以及所有受AVB保护的分区如:${COLOR_36}Boot Recovery ...${COLOR_0}"
             ;;
         *)
@@ -2217,6 +2177,10 @@ MiShuiTool_AUTO_main() {
         then
             NEED_FLASH_SLOT_NAME="init_boot$ROOT_SLOT_A_B"
             DOWNLOAD_IMG_NAME=init_boot
+        elif grep "vendor_boot$ROOT_SLOT_A_B" <<< "$ALL_SLOT_ROOT" &>>$MST_LOG
+        then
+            NEED_FLASH_SLOT_NAME="vendor_boot$ROOT_SLOT_A_B"
+            DOWNLOAD_IMG_NAME=vendor_boot
         elif grep "boot$ROOT_SLOT_A_B" <<< "$ALL_SLOT_ROOT" &>>$MST_LOG
         then
             NEED_FLASH_SLOT_NAME="boot$ROOT_SLOT_A_B"
