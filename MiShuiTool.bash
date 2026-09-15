@@ -12,7 +12,7 @@ MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
 MST_UPDATE_TIME='26.4.5 Official'
-NOW_VERSION=10042
+NOW_VERSION=10043
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -562,7 +562,7 @@ CA_FLASH_MAIN() {
         echo -e "${COLOR_31}[!]${COLOR_33}当前还未安装'${COLOR_36}Termux-Api${COLOR_33}'App${COLOR_0}"
         echo -e "${COLOR_35}[Tip]${COLOR_33}访问Termux官网下载Termux-Api并安装:${COLOR_36}https://termux.dev/cn/${COLOR_0}"
     fi
-    if [ "$(id -u)" != 0 ] && ! command -v termux-adb &>>$MST_LOG
+    if { [ "$(id -u)" != 0 ] || [ "$EVAL_AF" = termux- ]; } && ! command -v termux-adb &>>$MST_LOG
     then
         MISHUI_MAIN_TIP='安装第三方F&A工具'
         MISHUI_MAIN
