@@ -11,8 +11,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='26.4.5 Official'
-NOW_VERSION=10042
+MST_UPDATE_TIME='26.4.4 Official'
+NOW_VERSION=10041
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -21,7 +21,7 @@ else
 fi
 case "$1" in
 '')
-    EVAL_AF='termux-'
+    true
     ;;
 update | -u | --update)
     echo
@@ -36,7 +36,6 @@ help | -h | --help)
     echo -e " ${COLOR_32}update${COLOR_0}  | ${COLOR_32}-u ${COLOR_0}| ${COLOR_32}--update${COLOR_0}   更新MST工具箱"
     echo -e " ${COLOR_32}version${COLOR_0} | ${COLOR_32}-v ${COLOR_0}| ${COLOR_32}--version${COLOR_0}  查看MST工具箱的版本信息"
     echo -e " ${COLOR_32}check${COLOR_0}   | ${COLOR_32}-c ${COLOR_0}| ${COLOR_32}--check${COLOR_0}    快速检查运行环境"
-    echo -e " ${COLOR_32}su${COLOR_0}      | ${COLOR_32}-s ${COLOR_0}| ${COLOR_32}root${COLOR_0}       以sudo(Root权限)执行命令"
     echo
     exit 0
     ;;
@@ -101,15 +100,6 @@ check | -c | --check)
     esac
     echo 
     exit 0
-    ;;
-su | -s | root)
-    if [ "$(sudo id -u)" = 0 ]
-    then
-        EVAL_AF='sudo '
-    else
-        EVAL_AF='termux-'
-        HEAD_TIP_MISHUITOOL="${COLOR_31}WARIN:${COLOR_37}未获得Root权限 已降级至免Root模式${COLOR_0}"
-    fi
     ;;
 *)
     echo
@@ -237,7 +227,7 @@ SELEC_ADB_FB_DEVICE() {
         echo -e -n "${COLOR_33}›$USR_DEVICES_NUM*-${COLOR_32}$ONE_USR_DEV${COLOR_0} "
         case "$ADB_FASTBOOT_NAME" in
         'ADB')
-            if ONE_DEVICE="$(${EVAL_AF}adb -s "$ONE_USR_DEV" shell settings get global device_name </dev/null 2>>$MST_LOG)" && [ -n "$ONE_DEVICE" ]
+            if ONE_DEVICE="$(termux-adb -s "$ONE_USR_DEV" shell settings get global device_name </dev/null 2>>$MST_LOG)" && [ -n "$ONE_DEVICE" ]
             then
                 echo -e "${COLOR_33}(${COLOR_36}$ONE_DEVICE${COLOR_33})${COLOR_0}"
             else
@@ -289,7 +279,7 @@ SELEC_ADB_FB_DEVICE() {
     while IFS= read -r ONE_ADB_DEVICE
     do
         echo -e -n "${COLOR_36}$ONE_ADB_DEVICE${COLOR_0}"
-        if THE_ONE_DEVICE_SEE=$(${EVAL_AF}adb -s "$ONE_ADB_DEVICE" shell settings get global device_name </dev/null 2>>$MST_LOG) && [ -n "$THE_ONE_DEVICE_SEE" ]
+        if THE_ONE_DEVICE_SEE=$(termux-adb -s "$ONE_ADB_DEVICE" shell settings get global device_name </dev/null 2>>$MST_LOG) && [ -n "$THE_ONE_DEVICE_SEE" ]
         then
             echo -e "${COLOR_33}(${COLOR_32}$THE_ONE_DEVICE_SEE${COLOR_33})${COLOR_0}"
         else
@@ -300,13 +290,13 @@ SELEC_ADB_FB_DEVICE() {
 }
 USB_DEVICES_FASTBOOT() {
     echo -e -n "${COLOR_35}[FASTBOOT]${COLOR_33}设备连接状态:${COLOR_0}"
-    FASTBOOT_DEVICES="$(${EVAL_AF}fastboot devices 2>&1)"
+    FASTBOOT_DEVICES="$(termux-fastboot devices 2>&1)"
     if [ -n "$FASTBOOT_DEVICES" ]
     then
         FASTBOOT_DEVICES=$(echo "$FASTBOOT_DEVICES" | awk '/fastboot/ {print $1}')
     elif [ -z "$FASTBOOT_DEVICES" ]
     then
-        FASTBOOT_GETVAR="$(timeout 3 ${EVAL_AF}fastboot getvar serialno 2>&1 | sed 's/<.*//g')"
+        FASTBOOT_GETVAR="$(timeout 3 termux-fastboot getvar serialno 2>&1 | sed 's/<.*//g')"
         FASTBOOT_DEVICES=$(echo "$FASTBOOT_GETVAR" | grep 'serialno:' | sed 's/serialno://g')
     fi
     if [ -z "$FASTBOOT_DEVICES" ] && [ -z "$FASTBOOT_GETVAR" ]
@@ -321,9 +311,9 @@ USB_DEVICES_FASTBOOT() {
         SELEC_FASTBOOT_DEVICE="$FASTBOOT_DEVICES"
     fi
     echo -e "${COLOR_36}$SELEC_FASTBOOT_DEVICE fastboot${COLOR_32}-已连接${COLOR_0}"
-    FB_DEV_BL_YN="$(${EVAL_AF}fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar unlocked 2>&1 | grep 'unlocked' | sed 's/.*: //g' 2>>$MST_LOG)"
-    FB_DEV_TOKEN="$(${EVAL_AF}fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar token 2>&1 | grep 'token' | sed 's/.*: //g' 2>>$MST_LOG)"
-    FB_DEV_SLOT="$(${EVAL_AF}fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar current-slot 2>&1 | grep 'slot' | sed 's/.*slot: //g' 2>>$MST_LOG)"
+    FB_DEV_BL_YN="$(termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar unlocked 2>&1 | grep 'unlocked' | sed 's/.*: //g' 2>>$MST_LOG)"
+    FB_DEV_TOKEN="$(termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar token 2>&1 | grep 'token' | sed 's/.*: //g' 2>>$MST_LOG)"
+    FB_DEV_SLOT="$(termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar current-slot 2>&1 | grep 'slot' | sed 's/.*slot: //g' 2>>$MST_LOG)"
     [ -z "$FB_DEV_TOKEN" ] && FB_DEV_TOKEN="${COLOR_31}未知${COLOR_0}"
     case "$FB_DEV_SLOT" in
     'a')
@@ -365,8 +355,8 @@ USB_DEVICES_ADB() {
     local ANY_OR_ONLY="$1"
     [ -z "$ANY_OR_ONLY" ] && ANY_OR_ONLY=only
     echo -e -n "${COLOR_35}[ADB]${COLOR_33}设备连接状态:${COLOR_0}"
-    timeout 5 ${EVAL_AF}adb wait-for-device &>>$MST_LOG
-    ALL_ADB_DEVICES="$(${EVAL_AF}adb devices 2>>$MST_LOG)"
+    timeout 5 termux-adb wait-for-device &>>$MST_LOG
+    ALL_ADB_DEVICES="$(termux-adb devices 2>>$MST_LOG)"
     ADB_DEVICES="$(sed '/^$/d; /List/d; s/\s.*//g' <<< "$ALL_ADB_DEVICES")"
     if [ -z "$ADB_DEVICES" ]
     then
@@ -386,7 +376,7 @@ USB_DEVICES_ADB() {
     do
         [ -z "$ONE_SELEC_ADB_DEVICE" ] && continue
         SELEC_ADB_DEVICES_NUMBER=$((SELEC_ADB_DEVICES_NUMBER + 1))
-        ALL_ADB_DEVICE_INFO="$(${EVAL_AF}adb -s "$ONE_SELEC_ADB_DEVICE" shell "getprop ro.build.version.release
+        ALL_ADB_DEVICE_INFO="$(termux-adb -s "$ONE_SELEC_ADB_DEVICE" shell "getprop ro.build.version.release
 grep -c 'processor' /proc/cpuinfo
 getprop ro.product.device
 settings get global device_name
@@ -408,7 +398,7 @@ getprop ro.soc.model" 2>>$MST_LOG)"
         DEV_NAME="$(sed -n 9p <<< "$ALL_ADB_DEVICE_INFO")"
         CPU_GHZ="$(sed -n 10p <<< "$ALL_ADB_DEVICE_INFO")"
         CPUNAME="$(sed -n 11p <<< "$ALL_ADB_DEVICE_INFO")"
-        [ -z "$CPUNAME" ] && CPUNAME=$(${EVAL_AF}adb -s "$ONE_SELEC_ADB_DEVICE" shell grep 'Hardware' /proc/cpuinfo 2>>$MST_LOG | sed 's/.*: //g; s/, /-/g' 2>>$MST_LOG)
+        [ -z "$CPUNAME" ] && CPUNAME=$(termux-adb -s "$ONE_SELEC_ADB_DEVICE" shell grep 'Hardware' /proc/cpuinfo 2>>$MST_LOG | sed 's/.*: //g; s/, /-/g' 2>>$MST_LOG)
         local ALL_ABC=("CPUNAME" "OSV" "CPUUN" "DEVONE" "DEVTWO" "UINAME" "KERNEL" "WIFI" "DEV_SDK" "DEV_NAME" "CPU_GHZ")
         for ABC in "${ALL_ABC[@]}"
         do
@@ -443,9 +433,9 @@ BACK_TO_SHELL() {
 }
 ADB_FASTBOOT_VER() {
     echo -e "${COLOR_35}[ADB]${COLOR_33}当前版本 >>${COLOR_32}"
-    ${EVAL_AF}adb  --version 2>&1 | grep 'version' || echo -e "\033[1A${COLOR_31}[NotFound]${COLOR_33}没有安装!${COLOR_0}\033[K"
+    termux-adb  --version 2>&1 | grep 'version' || echo -e "\033[1A${COLOR_31}[NotFound]${COLOR_33}没有安装!${COLOR_0}\033[K"
     echo -e "${COLOR_35}[Fastboot]${COLOR_33}当前版本 >>${COLOR_32}"
-    ${EVAL_AF}fastboot --version 2>&1 | grep 'version' || echo -e "\033[1A${COLOR_31}[NotFound]${COLOR_33}没有安装!${COLOR_0}\033[K"
+    termux-fastboot --version 2>&1 | grep 'version' || echo -e "\033[1A${COLOR_31}[NotFound]${COLOR_33}没有安装!${COLOR_0}\033[K"
     echo -e "${COLOR_0}"
 }
 REBOOT_USB_DEVICES() {
@@ -562,19 +552,19 @@ CA_FLASH_MAIN() {
         echo -e "${COLOR_31}[!]${COLOR_33}当前还未安装'${COLOR_36}Termux-Api${COLOR_33}'App${COLOR_0}"
         echo -e "${COLOR_35}[Tip]${COLOR_33}访问Termux官网下载Termux-Api并安装:${COLOR_36}https://termux.dev/cn/${COLOR_0}"
     fi
-    if [ "$(id -u)" != 0 ] && ! command -v termux-adb &>>$MST_LOG
+    if ! command -v termux-adb &>>$MST_LOG
     then
         MISHUI_MAIN_TIP='安装第三方F&A工具'
         MISHUI_MAIN
         echo
-        echo -e "$COLOR[INST]${COLOR_33}需要安装第三方${COLOR_36}ADB&Fastboot${COLOR_33}命令以获得免Root支持 >>${COLOR_0}"
+        echo -e "$COLOR[INST]${COLOR_33}需要安装第三方${COLOR_36}ADB&Fastboot${COLOR_33}命令 >>${COLOR_0}"
         ADB_FASTBOOT_VER
         echo -e "${COLOR_35}[GitHub]${COLOR_33}此处引用GitHub仓库'${COLOR_32}https://github.com/nohajc/termux-adb${COLOR_33}'中${COLOR_36}ADB&Fastboot${COLOR_33}工具的安装脚本${COLOR_0}"
         echo -e "${COLOR_35}[DEV]${COLOR_33}开发者:${COLOR_36}nohajc${COLOR_0}"
         echo -e "${COLOR_35}[MIT]${COLOR_32}Copyright (c) 2022 nohajc${COLOR_0}"
         echo
         echo -e "${COLOR_35}[NE]${COLOR_33}是否立即安装第三方${COLOR_36}ADB&Fastboot${COLOR_33}命令 >>${COLOR_0}"
-        echo -e -n "${COLOR_36}[+][1›立即安装/2›不使用第三方工具/3›退出MST]*ᐷ${COLOR_01}"
+        echo -e -n "${COLOR_36}[+][1›立即安装/2›退出MST]*ᐷ${COLOR_01}"
         read -r YN_UPDATE
         case "$YN_UPDATE" in
         '1' | 'y' | 'Y')
@@ -593,12 +583,6 @@ CA_FLASH_MAIN() {
                 echo -e "${COLOR_33} - 命令: ${COLOR_36}curl -s https://raw.githubusercontent.com/nohajc/termux-adb/master/install.sh | bash${COLOR_0}"
                 EXIT_SHELL 1
             fi
-            ;;
-        2 | n | N)
-            echo -e "${COLOR_35}[Tip]${COLOR_33}本次已跳过安装第三方工具 但下次启动时仍会询问${COLOR_0}"
-            HEAD_TIP_MISHUITOOL="${COLOR_35}Tip:${COLOR_37}当前ADB&Fastboot在无Root环境下可能无法正常工作${COLOR_0}"
-            EVAL_AF=''
-            REBOOT_FL; return 0
             ;;
         *)
             EXIT_SHELL 1
@@ -649,8 +633,8 @@ MiShuiTool_DEV_main() {
         local FASTBOOT_OR_ADB_NAME=$1
         local DEVICES_PATH
         echo
-        [ "$FASTBOOT_OR_ADB_NAME" = ADB ] && FASTBOOT_OR_ADB_LINK_CMD="${EVAL_AF}adb"
-        [ "$FASTBOOT_OR_ADB_NAME" = FASTBOOT ] && FASTBOOT_OR_ADB_LINK_CMD="${EVAL_AF}fastboot"
+        [ "$FASTBOOT_OR_ADB_NAME" = ADB ] && FASTBOOT_OR_ADB_LINK_CMD='termux-adb'
+        [ "$FASTBOOT_OR_ADB_NAME" = FASTBOOT ] && FASTBOOT_OR_ADB_LINK_CMD='termux-fastboot'
         if USB_DEVICES_$FASTBOOT_OR_ADB_NAME
         then
             case "$2" in
@@ -704,7 +688,7 @@ MiShuiTool_DEV_main() {
     }
     REBOOT_THE_ADB() {
         echo -e -n " ${COLOR_35}[SVR]${COLOR_33}重启ADB守护进程...${COLOR_0}\r"
-        ${EVAL_AF}adb kill-server &>>$MST_LOG && ${EVAL_AF}adb start-server &>>$MST_LOG && true
+        termux-adb kill-server &>>$MST_LOG && termux-adb start-server &>>$MST_LOG && true
     }
     MISHUI_MAIN_TIP=管理连接设备
     MISHUI_MAIN
@@ -771,7 +755,7 @@ MiShuiTool_DEV_main() {
                 fi
                 echo
                 echo -e "${COLOR_35}[Connecting]${COLOR_33}正在与'${COLOR_36}$ONLY_IP${COLOR_33}'配对...${COLOR_0}"
-                if ! grep -q paired <<< "$(${EVAL_AF}adb pair "$ONLY_IP:$ONLY_PORT" <<< "$INPUT_PAIR_CODE" 2>&1)" &>>$MST_LOG
+                if ! grep -q paired <<< "$(termux-adb pair "$ONLY_IP:$ONLY_PORT" <<< "$INPUT_PAIR_CODE" 2>&1)" &>>$MST_LOG
                 then
                     echo -e "${COLOR_31}[ERROR]${COLOR_33}无法与'${COLOR_36}$IP_AND_PORT${COLOR_33}'配对${COLOR_0}"
                     echo -e "${COLOR_35}[Tip]${COLOR_33}配对开始时应保持'${COLOR_36}与设备配对${COLOR_33}'页面的开启状态 除非配对完毕后自动退出${COLOR_0}"
@@ -805,7 +789,7 @@ MiShuiTool_DEV_main() {
                 echo -e "${COLOR_31}[!]${COLOR_33}输入的端口'${COLOR_36}$THE_TCP_NUMBER${COLOR_33}'不在规范的范围(${COLOR_36}1024-49151${COLOR_33}) 为保证安全已终止操作${COLOR_0}"
                 REBOOT_FL; return 0
             fi
-            if ${EVAL_AF}adb tcpip $THE_TCP_NUMBER &>>$MST_LOG
+            if termux-adb tcpip $THE_TCP_NUMBER &>>$MST_LOG
             then
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}监听端口'${COLOR_36}$THE_TCP_NUMBER${COLOR_33}'已启动${COLOR_0}"
             else
@@ -814,7 +798,7 @@ MiShuiTool_DEV_main() {
             fi
             echo
             echo -e "${COLOR_35}[IP]${COLOR_33}正在获取目标设备IP地址...${COLOR_0}"
-            if ONLY_USB_IP="$(${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell ip addr show wlan0 2>>$MST_LOG | grep 'inet ' | sed 's/.*inet //g; s|/.*||g')" && [ -n "$ONLY_USB_IP" ]
+            if ONLY_USB_IP="$(termux-adb -s "$SELEC_ADB_DEVICE" shell ip addr show wlan0 2>>$MST_LOG | grep 'inet ' | sed 's/.*inet //g; s|/.*||g')" && [ -n "$ONLY_USB_IP" ]
             then
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}目标设备IP获取成功:${COLOR_36}$ONLY_USB_IP${COLOR_0}"
                 NEW_IP_AND_PORT="$ONLY_USB_IP:$THE_TCP_NUMBER"
@@ -848,7 +832,7 @@ MiShuiTool_DEV_main() {
             sed -i s/$ONLY_IP//g $MST_HOME/Pair_devices.txt
             REBOOT_FL; return 0
         }
-        if grep connected <<< "$(${EVAL_AF}adb connect $NEW_IP_AND_PORT 2>>$MST_LOG)"
+        if grep connected <<< "$(termux-adb connect $NEW_IP_AND_PORT)"
         then
             echo -e "${COLOR_32}[OKAY]${COLOR_33}连接成功 正在校验...${COLOR_0}"
             if USB_DEVICES_$FASTBOOT_OR_ADB_NAME
@@ -919,7 +903,7 @@ MiShuiTool_FB_main() {
     echo -e "${COLOR_30}-------------------------------------------------${COLOR_0}"
     CHUCK_SLOT_FLASH() {
         CHUCK_SLOT="$1"
-        if [ "$(${EVAL_AF}fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar partition-type:$CHUCK_SLOT 2>&1 | awk 'NR==1{print $2}')" != raw ] &>>$MST_LOG
+        if [ "$(termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar partition-type:$CHUCK_SLOT 2>&1 | awk 'NR==1{print $2}')" != raw ] &>>$MST_LOG
         then
             echo -e "${COLOR_31}[WARN]${COLOR_33}MST检测到分区'${COLOR_36}$FLASH_IMG_NAME${COLOR_33}'在目标设备上可能不存在或不可刷入 继续操作可能造成不可预知的后果${COLOR_0}"
             echo -e "${COLOR_35}[Continue]${COLOR_33}需慎重考虑是否继续 >>${COLOR_0}"
@@ -968,7 +952,7 @@ MiShuiTool_FB_main() {
                 REBOOT_FL; return 0
             fi
             echo -e "$COLOR_35[Flashing]${COLOR_33}正在将'${COLOR_36}$IMG_FILE_NAME${COLOR_33}'刷入'${COLOR_36}$FLASH_IMG_NAME${COLOR_33}'分区...${COLOR_30}"
-            if ${EVAL_AF}fastboot -s "$SELEC_FASTBOOT_DEVICE" flash $FLASH_IMG_SLOT "$IMG_FILE_PATH"
+            if termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" flash $FLASH_IMG_SLOT "$IMG_FILE_PATH"
             then
                 ALL_TIP_TION="${COLOR_32}[OKAY]${COLOR_33}刷入成功 是否立即重启 >>${COLOR_0}"
                 REBOOT_USB_DEVICES
@@ -1030,7 +1014,7 @@ MiShuiTool_FB_main() {
                 REBOOT_FL; return 0
             fi
             echo -e "$COLOR_35[Booting]${COLOR_33}正在将'${COLOR_36}$FASTBOOT_IMG_FILE_NAME${COLOR_33}'推送至目标设备并启动...${COLOR_30}"
-            if ${EVAL_AF}fastboot -s "$SELEC_FASTBOOT_DEVICE" boot "$FASTBOOT_IMG_FILE_PATH"
+            if termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" boot "$FASTBOOT_IMG_FILE_PATH"
             then
                 echo -e "${COLOR_31}[OKAY]${COLOR_33}推送成功 目标设备正在重启至镜像文件${COLOR_0}"
             else
@@ -1084,8 +1068,8 @@ MiShuiTool_FB_main() {
             MISHUI_MAIN_TIP='解锁一加(OnePlus)'
             SEE_USB_DEVICES
             WARN_UNLOCK_BL
-            echo -e "${COLOR_35}[Unlocking]${COLOR_33}正在使用'${COLOR_36}${EVAL_AF}fastboot -s "$SELEC_FASTBOOT_DEVICE" flashing unlock${COLOR_33}'命令解锁...${COLOR_30}"
-            if ${EVAL_AF}fastboot -s "$SELEC_FASTBOOT_DEVICE" flashing unlock || ${EVAL_AF}fastboot -s "$SELEC_FASTBOOT_DEVICE" oem unlock
+            echo -e "${COLOR_35}[Unlocking]${COLOR_33}正在使用'${COLOR_36}termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" flashing unlock${COLOR_33}'命令解锁...${COLOR_30}"
+            if termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" flashing unlock || termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" oem unlock
             then
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}命令执行成功${COLOR_0}"
                 echo -e "${COLOR_35}[Tip]${COLOR_33}目标设备跳转页面后点击目标设备'${COLOR_36}音量-${COLOR_33}'键选择'${COLOR_36}UNLOCK THE BOOTLOADER${COLOR_33}'选项并使用关机键确定即可完成解锁${COLOR_0}"
@@ -1234,16 +1218,16 @@ MiShuiTool_FB_main() {
             if unzip -t "$ZIP_DIR_PATH" android-info.txt &>>$MST_LOG
             then
                 echo -e "${COLOR_35}[Tip]${COLOR_33}该压缩包内置'${COLOR_36}android-info.txt${COLOR_33}'文件 可直接刷入${COLOR_0}"
-                echo -e "${COLOR_35}[INFO]${COLOR_33}该压缩包支持使用'${COLOR_33}${EVAL_AF}fastboot update${COLOR_33}'命令直接刷入而无需解压 但是以该方式刷入的刷机包可能不完整 需慎重考虑${COLOR_0}"
+                echo -e "${COLOR_35}[INFO]${COLOR_33}该压缩包支持使用'${COLOR_33}termux-fastboot update${COLOR_33}'命令直接刷入而无需解压 但是以该方式刷入的刷机包可能不完整 需慎重考虑${COLOR_0}"
                 echo
-                echo -e "${COLOR_35}[Update]${COLOR_33}是否以'${COLOR_33}${EVAL_AF}fastboot update${COLOR_33}'命令刷入 >>${COLOR_0}"
+                echo -e "${COLOR_35}[Update]${COLOR_33}是否以'${COLOR_33}termux-fastboot update${COLOR_33}'命令刷入 >>${COLOR_0}"
                 echo -e -n "${COLOR_36}[+][1›使用Update/2›使用刷机脚本]*ᐷ${COLOR_0}"
                 read -r YN_UPDATE_FLASH
                 case "$YN_UPDATE_FLASH" in
                 1 | y | Y)
                     CHECK_DEVICE_FLASH_OK
-                    echo -e "${COLOR_35}[Flashing]${COLOR_33}正在以'${COLOR_36}${EVAL_AF}fastboot update${COLOR_33}'命令刷入'${COLOR_36}$THE_FILE_FLASH_NAME${COLOR_33}' >>${COLOR_0}"
-                    if ${EVAL_AF}fastboot update "$THE_FILE_FLASH_NAME" && FLASH_END=$(date +%s.%N)
+                    echo -e "${COLOR_35}[Flashing]${COLOR_33}正在以'${COLOR_36}termux-fastboot update${COLOR_33}'命令刷入'${COLOR_36}$THE_FILE_FLASH_NAME${COLOR_33}' >>${COLOR_0}"
+                    if termux-fastboot update "$THE_FILE_FLASH_NAME" && FLASH_END=$(date +%s.%N)
                     then
                         echo -e "${COLOR_36}[Done]${COLOR_33}已完成刷入${COLOR_0}"
                         FLASH_ALL_OKAY
@@ -1364,7 +1348,7 @@ MiShuiTool_FB_main() {
             then
                 echo -e "${COLOR_34}[INT]${COLOR_33}已拦截刷机脚本的重启命令:${COLOR_36}fastboot $@${COLOR_0}"
             else
-                command ${EVAL_AF}fastboot "$@"
+                command termux-fastboot "$@"
             fi
         }
         export -f fastboot
@@ -1385,7 +1369,7 @@ MiShuiTool_FB_main() {
         echo
         while true
         do
-            read -r -e -p $'\001\033[0;35;1m\002[>_]\001\033[0;33;1m\002输入命令:\001\033[0;32;1m\002${EVAL_AF}fastboot -s '"$SELEC_FASTBOOT_DEVICE"$' \001\033[0;1m\002' FASTBOOT_SHELL_CMD
+            read -r -e -p $'\001\033[0;35;1m\002[>_]\001\033[0;33;1m\002输入命令:\001\033[0;32;1m\002termux-fastboot -s '"$SELEC_FASTBOOT_DEVICE"$' \001\033[0;1m\002' FASTBOOT_SHELL_CMD
             if [ -z "$FASTBOOT_SHELL_CMD" ]
             then
                 continue
@@ -1397,7 +1381,7 @@ MiShuiTool_FB_main() {
                 then
                     FASTBOOT_SHELL_CMD="${FASTBOOT_SHELL_CMD#fastboot}"
                 fi
-                if eval "${EVAL_AF}fastboot -s $SELEC_FASTBOOT_DEVICE $FASTBOOT_SHELL_CMD"
+                if eval "termux-fastboot -s $SELEC_FASTBOOT_DEVICE $FASTBOOT_SHELL_CMD"
                 then
                     echo -e "${COLOR_32} - 执行成功${COLOR_0}"
                 else
@@ -1438,7 +1422,7 @@ MiShuiTool_ADB_main() {
             local ACT_APP_NAME="$1"
             local ACT_APP_PATH="$2"
             local START_APP_CMD="$3"
-            if ! ${EVAL_AF}adb -s "$ONE_SELEC_ADB_DEVICE" shell test -f "$(awk '{print $2}' <<< "$ACT_APP_PATH")" &>>$MST_LOG
+            if ! termux-adb -s "$ONE_SELEC_ADB_DEVICE" shell test -f "$(awk '{print $2}' <<< "$ACT_APP_PATH")" &>>$MST_LOG
             then
                 echo -e "${COLOR_31}[!]${COLOR_33}目标设备暂未安装应用'${COLOR_36}$ACT_APP_NAME${COLOR_33}'或缺少可执行文件无法激活${COLOR_0}"
                 echo -e "${COLOR_35}[Tip]${COLOR_33}前往应用官网或可信渠道下载最新版本后安装至目标设备 也可以将APK文件下载至本机后使用'${COLOR_36}[ADB]›3*-ADB调试工具${COLOR_33} -> ${COLOR_36}[APP]›2*-应用管理 ${COLOR_33}-> ${COLOR_36}安装APK/卸载选定应用 ${COLOR_33}-> ${COLOR_36}安装APK${COLOR_33}'功能将APK安装至目标设备${COLOR_0}"
@@ -1446,12 +1430,12 @@ MiShuiTool_ADB_main() {
                 REBOOT_FL; return 0
             fi
             echo -e "${COLOR_35}[P-ACT]${COLOR_33}正在激活'${COLOR_36}$ACT_APP_NAME${COLOR_33}'...${COLOR_30}"
-            if ${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell am start -n $START_APP_CMD 2>>$MST_LOG; ${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell "$ACT_APP_PATH"
+            if termux-adb -s "$SELEC_ADB_DEVICE" shell am start -n $START_APP_CMD 2>>$MST_LOG; termux-adb -s "$SELEC_ADB_DEVICE" shell "$ACT_APP_PATH"
             then
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}激活'${COLOR_36}$ACT_APP_NAME${COLOR_33}'命令执行完毕${COLOR_0}"
             else
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}激活'${COLOR_36}$ACT_APP_NAME${COLOR_33}'命令执行失败${COLOR_0}"
-                echo -e "${COLOR_35}[CMD]${COLOR_33}手动激活命令: ${COLOR_36}${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell sh $ACT_APP_PATH${COLOR_0}"
+                echo -e "${COLOR_35}[CMD]${COLOR_33}手动激活命令: ${COLOR_36}termux-adb -s "$SELEC_ADB_DEVICE" shell sh $ACT_APP_PATH${COLOR_0}"
             fi
         }
         ALL_TIP_TION="${COLOR_35}[APP]${COLOR_33}已支持ADB激活的应用 >>${COLOR_0}"
@@ -1463,7 +1447,7 @@ MiShuiTool_ADB_main() {
             while IFS= read -r ONE_SELEC_ADB_DEVICE
             do
                 [ -z "$ONE_SELEC_ADB_DEVICE" ] && continue
-                ACT_ADB_APP 'Shizuku-ADB' "$(${EVAL_AF}adb -s "$ONE_SELEC_ADB_DEVICE" shell pm path moe.shizuku.privileged.api | sed 's/package://g; s|base.apk|lib/arm64/libshizuku.so|g')" 'moe.shizuku.privileged.api/moe.shizuku.manager.MainActivity'
+                ACT_ADB_APP 'Shizuku-ADB' "$(termux-adb -s "$ONE_SELEC_ADB_DEVICE" shell pm path moe.shizuku.privileged.api | sed 's/package://g; s|base.apk|lib/arm64/libshizuku.so|g')" 'moe.shizuku.privileged.api/moe.shizuku.manager.MainActivity'
             done <<< "$SELEC_ADB_DEVICE"
             ;;
         '2')
@@ -1477,16 +1461,16 @@ MiShuiTool_ADB_main() {
             while IFS= read -r ONE_SELEC_ADB_DEVICE
             do
                 [ -z "$ONE_SELEC_ADB_DEVICE" ] && continue
-                ACT_ADB_APP '黑阈-ADB' "$(${EVAL_AF}adb -s "$ONE_SELEC_ADB_DEVICE" shell pm path me.piebridge.brevent | sed 's/package://g; s|base.apk|lib/arm64/libbrevent.so|g')" 'me.piebridge.brevent/me.piebridge.brevent.ui.BreventActivity'
+                ACT_ADB_APP '黑阈-ADB' "$(termux-adb -s "$ONE_SELEC_ADB_DEVICE" shell pm path me.piebridge.brevent | sed 's/package://g; s|base.apk|lib/arm64/libbrevent.so|g')" 'me.piebridge.brevent/me.piebridge.brevent.ui.BreventActivity'
             done <<< "$SELEC_ADB_DEVICE"
             ;;
         '4')
             while IFS= read -r ONE_SELEC_ADB_DEVICE
             do
                 [ -z "$ONE_SELEC_ADB_DEVICE" ] && continue
-                ACT_ADB_APP 'Shizuku-ADB' "$(${EVAL_AF}adb -s "$ONE_SELEC_ADB_DEVICE" shell pm path moe.shizuku.privileged.api | sed 's/package://g; s|base.apk|lib/arm64/libshizuku.so|g')" 'moe.shizuku.privileged.api/moe.shizuku.manager.MainActivity'
+                ACT_ADB_APP 'Shizuku-ADB' "$(termux-adb -s "$ONE_SELEC_ADB_DEVICE" shell pm path moe.shizuku.privileged.api | sed 's/package://g; s|base.apk|lib/arm64/libshizuku.so|g')" 'moe.shizuku.privileged.api/moe.shizuku.manager.MainActivity'
                 ACT_ADB_APP 'Scene6-ADB' "sh $STORAGE/Android/data/com.omarea.vtools/up.sh" 'com.omarea.vtools/com.omarea.vtools.activities.ActivityStartSplash'
-                ACT_ADB_APP '黑阈-ADB' "$(${EVAL_AF}adb -s "$ONE_SELEC_ADB_DEVICE" shell pm path me.piebridge.brevent | sed 's/package://g; s|base.apk|lib/arm64/libbrevent.so|g')" 'me.piebridge.brevent/me.piebridge.brevent.ui.BreventActivity'
+                ACT_ADB_APP '黑阈-ADB' "$(termux-adb -s "$ONE_SELEC_ADB_DEVICE" shell pm path me.piebridge.brevent | sed 's/package://g; s|base.apk|lib/arm64/libbrevent.so|g')" 'me.piebridge.brevent/me.piebridge.brevent.ui.BreventActivity'
             done <<< "$SELEC_ADB_DEVICE"
             ;;
         5)
@@ -1518,10 +1502,10 @@ MiShuiTool_ADB_main() {
             fi
             echo
             echo -e "${COLOR_35}[SRCH]${COLOR_33}正在搜索包含'${COLOR_36}${INPUT_PKGE_NAME[*]}${COLOR_33}'的包名...${COLOR_0}"
-            ALL_LIST_PKGE="$(${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell pm list packages --user current 2>>$MST_LOG)"
+            ALL_LIST_PKGE="$(termux-adb -s "$SELEC_ADB_DEVICE" shell pm list packages --user current 2>>$MST_LOG)"
             if [ -z "$ALL_LIST_PKGE" ]
             then
-                ALL_LIST_PKGE="$(${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell pm list packages 2>>$MST_LOG)"
+                ALL_LIST_PKGE="$(termux-adb -s "$SELEC_ADB_DEVICE" shell pm list packages 2>>$MST_LOG)"
             fi
             PKGE_NUMBER=1
             ALL_SEARCH=""
@@ -1588,13 +1572,13 @@ MiShuiTool_ADB_main() {
             local ICE_THE_APP
             while IFS= read -r ICE_THE_APP
             do
-                if echo -e -n "$COLOR_30" && ${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell pm disable-user "$ICE_THE_APP"
+                if echo -e -n "$COLOR_30" && termux-adb -s "$SELEC_ADB_DEVICE" shell pm disable-user "$ICE_THE_APP"
                 then
                    echo -e "${COLOR_32}[OKAY]${COLOR_33}应用'${COLOR_36}$ICE_THE_APP${COLOR_33}'$THE_ICE_USR成功${COLOR_0}"
                 else
                     echo -e "${COLOR_31}[ERROR]${COLOR_33}应用'${COLOR_36}$ICE_THE_APP${COLOR_33}'$THE_ICE_USR失败${COLOR_0}"
                     echo -e "${COLOR_35}[Tip]${COLOR_33}检查设备是否正确连接或手动执行命令 >>${COLOR_0}"
-                    echo -e "${COLOR_35}[CMD]${COLOR_33}命令: ${COLOR_36}${EVAL_AF}adb -s $SELEC_ADB_DEVICE shell pm disable-user $ICE_THE_APP${COLOR_0}"
+                    echo -e "${COLOR_35}[CMD]${COLOR_33}命令: ${COLOR_36}termux-adb -s $SELEC_ADB_DEVICE shell pm disable-user $ICE_THE_APP${COLOR_0}"
                 fi
             done <<< "$USR_OKAY_PKGE"
             REBOOT_FL; return 0
@@ -1665,14 +1649,14 @@ MiShuiTool_ADB_main() {
                     [ -z "$INSTALL_ONE_APK" ] && continue
                     WHILE_INSTALL_APK_NAME="$(basename "$INSTALL_ONE_APK")"
                     echo -e "${COLOR_35}[Installing]${COLOR_33}正在安装'${COLOR_36}$WHILE_INSTALL_APK_NAME${COLOR_33}'...${COLOR_30}"
-                    if ${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" install "$INSTALL_ONE_APK" </dev/null
+                    if termux-adb -s "$SELEC_ADB_DEVICE" install "$INSTALL_ONE_APK" </dev/null
                     then
                         echo -e "${COLOR_32}[OKAY]${COLOR_33}APK安装成功${COLOR_0}"
                         OKAY_INSTALL_APK_NUMBER=$((OKAY_INSTALL_APK_NUMBER + 1))
                     else
                         echo -e "${COLOR_31}[ERROR]${COLOR_33}APK安装失败${COLOR_0}"
                         echo -e "${COLOR_35}[Tip]${COLOR_33}检查设备是否正确连接或手动执行命令 >>${COLOR_0}"
-                        echo -e "${COLOR_35}[CMD]${COLOR_33}命令: ${COLOR_36}${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" install $APK_INSTALL_PATH${COLOR_0}"
+                        echo -e "${COLOR_35}[CMD]${COLOR_33}命令: ${COLOR_36}termux-adb -s "$SELEC_ADB_DEVICE" install $APK_INSTALL_PATH${COLOR_0}"
                         ERROR_INSTALL_APK_NUMBER=$((ERROR_INSTALL_APK_NUMBER + 1))
                     fi
                 done <<< "$APK_INSTALL_PATH"
@@ -1686,13 +1670,13 @@ MiShuiTool_ADB_main() {
                 while IFS= read -r UN_THE_APP
                 do
                     echo -e "${COLOR_35}[Uninstalling]${COLOR_33}正在卸载'${COLOR_36}$UN_THE_APP${COLOR_33}'...${COLOR_30}"
-                    if ${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell pm enable "$UN_THE_APP" </dev/null && ${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" uninstall "$UN_THE_APP" </dev/null
+                    if termux-adb -s "$SELEC_ADB_DEVICE" shell pm enable "$UN_THE_APP" </dev/null && termux-adb -s "$SELEC_ADB_DEVICE" uninstall "$UN_THE_APP" </dev/null
                     then
                         echo -e "${COLOR_32}[OKAY]${COLOR_33}应用'${COLOR_36}$UN_THE_APP${COLOR_33}'卸载成功${COLOR_0}"
                     else
                         echo -e "${COLOR_31}[ERROR]${COLOR_33}应用'${COLOR_36}$UN_THE_APP${COLOR_33}'卸载失败${COLOR_0}"
                         echo -e "${COLOR_35}[Tip]${COLOR_33}检查设备是否正确连接或手动执行命令 >>${COLOR_0}"
-                        echo -e "${COLOR_35}[CMD]${COLOR_33}命令: ${COLOR_36}${EVAL_AF}adb -s $SELEC_ADB_DEVICE uninstall -k $UN_THE_APP${COLOR_0}"
+                        echo -e "${COLOR_35}[CMD]${COLOR_33}命令: ${COLOR_36}termux-adb -s $SELEC_ADB_DEVICE uninstall -k $UN_THE_APP${COLOR_0}"
                     fi
                 done <<< "$USR_OKAY_PKGE"
                 REBOOT_FL; return 0
@@ -1722,17 +1706,17 @@ MiShuiTool_ADB_main() {
                 while IFS= read -r START_THE_APP
                 do
                     echo -e "${COLOR_35}[ACT]${COLOR_33}正在获取'${COLOR_36}$START_THE_APP${COLOR_33}'的Activity...${COLOR_0}"
-                    if APP_S_ACTIVITY=$(${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell cmd package resolve-activity --brief "$START_THE_APP" </dev/null | tail -n 1) && [ -n "$APP_S_ACTIVITY" ]
+                    if APP_S_ACTIVITY=$(termux-adb -s "$SELEC_ADB_DEVICE" shell cmd package resolve-activity --brief "$START_THE_APP" </dev/null | tail -n 1) && [ -n "$APP_S_ACTIVITY" ]
                     then
                         echo -e "${COLOR_32}[OKAY]${COLOR_33}Activity获取成功:${COLOR_36}$APP_S_ACTIVITY${COLOR_0}"
                         echo -e "${COLOR_35}[Starting]${COLOR_33}正在打开'${COLOR_36}$START_THE_APP${COLOR_33}'...$COLOR_30"
-                        if ${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell am start -n "$APP_S_ACTIVITY" </dev/null
+                        if termux-adb -s "$SELEC_ADB_DEVICE" shell am start -n "$APP_S_ACTIVITY" </dev/null
                         then
                             echo -e "${COLOR_32}[OKAY]${COLOR_33}应用打开成功${COLOR_0}"
                         else
                             echo -e "${COLOR_31}[ERROR]${COLOR_33}应用打开失败${COLOR_0}"
                             echo -e "${COLOR_35}[Tip]${COLOR_33}尝试在被连接设备上手动抓取Activity并手动执行命令 >>${COLOR_0}"
-                            echo -e "${COLOR_35}[CMD]${COLOR_33}命令: ${COLOR_36}${EVAL_AF}adb -s $SELEC_ADB_DEVICE shell am start -n $START_THE_APP/<Activity>${COLOR_0}"
+                            echo -e "${COLOR_35}[CMD]${COLOR_33}命令: ${COLOR_36}termux-adb -s $SELEC_ADB_DEVICE shell am start -n $START_THE_APP/<Activity>${COLOR_0}"
                         fi
                     else
                         echo -e "${COLOR_31}[ERROR]${COLOR_33}应用'${COLOR_36}$START_THE_APP${COLOR_33}'Activity获取失败${COLOR_0}"
@@ -1747,7 +1731,7 @@ MiShuiTool_ADB_main() {
                 while IFS= read -r KILL_THE_APP
                 do
                     echo -e "${COLOR_35}[KILL]${COLOR_33}正在杀死'${COLOR_36}$KILL_THE_APP${COLOR_33}'的全部进程...${COLOR_30}"
-                    if ${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell am force-stop "$KILL_THE_APP" </dev/null
+                    if termux-adb -s "$SELEC_ADB_DEVICE" shell am force-stop "$KILL_THE_APP" </dev/null
                     then
                         echo -e "${COLOR_32}[OKAY]${COLOR_33}已成功杀死'${COLOR_36}$KILL_THE_APP${COLOR_33}'的全部进程${COLOR_0}"
                     else
@@ -1787,7 +1771,7 @@ MiShuiTool_ADB_main() {
             DOWNLOAD_APK_FILE() {
                 local ONE_PULL_APK_PATH="$1"
                 local THE_DOWNLOAD_APK_PATH="$2"
-                if echo -e -n "$COLOR_30" && ${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" pull "$ONE_PULL_APK_PATH" "$THE_DOWNLOAD_APK_PATH" </dev/null
+                if echo -e -n "$COLOR_30" && termux-adb -s "$SELEC_ADB_DEVICE" pull "$ONE_PULL_APK_PATH" "$THE_DOWNLOAD_APK_PATH" </dev/null
                 then
                     echo -e "${COLOR_32}[OKAY]${COLOR_33}已成功将'${COLOR_36}$PULL_THE_APK${COLOR_33}'应用的Apk文件提取至本机路径:${COLOR_36}$THE_DOWNLOAD_APK_PATH${COLOR_0}"
                 else
@@ -1799,7 +1783,7 @@ MiShuiTool_ADB_main() {
             do
                 echo
                 echo -e "${COLOR_35}[DATA]${COLOR_33}正在获取'${COLOR_36}$PULL_THE_APK${COLOR_33}'的APK文件路径...${COLOR_0}"
-                THE_APK_PULL_PATH="$(${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell pm path "$PULL_THE_APK" </dev/null 2>>$MST_LOG | sed 's/package://')"
+                THE_APK_PULL_PATH="$(termux-adb -s "$SELEC_ADB_DEVICE" shell pm path "$PULL_THE_APK" </dev/null 2>>$MST_LOG | sed 's/package://')"
                 ALL_APK_NUMBER="$(wc -l <<< "$THE_APK_PULL_PATH")"
                 if  [ -n "$THE_APK_PULL_PATH" ] && [ "$ALL_APK_NUMBER" = 1 ]
                 then
@@ -1847,16 +1831,16 @@ MiShuiTool_ADB_main() {
                 echo -e "${COLOR_35}[Cleaning]${COLOR_33}正在清理应用'${COLOR_36}$ONE_CLEAN_APP${COLOR_33}'的全部数据...${COLOR_0}"
                 [ -z "$SELEC_ADB_DEVICE" ] && continue
                 ALL_CLEAN_APP=$((ALL_CLEAN_APP + 1))
-                DATA_SIZE="$(${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell df /data | awk 'NR==2 {printf "%.2f", ($3/1024/1024)}' 2>>$MST_LOG)"
-                if echo -e -n "$COLOR_30" && ${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell pm clear "$ONE_CLEAN_APP" </dev/null
+                DATA_SIZE="$(termux-adb -s "$SELEC_ADB_DEVICE" shell df /data | awk 'NR==2 {printf "%.2f", ($3/1024/1024)}' 2>>$MST_LOG)"
+                if echo -e -n "$COLOR_30" && termux-adb -s "$SELEC_ADB_DEVICE" shell pm clear "$ONE_CLEAN_APP" </dev/null
                 then
                     OKAY_CLEAN_APP=$((OKAY_CLEAN_APP + 1))
-                    RM_DATA_MB="$(awk '{printf "%.2f", ($1 - $2) * 1024}' <<< "$DATA_SIZE $(${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell df /data | awk 'NR==2 {printf "%.2f", ($3/1024/1024)}' 2>>$MST_LOG)" 2>>$MST_LOG)"
+                    RM_DATA_MB="$(awk '{printf "%.2f", ($1 - $2) * 1024}' <<< "$DATA_SIZE $(termux-adb -s "$SELEC_ADB_DEVICE" shell df /data | awk 'NR==2 {printf "%.2f", ($3/1024/1024)}' 2>>$MST_LOG)" 2>>$MST_LOG)"
                     echo -e "${COLOR_32}[OKAY]${COLOR_33}数据清理成功 本次约释放'${COLOR_36}$RM_DATA_MB${COLOR_33}MB'存储空间${COLOR_0}"
                 else
                     echo -e "${COLOR_31}[ERROR]${COLOR_33}无法通过ADB命令删除'${COLOR_36}$ONE_CLEAN_APP${COLOR_33}'的全部数据${COLOR_0}"
                     echo
-                    echo -e "${COLOR_35}[CMD]${COLOR_33}尝试手动执行命令: ${COLOR_36}${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell pm clear "$ONE_CLEAN_APP"${COLOR_0}"
+                    echo -e "${COLOR_35}[CMD]${COLOR_33}尝试手动执行命令: ${COLOR_36}termux-adb -s "$SELEC_ADB_DEVICE" shell pm clear "$ONE_CLEAN_APP"${COLOR_0}"
                fi
             done <<< "$USR_OKAY_PKGE"
             REBOOT_FL; return 0
@@ -1876,7 +1860,7 @@ MiShuiTool_ADB_main() {
         while true
         do
             
-            read -r -e -p $'\001\033[0;35;1m\002[>_]\001\033[0;33;1m\002输入命令:\001\033[0;32;1m\002${EVAL_AF}adb -s '"$SELEC_ADB_DEVICE"$' \001\033[0;1m\002' ADB_SHELL_CMD
+            read -r -e -p $'\001\033[0;35;1m\002[>_]\001\033[0;33;1m\002输入命令:\001\033[0;32;1m\002termux-adb -s '"$SELEC_ADB_DEVICE"$' \001\033[0;1m\002' ADB_SHELL_CMD
             if [ -z "$ADB_SHELL_CMD" ]
             then
                 continue
@@ -1885,7 +1869,7 @@ MiShuiTool_ADB_main() {
                 REBOOT_FL; return 0
             else
                 [[ "$ADB_SHELL_CMD" == adb* ]] && ADB_SHELL_CMD="${ADB_SHELL_CMD#adb}"
-                if eval "${EVAL_AF}adb -s $SELEC_ADB_DEVICE $ADB_SHELL_CMD"
+                if eval "termux-adb -s $SELEC_ADB_DEVICE $ADB_SHELL_CMD"
                 then
                     echo -e "${COLOR_32} - 执行成功${COLOR_0}"
                 else
@@ -1909,7 +1893,7 @@ MiShuiTool_ADB_main() {
             MISHUI_MAIN_TIP=修改/恢复屏幕分辨率
             SEE_USB_DEVICES
             SAVE_THE_NEW_SIZE() {
-                if ! BAK_ADB_SIZE="$(${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell wm size 2>>$MST_LOG | sed 's/.*size: //g')" && [ -z "$BAK_ADB_SIZE" ]
+                if ! BAK_ADB_SIZE="$(termux-adb -s "$SELEC_ADB_DEVICE" shell wm size 2>>$MST_LOG | sed 's/.*size: //g')" && [ -z "$BAK_ADB_SIZE" ]
                 then
                     echo -e "${COLOR_35}[WARN]${COLOR_31}无法备份目标设备当前屏幕分辨率 继续执行可能含有风险${COLOR_33} 是否继续 >>${COLOR_0}"
                     echo -e "${COLOR_36}[+][1›确认风险并继续/2›取消并返回主页]*ᐷ${COLOR_01}"
@@ -1927,7 +1911,7 @@ MiShuiTool_ADB_main() {
             }
             SET_THE_BAK_SIZE() {
                 echo -e "${COLOR_35}[Restoring]${COLOR_33}正在将目标设备恢复至'${COLOR_36}$BAK_ADB_SIZE${COLOR_33}'分辨率...${COLOR_30}"
-                if ${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell wm size $BAK_ADB_SIZE
+                if termux-adb -s "$SELEC_ADB_DEVICE" shell wm size $BAK_ADB_SIZE
                 then
                     echo -e "${COLOR_32}[OKAY]${COLOR_33}原分辨率恢复成功:${COLOR_36}$BAK_ADB_SIZE${COLOR_0}"
                     REBOOT_FL; return 0
@@ -1986,7 +1970,7 @@ MiShuiTool_ADB_main() {
                 REBOOT_FL; return 0
                 ;;
             esac
-            if ${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell wm size $SETTING_SIZE
+            if termux-adb -s "$SELEC_ADB_DEVICE" shell wm size $SETTING_SIZE
             then
                 echo -e "${COLOR_32}[OKAY]${COLOR_33}设置成功 现在测试目标设备能否正常操作触摸并依据测试结果选择操作 >>${COLOR_0}"
                 echo -e "${COLOR_36}[+][1›屏幕正常并确认修改/2›屏幕失效立即恢复]*ᐷ${COLOR_01}"
@@ -2002,7 +1986,7 @@ MiShuiTool_ADB_main() {
                 REBOOT_FL; return 0
             else
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}设置失败 尝试手动执行命令 >>${COLOR_0}"
-                echo -e "${COLOR_35}[CMD]${COLOR_33}命令: ${COLOR_36}${EVAL_AF}adb -s $SELEC_ADB_DEVICE shell wm size $SETTING_SIZE${COLOR_0}"
+                echo -e "${COLOR_35}[CMD]${COLOR_33}命令: ${COLOR_36}termux-adb -s $SELEC_ADB_DEVICE shell wm size $SETTING_SIZE${COLOR_0}"
                 REBOOT_FL; return 0
             fi
             ;;
@@ -2016,14 +2000,14 @@ MiShuiTool_ADB_main() {
                 read -r FALSE_PAS
                 case "$FALSE_PAS" in
                 '1' | 'y' | 'Y')
-                    if ${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell settings put global cached_apps_freezer $1
+                    if termux-adb -s "$SELEC_ADB_DEVICE" shell settings put global cached_apps_freezer $1
                     then
                         echo -e "${COLOR_32}[OKAY]${COLOR_33}已修改 重启后生效${COLOR_0}"
                         echo -e "${COLOR_35}[STEP]${COLOR_33}重启:${COLOR_36}MST主页 ${COLOR_33}-> ${COLOR_36}ADB调试工具 ${COLOR_33}-> ${COLOR_36}重启连接设备 ${COLOR_33}-> ${COLOR_36}重启至系统${COLOR_0}"
                         REBOOT_FL; return 0
                     else
                         echo -e "${COLOR_31}[ERROR]${COLOR_33}修改失败 尝试手动执行命令${COLOR_0}"
-                        echo -e "${COLOR_35}[CMD]${COLOR_33}命令:${COLOR_36}${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell settings put global cached_apps_freezer $1${COLOR_0}"
+                        echo -e "${COLOR_35}[CMD]${COLOR_33}命令:${COLOR_36}termux-adb -s "$SELEC_ADB_DEVICE" shell settings put global cached_apps_freezer $1${COLOR_0}"
                         REBOOT_FL; return 0
                     fi
                     ;;
@@ -2033,7 +2017,7 @@ MiShuiTool_ADB_main() {
                 esac
             }
             echo -e -n "${COLOR_35}[PAS]${COLOR_33}正在检查目标设备是否支持墓碑模式:${COLOR_0}"
-            case "$(${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell settings get global cached_apps_freezer)" in
+            case "$(termux-adb -s "$SELEC_ADB_DEVICE" shell settings get global cached_apps_freezer)" in
             'enabled')
                 echo -e "${COLOR_32}设备支持并已启用${COLOR_0}"
                 START_OUT_THE_PAS 'disabled' '关闭' 'TURE'
@@ -2110,7 +2094,7 @@ MiShuiTool_AUTO_main() {
             esac
         }
         echo -e -n "${COLOR_35}[PATCH]${COLOR_33}校验目标设备最新安全补丁更新日期:${COLOR_36}$DEVICES_PATCHTIME${COLOR_33}...${COLOR_0}"
-        DEVICES_PATCHTIME="$(${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell getprop ro.build.version.security_patch 2>>$MST_LOG || echo error)"
+        DEVICES_PATCHTIME="$(termux-adb -s "$SELEC_ADB_DEVICE" shell getprop ro.build.version.security_patch 2>>$MST_LOG || echo error)"
         if [ "$DEVICES_PATCHTIME" = error ]
         then
             CHUCK_PATCH_TIME "${COLOR_31}[ERROR]${COLOR_33}无法读取目标设备安全补丁更新日期 此功能依赖的漏洞需要安全补丁日期低于${COLOR_36}2826年3月${COLOR_33} 是否继续 >>${COLOR_0}" 未知
@@ -2120,7 +2104,7 @@ MiShuiTool_AUTO_main() {
         else
             echo -e "${COLOR_32}通过${COLOR_0}"
         fi
-        KERNELSU_VERSION="$(${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell dumpsys package me.weishu.kernelsu 2>>$MST_LOG | awk $'/versionCode/ {print $1}' | ses 's/.*versionCode=//g')"
+        KERNELSU_VERSION="$(termux-adb -s "$SELEC_ADB_DEVICE" shell dumpsys package me.weishu.kernelsu 2>>$MST_LOG | awk $'/versionCode/ {print $1}' | ses 's/.*versionCode=//g')"
         if [ -z "$KERNELSU_VERSION" ] || [ "$KERNELSU_VERSION" -lt 32389 ]
         then
             echo -e "${COLOR_35}[KSU]${COLOR_33}需要从KernrlSU的官方仓库下载Releases可越狱版本 >>${COLOR_0}"
@@ -2145,7 +2129,7 @@ MiShuiTool_AUTO_main() {
                 REBOOT_FL; return 0
             fi
             echo -e "${COLOR_35}[Installing]${COLOR_33}下载完毕正在安装KernelSU...${COLOR_30}"
-            if ! ${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" install "$DOWNLOAD_PATH/KernelSU_v3.2.0_32389-Releases.apk"
+            if ! termux-adb -s "$SELEC_ADB_DEVICE" install "$DOWNLOAD_PATH/KernelSU_v3.2.0_32389-Releases.apk"
             then
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}自动安装失败 若目标设备有安装授权弹窗需点击允许${COLOR_0}"
                 echo -e "${COLOR_35}[Tip]${COLOR_33}此前下载的KernelSU安装包位于本机路径:${COLOR_36}$DOWNLOAD_PATH/KernelSU_v3.2.0_32389-Releases.apk${COLOR_33} 尝试在目标设备上安装后再试${COLOR_0}"
@@ -2166,7 +2150,7 @@ MiShuiTool_AUTO_main() {
         ADB_FASTBOOT_CMD=fastboot
         SEE_USB_DEVICES
         echo -e "${COLOR_33}[Setting]${COLOR_33}正在尝试通过fastboot命令将SELinux设置为宽容模式...${COLOR_0}"
-        if ! ${EVAL_AF}fastboot -s "$SELEC_FASTBOOT_DEVICE" oem set-gpu-preemption 0 androidboot.selinux=permissive &>>$MST_LOG
+        if ! termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" oem set-gpu-preemption 0 androidboot.selinux=permissive &>>$MST_LOG
         then
             echo -e "${COLOR_31}[ERROR]${COLOR_33}设置失败 该漏洞在目标设备上可能已修复${COLOR_0}"
             ALL_TIP_TION="${COLOR_35}[RE]${COLOR_33}选择需要重启的目标模式 >>${COLOR_0}"
@@ -2182,7 +2166,7 @@ MiShuiTool_AUTO_main() {
         FASTBOOT_CONTINUE_TRY() {
             while true
             do
-                if ${EVAL_AF}fastboot -s "$SELEC_FASTBOOT_DEVICE" continue &>>$MST_LOG
+                if termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" continue &>>$MST_LOG
                 then
                     return 0
                 elif [ "$FASTBOOT_CONTINUE_TRY_NUMNER" -ge 3 ]
@@ -2221,14 +2205,14 @@ MiShuiTool_AUTO_main() {
         ADB_FASTBOOT_CMD=adb
         MISHUI_MAIN_TIP='一键ROOT'
         SEE_USB_DEVICES
-        if [ "$(${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell getprop ro.boot.flash.locked)" = 1 ]
+        if [ "$(termux-adb -s "$SELEC_ADB_DEVICE" shell getprop ro.boot.flash.locked)" = 1 ]
         then
             echo -e "${COLOR_35}[WARN]${COLOR_31}目标设备似乎没有解锁BootLoader${COLOR_0}"
             echo -e "${COLOR_31}[!]${COLOR_33}要继续操作必须先为目标设备${COLOR_36}解锁BootLoader${COLOR_33}(BL锁)${COLOR_0}"
             REBOOT_FL; return 0
         fi
-        ALL_SLOT_ROOT="$(${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell printf '%s\n' /dev/block/by-name/* 2>>$MST_LOG | grep 'boot')"
-        ROOT_SLOT_A_B="$(${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell getprop ro.boot.slot_suffix)"
+        ALL_SLOT_ROOT="$(termux-adb -s "$SELEC_ADB_DEVICE" shell printf '%s\n' /dev/block/by-name/* 2>>$MST_LOG | grep 'boot')"
+        ROOT_SLOT_A_B="$(termux-adb -s "$SELEC_ADB_DEVICE" shell getprop ro.boot.slot_suffix)"
         if grep -w "init_boot$ROOT_SLOT_A_B" <<< "$ALL_SLOT_ROOT" &>>$MST_LOG
         then
             NEED_FLASH_SLOT_NAME="init_boot$ROOT_SLOT_A_B"
@@ -2290,7 +2274,7 @@ MiShuiTool_AUTO_main() {
             REBOOT_FL; return 0
         fi
         echo -e "${COLOR_35}[PUSH]${COLOR_33}正在将$ECHO_DOWNLOAD_OR_LOCAL_FILE_TIP的镜像文件推送至目标设备...${COLOR_0}"
-        if ! ${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" push "$THE_LOCAL_IMG_PATH" "$THE_LOCAL_IMG_PATH" &>>$MST_LOG
+        if ! termux-adb -s "$SELEC_ADB_DEVICE" push "$THE_LOCAL_IMG_PATH" "$THE_LOCAL_IMG_PATH" &>>$MST_LOG
         then
             echo -e "${COLOR_31}[ERROR]${COLOR_33}镜像文件推送失败 检查设备是否意外断开后再试一次${COLOR_0}"
             REBOOT_FL; return 0
@@ -2300,7 +2284,7 @@ MiShuiTool_AUTO_main() {
         echo -e "${COLOR_35}[Tip]${COLOR_33}接下来在目标设备上需要的Root管理器修补推送的镜像文件${COLOR_0}"
         ENTER_ANY_CONTINUE 修补完毕后
         echo -e "${COLOR_35}[Searching]${COLOR_33}正在目标设备上搜索修补后的镜像文件...${COLOR_0}"
-        ALL_PATCH_IMG_FILE="$(${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell ls $DOWNLOAD_PATH/*-patched-*-*.img 2>>$MST_LOG)"
+        ALL_PATCH_IMG_FILE="$(termux-adb -s "$SELEC_ADB_DEVICE" shell ls $DOWNLOAD_PATH/*-patched-*-*.img 2>>$MST_LOG)"
         if [ -z "$ALL_PATCH_IMG_FILE" ]
         then
             echo -e "${COLOR_35}[PATH]${COLOR_33}没有找到已修补的文件 输入修补后的镜像文件在目标设备上的完整路径 >>${COLOR_0}"
@@ -2313,7 +2297,7 @@ MiShuiTool_AUTO_main() {
             SHOW_FUNC_MENU
             THE_NEED_PATCH_IMG="$DOWNLOAD_PATH/$(sed -n ${FUNC_CONT}p <<< "$ALL_PATCH_IMG_FILE")"
         fi
-        if ! ${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell test -f "$THE_NEED_PATCH_IMG" &>>$MST_LOG
+        if ! termux-adb -s "$SELEC_ADB_DEVICE" shell test -f "$THE_NEED_PATCH_IMG" &>>$MST_LOG
         then
             echo -e "${COLOR_31}[!]${COLOR_33}文件'${COLOR_36}$THE_NEED_PATCH_IMG${COLOR_33}'在目标设备上不存在或无法访问${COLOR_0}"
             echo -e "${COLOR_35}[Tip]${COLOR_33}尝试将修补后的镜像文件移动至ADB权限可读取的文件夹例如'${COLOR_36}/data/local/tmp${COLOR_33}'后再试一次${COLOR_0}"
@@ -2321,7 +2305,7 @@ MiShuiTool_AUTO_main() {
         fi
         echo
         echo -e "${COLOR_35}[PATCH]${COLOR_33}正在从目标设备提取修补后的镜像文件:${COLOR_36}$THE_NEED_PATCH_IMG${COLOR_33}...${COLOR_0}"
-        if ! ${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" pull "$THE_NEED_PATCH_IMG" "$THE_NEED_PATCH_IMG" 2>>$MST_LOG || ! [ -f "$THE_NEED_PATCH_IMG" ]
+        if ! termux-adb -s "$SELEC_ADB_DEVICE" pull "$THE_NEED_PATCH_IMG" "$THE_NEED_PATCH_IMG" 2>>$MST_LOG || ! [ -f "$THE_NEED_PATCH_IMG" ]
         then
             echo -e "${COLOR_31}[ERROR]${COLOR_33}镜像文件提取失败 检查设备是否意外断开后再试一次${COLOR_0}"
             REBOOT_FL; return 0
@@ -2354,7 +2338,7 @@ MiShuiTool_AUTO_main() {
                 REBOOT_FL; return 0
             fi
             echo -e -n "$COLOR_35[Flashing]${COLOR_33}正在将'${COLOR_36}$THE_NEED_PATCH_IMG${COLOR_33}'刷入'${COLOR_36}$NEED_FLASH_SLOT_NAME${COLOR_33}'分区...${COLOR_0}"
-            if ${EVAL_AF}fastboot -s "$SELEC_FASTBOOT_DEVICE" flash $NEED_FLASH_SLOT_NAME "$THE_NEED_PATCH_IMG" &>>$MST_LOG
+            if termux-fastboot -s "$SELEC_FASTBOOT_DEVICE" flash $NEED_FLASH_SLOT_NAME "$THE_NEED_PATCH_IMG" &>>$MST_LOG
             then
                 echo -e "${COLOR_32}OKAY${COLOR_0}"
                 REBOOT_USB_DEVICES system
@@ -2380,7 +2364,7 @@ MiShuiTool_AUTO_main() {
                     echo -e "${COLOR_33} - 文件1(本机):${COLOR_36} $THE_LOCAL_IMG_PATH${COLOR_0}"
                     echo -e "${COLOR_33} - 文件2(本机):${COLOR_36} $THE_NEED_PATCH_IMG${COLOR_0}"
                 fi
-                if USB_DEVICES_ADB && ${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell rm "$THE_LOCAL_IMG_PATH" &>>$MST_LOG && ${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell rm "$THE_NEED_PATCH_IMG" &>>$MST_LOG
+                if USB_DEVICES_ADB && termux-adb -s "$SELEC_ADB_DEVICE" shell rm "$THE_LOCAL_IMG_PATH" &>>$MST_LOG && termux-adb -s "$SELEC_ADB_DEVICE" shell rm "$THE_NEED_PATCH_IMG" &>>$MST_LOG
                 then
                     echo -e "${COLOR_32}[OKAY]${COLOR_33}目标设备临时镜像文件已删除${COLOR_0}"
                 else
@@ -2573,13 +2557,11 @@ MiShuiTool_i_main() {
 trap wait EXIT
 if [ ! -d $MST_HOME/ ]
 then
-    if mkdir -p $MST_HOME &>>/dev/null
+    if mkdir -p $MST_HOME &>>$MST_LOG
     then
         HEAD_TIP_MISHUITOOL="${COLOR_32}Okay:${COLOR_31}已自动初始化运行环境${COLOR_0}"
     else
         HEAD_TIP_MISHUITOOL="${COLOR_31}Error:${COLOR_31}初始化运行环境失败 需重启脚本${COLOR_0}"
-        MISHUI_MAIN_TIP=需重新启动MiShuiTool
-        MISHUI_MAIN
         EXIT_SHELL 1
     fi
 fi
@@ -2591,7 +2573,7 @@ elif [ "$(stat -c%s $MST_HOME/MST运行日志.log)" -gt 10240 ]
 then
     echo "[$(date +%Y-%m-%d) $(date +%H:%M:%S)] 日志文件过大已自动清除" &>$MST_LOG
 fi
-if [ "$COLUMNS" -lt 65 ] 2>>$MST_LOG
+if [ "$COLUMNS" -lt "65" ]
 then
      MAIN_HAED_TIP
      echo -e "${COLOR_35}[INFO]${COLOR_33}当前终端宽度过窄 为保证视觉效果需将终端宽度调整为'${COLOR_36}65${COLOR_33}'以上${COLOR_0}"
