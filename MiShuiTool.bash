@@ -12,7 +12,7 @@ MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
 MST_UPDATE_TIME='26.4.5 Official'
-NOW_VERSION=10043
+NOW_VERSION=10044
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -771,7 +771,7 @@ MiShuiTool_DEV_main() {
                 fi
                 echo
                 echo -e "${COLOR_35}[Connecting]${COLOR_33}正在与'${COLOR_36}$ONLY_IP${COLOR_33}'配对...${COLOR_0}"
-                if ! grep -q paired <<< "$(${EVAL_AF}adb pair "$ONLY_IP:$ONLY_PORT" <<< "$INPUT_PAIR_CODE" 2>&1)" &>>$MST_LOG
+                if ! grep -q paired <<< "$(adb pair "$ONLY_IP:$ONLY_PORT" <<< "$INPUT_PAIR_CODE" 2>&1)" &>>$MST_LOG
                 then
                     echo -e "${COLOR_31}[ERROR]${COLOR_33}无法与'${COLOR_36}$IP_AND_PORT${COLOR_33}'配对${COLOR_0}"
                     echo -e "${COLOR_35}[Tip]${COLOR_33}配对开始时应保持'${COLOR_36}与设备配对${COLOR_33}'页面的开启状态 除非配对完毕后自动退出${COLOR_0}"
@@ -848,7 +848,7 @@ MiShuiTool_DEV_main() {
             sed -i s/$ONLY_IP//g $MST_HOME/Pair_devices.txt
             REBOOT_FL; return 0
         }
-        if grep connected <<< "$(${EVAL_AF}adb connect $NEW_IP_AND_PORT 2>>$MST_LOG)"
+        if grep connected <<< "$(adb connect $NEW_IP_AND_PORT 2>>$MST_LOG)"
         then
             echo -e "${COLOR_32}[OKAY]${COLOR_33}连接成功 正在校验...${COLOR_0}"
             if USB_DEVICES_$FASTBOOT_OR_ADB_NAME
