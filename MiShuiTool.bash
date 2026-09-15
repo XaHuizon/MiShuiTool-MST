@@ -12,7 +12,7 @@ MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
 MST_UPDATE_TIME='26.4.5 Official'
-NOW_VERSION=10044
+NOW_VERSION=10045
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -482,7 +482,7 @@ REBOOT_USB_DEVICES() {
         ;;
     esac
     echo -e "${COLOR_35}[Rebooting]${COLOR_33}正在将目标设备重启至'${COLOR_36}$REBOOT_NAME${COLOR_33}'模式...${COLOR_30}"
-    if $ADB_FASTBOOT_CMD reboot $REBOOT_PT
+    if $EVAL_AF$ADB_FASTBOOT_CMD reboot $REBOOT_PT
     then
         echo -e "${COLOR_32}[OKAY]${COLOR_33}已将目标设备重启至'${COLOR_36}$REBOOT_NAME${COLOR_33}'模式${COLOR_0}"
     else
@@ -930,7 +930,7 @@ MiShuiTool_FB_main() {
                 MAIN_REBOOT; return 0
                 ;;
             esac
-        elif [ "$(fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar has-slot:$CHUCK_SLOT 2>&1 | awk 'NR==1{print $2}')" = yes ]
+        elif [ "$(${EVAL_AF}fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar has-slot:$CHUCK_SLOT 2>&1 | awk 'NR==1{print $2}')" = yes ]
         then
             echo -e "${COLOR_35}[A/B]${COLOR_33}分区'${COLOR_36}$FLASH_IMG_NAME${COLOR_33}'在该设备上是${COLOR_36}A/B分区${COLOR_33} 选择需要刷入的槽位 >>${COLOR_0}"
             echo -e -n "${COLOR_36}[+][1›自动(当前槽位)/2›A槽位/3›B槽位/4›返回主页]*ᐷ${COLOR_01}"
