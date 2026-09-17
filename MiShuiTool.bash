@@ -12,7 +12,7 @@ MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
 MST_UPDATE_TIME='26.4.5 Official'
-NOW_VERSION=10045
+NOW_VERSION=10046
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -2120,11 +2120,11 @@ MiShuiTool_AUTO_main() {
         else
             echo -e "${COLOR_32}通过${COLOR_0}"
         fi
-        KERNELSU_VERSION="$(${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell dumpsys package me.weishu.kernelsu 2>>$MST_LOG | awk $'/versionCode/ {print $1}' | ses 's/.*versionCode=//g')"
+        KERNELSU_VERSION="$(${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell dumpsys package me.weishu.kernelsu 2>>$MST_LOG | awk $'/versionCode/ {print $1}' | sed 's/.*versionCode=//g')"
         if [ -z "$KERNELSU_VERSION" ] || [ "$KERNELSU_VERSION" -lt 32389 ]
         then
             echo -e "${COLOR_35}[KSU]${COLOR_33}需要从KernrlSU的官方仓库下载Releases可越狱版本 >>${COLOR_0}"
-            ADB_FASTBOOT_VER
+            echo
             echo -e "${COLOR_35}[GitHub]${COLOR_33}此处下载GitHub仓库'${COLOR_32}https://github.com/tiann/KernelSU/${COLOR_33}'中官方的${COLOR_36}KernelSU${COLOR_33}正式发布版${COLOR_0}"
             echo -e "${COLOR_35}[DEV]${COLOR_33}开发者:${COLOR_36}tiann${COLOR_0}"
             echo -e "${COLOR_35}[GPL-3.0]${COLOR_32}Copyright (c) 2026 tiann${COLOR_0}"
@@ -2139,7 +2139,7 @@ MiShuiTool_AUTO_main() {
             esac
             echo
             echo -e "${COLOR_35}[Downloading]${COLOR_33}正在下载KernelSU...${COLOR_0}"
-            if ! curl --progress-bar -L -o  "$DOWNLOAD_PATH/KernelSU_v3.2.0_32389-Releases.apk" 'https://github.com/tiann/KernelSU/releases/download/v3.2.0/KernelSU_v3.2.0_32389-release.apk'
+            if ! curl --progress-bar -L -o  "$DOWNLOAD_PATH/KernelSU_v3.3.0_32601-release.apk" 'https://github.com/tiann/KernelSU/releases/download/v3.3.0/KernelSU_v3.3.0_32601-release.apk'
             then
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}下载失败 尝试连接魔法或手动下载安装后重试${COLOR_0}"
                 REBOOT_FL; return 0
