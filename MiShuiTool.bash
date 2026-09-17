@@ -2145,7 +2145,7 @@ MiShuiTool_AUTO_main() {
                 REBOOT_FL; return 0
             fi
             echo -e "${COLOR_35}[Installing]${COLOR_33}下载完毕正在安装KernelSU...${COLOR_30}"
-            if ! ${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" install "$DOWNLOAD_PATH/KernelSU_v3.2.0_32389-Releases.apk"
+            if ! ${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" install "$DOWNLOAD_PATH/KernelSU_v3.3.0_32601-release.apk"
             then
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}自动安装失败 若目标设备有安装授权弹窗需点击允许${COLOR_0}"
                 echo -e "${COLOR_35}[Tip]${COLOR_33}此前下载的KernelSU安装包位于本机路径:${COLOR_36}$DOWNLOAD_PATH/KernelSU_v3.2.0_32389-Releases.apk${COLOR_33} 尝试在目标设备上安装后再试${COLOR_0}"
