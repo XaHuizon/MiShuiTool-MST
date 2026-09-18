@@ -12,7 +12,7 @@ MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
 MST_UPDATE_TIME='26.4.6 Official'
-NOW_VERSION=10047
+NOW_VERSION=10048
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -1061,6 +1061,7 @@ MiShuiTool_FB_main() {
                 ERROR_CONT
                 ;;
             esac
+            REBOOT_FL; return 0
             ;;
         '7')
             MAIN_REBOOT; return 0
