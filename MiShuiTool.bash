@@ -11,8 +11,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='26.4.5 Official'
-NOW_VERSION=10046
+MST_UPDATE_TIME='26.4.6 Official'
+NOW_VERSION=10047
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -108,7 +108,7 @@ su | -s | root)
         EVAL_AF='sudo '
     else
         EVAL_AF='termux-'
-        HEAD_TIP_MISHUITOOL="${COLOR_31}WARIN:${COLOR_37}未获得Root权限 已降级至免Root模式${COLOR_0}"
+        HEAD_TIP_MISHUITOOL="${COLOR_31}WARN:${COLOR_37}未获得Root权限 已降级至免Root模式${COLOR_0}"
     fi
     ;;
 *)
@@ -136,6 +136,7 @@ CONTINUE_YN() {
     echo -e -n "${COLOR_35}[Continue]${COLOR_33}按任意键继续 回车键取消${COLOR_0}"
     read -r -s -n1 CONTINUE
     echo
+    [ -z "$CONTINUE" ]
 }
 ERROR_CONT() {
     echo -e "${COLOR_31}[!]${COLOR_33}异常选项:${COLOR_36}$FUNC_CONT${COLOR_0}"
@@ -910,7 +911,7 @@ MiShuiTool_FB_main() {
     MISHUI_MAIN
     echo
     echo -e "${COLOR}[FB]${COLOR_33}选择Fastboot刷机功能 >>${COLOR_0}"
-    echo -e "${COLOR_35}[SLOT]${COLOR_33}›1*-${COLOR_36}刷入/临时启动镜像${COLOR_35}[RE]${COLOR_33}›2*-${COLOR_36}重启连接设备${COLOR_0}"
+    echo -e "${COLOR_35}[SLOT]${COLOR_33}›1*-${COLOR_36}设备分区管理${COLOR_35}[RE]${COLOR_33}›2*-${COLOR_36}重启连接设备${COLOR_0}"
     echo -e "${COLOR_35}[UBL]${COLOR_33}›3*-${COLOR_36}BL解锁(第三方工具)${COLOR_35}[ROM]${COLOR_33}›4*-${COLOR_36}刷入ROM${COLOR_0}"
     echo -e "${COLOR_35}[CMD]${COLOR_33}›5*-${COLOR_36}执行Fastboot命令${COLOR_35}[HOME]${COLOR_33}›6*-${COLOR_36}返回主页${COLOR_0}"
     echo -e -n "${COLOR}[-${COLOR_32}FB${COLOR}-]${COLOR_33}输入选项*ᐷ${COLOR_0}"
@@ -918,10 +919,10 @@ MiShuiTool_FB_main() {
     read -r FUNC_CONT
     echo -e "${COLOR_30}-------------------------------------------------${COLOR_0}"
     CHUCK_SLOT_FLASH() {
-        CHUCK_SLOT="$1"
-        if [ "$(${EVAL_AF}fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar partition-type:$CHUCK_SLOT 2>&1 | awk 'NR==1{print $2}')" != raw ] &>>$MST_LOG
+        local CHUCK_SLOT="$1"
+        if [ "$(${EVAL_AF}fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar partition-type:$CHUCK_SLOT 2>&1 | awk 'NR==1{print $2}')" != raw ]
         then
-            echo -e "${COLOR_31}[WARN]${COLOR_33}MST检测到分区'${COLOR_36}$FLASH_IMG_NAME${COLOR_33}'在目标设备上可能不存在或不可刷入 继续操作可能造成不可预知的后果${COLOR_0}"
+            echo -e "${COLOR_31}[WARN]${COLOR_33}MST检测到分区'${COLOR_36}$CHUCK_SLOT${COLOR_33}'在目标设备上可能不存在或不可刷入 继续操作可能造成不可预知的后果${COLOR_0}"
             echo -e "${COLOR_35}[Continue]${COLOR_33}需慎重考虑是否继续 >>${COLOR_0}"
             echo -e -n "${COLOR_36}[+][1›无视风险继续操作/2›取消操作]*ᐷ${COLOR_01}"
             read -r YN_FLASH_ERROR_SLOT
@@ -932,15 +933,15 @@ MiShuiTool_FB_main() {
             esac
         elif [ "$(${EVAL_AF}fastboot -s "$SELEC_FASTBOOT_DEVICE" getvar has-slot:$CHUCK_SLOT 2>&1 | awk 'NR==1{print $2}')" = yes ]
         then
-            echo -e "${COLOR_35}[A/B]${COLOR_33}分区'${COLOR_36}$FLASH_IMG_NAME${COLOR_33}'在该设备上是${COLOR_36}A/B分区${COLOR_33} 选择需要刷入的槽位 >>${COLOR_0}"
+            echo -e "${COLOR_35}[A/B]${COLOR_33}分区'${COLOR_36}$CHUCK_SLOT${COLOR_33}'在该设备上是${COLOR_36}A/B分区${COLOR_33} 选择需要刷入的槽位 >>${COLOR_0}"
             echo -e -n "${COLOR_36}[+][1›自动(当前槽位)/2›A槽位/3›B槽位/4›返回主页]*ᐷ${COLOR_01}"
             read YN_SELEC_AB
             case "$YN_SELEC_AB" in
               1 | AUTO | 自动) true
                 ;;
-              2 | A) FLASH_IMG_SLOT="${FLASH_IMG_SLOT}_a"
+              2 | A) FLASH_IMG_SLOT="${CHUCK_SLOT}_a"
                 ;;
-              3 | B) FLASH_IMG_SLOT="${FLASH_IMG_SLOT}_b"
+              3 | B) FLASH_IMG_SLOT="${CHUCK_SLOT}_b"
                 ;;
               4 | 返回主页)
                 MAIN_REBOOT; return 0
@@ -949,15 +950,16 @@ MiShuiTool_FB_main() {
         fi
     }
     case "$FUNC_CONT" in
-    '1' | '分区/镜像管理' | 'SLOT')
+    '1' | '设备分区管理' | 'SLOT')
         FLASH_IMG_TO_SLOT() {
-            local FLASH_IMG_NAME=$1
+            local IMG_FOR_APER=$1
             local FLASH_IMG_SLOT=$2
             local IMG_FILE_PA IMG_FILE_NAME IMG_FILE_PATH
             CHUCK_SLOT_FLASH "$FLASH_IMG_SLOT"
-            echo -e "${COLOR_35}[FILE]${COLOR_33}输入要刷入'${COLOR_36}$FLASH_IMG_NAME${COLOR_33}'分区的镜像文件路径 >>${COLOR_0}"
+            [ "$IMG_FOR_APER" = flash ] && echo -e "${COLOR_35}[FILE]${COLOR_33}输入要刷入'${COLOR_36}$FLASH_IMG_NAME${COLOR_33}'分区的镜像文件路径 >>${COLOR_0}"
+            [ "$IMG_FOR_APER" = boot ] && echo -e "${COLOR_35}[FILE]${COLOR_33}输入要临时启动的镜像文件路径 >>${COLOR_0}"
             read -r -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' IMG_FILE_PATH
-            IMG_FILE_NAME=$(basename "$IMG_FILE_PATH" 2>>$MST_LOG)
+            IMG_FILE_NAME="$(basename "$IMG_FILE_PATH" 2>>$MST_LOG)"
             if [ -z "$IMG_FILE_PATH" ]
             then
                 echo -e "${COLOR_31}[!]${COLOR_33}输入不可为空${COLOR_0}"
@@ -967,36 +969,36 @@ MiShuiTool_FB_main() {
                 echo -e "${COLOR_31}[!]${COLOR_33}文件'${COLOR_36}$IMG_FILE_NAME${COLOR_33}'路径不存在/无法读取${COLOR_0}"
                 REBOOT_FL; return 0
             fi
-            echo -e "$COLOR_35[Flashing]${COLOR_33}正在将'${COLOR_36}$IMG_FILE_NAME${COLOR_33}'刷入'${COLOR_36}$FLASH_IMG_NAME${COLOR_33}'分区...${COLOR_30}"
-            if ${EVAL_AF}fastboot -s "$SELEC_FASTBOOT_DEVICE" flash $FLASH_IMG_SLOT "$IMG_FILE_PATH"
+            [ "$IMG_FOR_APER" = flash ] && echo -e "$COLOR_35[Flashing]${COLOR_33}正在将'${COLOR_36}$IMG_FILE_NAME${COLOR_33}'刷入'${COLOR_36}$FLASH_IMG_SLOT${COLOR_33}'分区...${COLOR_30}"
+            [ "$IMG_FOR_APER" = flash ] && echo -e "$COLOR_35[Booting]${COLOR_33}正在将'${COLOR_36}$FASTBOOT_IMG_FILE_NAME${COLOR_33}'推送至目标设备并启动...${COLOR_30}"
+            if ${EVAL_AF}fastboot -s "$SELEC_FASTBOOT_DEVICE" $IMG_FOR_APER $FLASH_IMG_SLOT "$IMG_FILE_PATH"
             then
-                ALL_TIP_TION="${COLOR_32}[OKAY]${COLOR_33}刷入成功 是否立即重启 >>${COLOR_0}"
+                ALL_TIP_TION="${COLOR_32}[OKAY]${COLOR_33}操作成功 是否立即重启 >>${COLOR_0}"
                 REBOOT_USB_DEVICES
             else
-                echo -e "${COLOR_31}[ERROR]${COLOR_33}刷入失败 检查设备是否正确连接或镜像文件是否正确${COLOR_0}"
+                echo -e "${COLOR_31}[ERROR]${COLOR_33}操作失败 检查设备是否正确连接或镜像文件是否正确${COLOR_0}"
             fi
             REBOOT_FL; return 0
-        }
-        
-        MISHUI_MAIN_TIP=分区镜像刷入
+        }        
+        MISHUI_MAIN_TIP=设备分区管理
         SEE_USB_DEVICES
         NOT_UNLOCK_ERROR
         echo -e "${COLOR_35}[SLOT]${COLOR_33}选择要刷入的分区 >>$COLOR_0"
         ALL_TIP_TION="${COLOR}[DEV]${COLOR_33}选择设备管理功能 >>${COLOR_0}"
-        ALL_OPTION=("1*-刷入Boot(_a/_b)" "2*-刷入Init_boot(_a/_b)" "3*-刷入Recovery(_a/_b)" "4*-刷入自定义分区" "5*-临时启动镜像" "6*-返回主页")
+        ALL_OPTION=("1*-刷入Boot(_a/_b)" "2*-刷入Init_boot(_a/_b)" "3*-刷入Recovery(_a/_b)" "4*-刷入自定义分区" "5*-临时启动镜像" "6*-格式化指定分区" "7*-返回主页")
         NOW_LINE
         SHOW_FUNC_MENU
         case "$FUNC_CONT" in
-        '1')
-            FLASH_IMG_TO_SLOT BOOT boot
+        1)
+            FLASH_IMG_TO_SLOT flash boot
             ;;
-        '2')
-            FLASH_IMG_TO_SLOT INIT_BOOT init_boot
+        2)
+            FLASH_IMG_TO_SLOT flash init_boot
             ;;
-        '3')
-            FLASH_IMG_TO_SLOT RECOVERY recovery
+        4)
+            FLASH_IMG_TO_SLOT flash recovery
             ;;
-        '4')
+        4)
             echo -e -n "${COLOR_35}[SLOT]${COLOR_33}输入要刷入的分区名称*ᐷ${COLOR_01}"
             read -r FLASH_IMG_NAME
             CHUCK_SLOT_FLASH "$FLASH_IMG_NAME"
@@ -1005,9 +1007,8 @@ MiShuiTool_FB_main() {
             read -r YN_INPUT_SLOT
             case "$YN_INPUT_SLOT" in
             '1' | 'y' | 'Y')
-                FLASH_IMG_NAME="${FLASH_IMG_NAME^^}"
                 echo -e "${COLOR_32}[CFM]${COLOR_33}已确定指定分区为:${COLOR_36}$FLASH_IMG_SLOT${COLOR_0}"
-                FLASH_IMG_TO_SLOT "$FLASH_IMG_NAME" "$FLASH_IMG_SLOT"
+                FLASH_IMG_TO_SLOT flash "$FLASH_IMG_SLOT"
                 ;;
              *)
                 MAIN_REBOOT; return 0
@@ -1017,28 +1018,51 @@ MiShuiTool_FB_main() {
         5)
             echo -e -n "${COLOR_35}[SLOT]${COLOR_33}可临时在目标设备上启动一个镜像文件而不直接修改分区(重启后失效) >>${COLOR_01}"
             echo
-            echo -e "${COLOR_35}[FILE]${COLOR_33}输入要临时启动的镜像文件路径 >>${COLOR_0}"
-            read -r -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' FASTBOOT_IMG_FILE_PATH
-            FASTBOOT_IMG_FILE_NAME=$(basename "$FASTBOOT_IMG_FILE_PATH" 2>>$MST_LOG)
-            if [ -z "$FASTBOOT_IMG_FILE_PATH" ]
-            then
-                echo -e "${COLOR_31}[!]${COLOR_33}输入不可为空${COLOR_0}"
-                REBOOT_FL; return 0
-            elif [ ! -f "$FASTBOOT_IMG_FILE_PATH" ]
-            then
-                echo -e "${COLOR_31}[!]${COLOR_33}文件'${COLOR_36}$FASTBOOT_IMG_FILE_NAME${COLOR_33}'路径不存在/无法读取${COLOR_0}"
-                REBOOT_FL; return 0
-            fi
-            echo -e "$COLOR_35[Booting]${COLOR_33}正在将'${COLOR_36}$FASTBOOT_IMG_FILE_NAME${COLOR_33}'推送至目标设备并启动...${COLOR_30}"
-            if ${EVAL_AF}fastboot -s "$SELEC_FASTBOOT_DEVICE" boot "$FASTBOOT_IMG_FILE_PATH"
-            then
-                echo -e "${COLOR_31}[OKAY]${COLOR_33}推送成功 目标设备正在重启至镜像文件${COLOR_0}"
-            else
-                echo -e "${COLOR_31}[ERROR]${COLOR_33}启动失败 镜像文件可能不可用或不适配${COLOR_0}"
-            fi
-            REBOOT_FL; return 0
+            FLASH_IMG_TO_SLOT boot
             ;;
-        '6')
+        6)
+            FASTBOOT_ERASE_SLOT() {
+                local EARSE_SLOT ALL_ERASE_SLOT="$1"
+                local OKAY_ERASE=0 ERROR_ERASE=0
+                echo -e "${COLOR_35}[Formatting]${COLOR_33}正在格式化分区:${COLOR_36}$ALL_ERASE_SLOT${COLOR_0})...${COLOR_30}"
+                for EARSE_SLOT in $ALL_ERASE_SLOT
+                do       
+                    if ${EVAL_AF}fastboot -s "$SELEC_FASTBOOT_DEVICE" erase $EARSE_SLOT
+                    then
+                        echo -e -n "${COLOR_32} - 成功:$EARSE_SLOT${COLOR_0}"
+                        OKAY_ERASE=$((OKAY_ERASE + 1))
+                    else
+                        echo -e -n "${COLOR_31} -! 失败:$EARSE_SLOT${COLOR_0}"
+                        ERROR_ERASE=$((ERROR_ERASE + 1))
+                    fi
+                done
+                echo -e "${COLOR_32}[AllDone]${COLOR_33}分区格式化结束(${COLOR_32}成功:$OKAY_ERASE${COLOR_33}/${COLOR_31}失败:$ERROR_ERASE${COLOR_33})${COLOR_0}"
+            }
+            ALL_TIP_TION="${COLOR}[ERASE]${COLOR_33}选择要格式化的分区 >>${COLOR_0}"
+            ALL_OPTION=("1*-恢复出厂设置(双清)" "2*-自定义分区" "3*-返回主页")
+            NOW_LINE
+            SHOW_FUNC_MENU
+            case "$FUNC_CONT" in
+            '1')
+                echo -e "${COLOR_31}[WARN]${COLOR_33}此操作会${COLOR_31}清楚全部用户数据${COLOR_33}且无法恢复 建议操作前备份重要文件${COLOR_0}"
+                CONTINUE_YN && FASTBOOT_ERASE_SLOT "userdata cache"
+                ;;
+            '2')
+                echo -e "${COLOR_35}[ERASE]${COLOR_33}输入要格式化的分区名称(多个分区以'${COLOR_36}-${COLOR_33}'符号分隔)${COLOR_0}"
+                read -r -e -p $'\033[0;33;1m*ᐷ\033[0;1m ' INPUT_ALL_SLOT
+                INPUT_ALL_SLOT="$(sed 's/[^a-zA-Z0-9]/ /g' <<< "$INPUT_ALL_SLOT")"
+                echo -e "${COLOR_35}[OPER]${COLOR_33}将要格式化的分区:${COLOR_36}$INPUT_ALL_SLOT${COLOR_0}"
+                CONTINUE_YN && FASTBOOT_ERASE_SLOT "$INPUT_ALL_SLOT"
+                ;;
+            '3')
+                MAIN_REBOOT; return 0
+                ;;
+            *)
+                ERROR_CONT
+                ;;
+            esac
+            ;;
+        '7')
             MAIN_REBOOT; return 0
             ;;
         *)
@@ -1371,7 +1395,8 @@ MiShuiTool_FB_main() {
         if bash "$USR_SH_FALSH" && FLASH_END=$(date +%s.%N) && unset -f fastboot &>>$MST_LOG
         then
             echo -e "${COLOR_32}[OKAY]${COLOR_33}刷机脚本'${COLOR_36}$(basename "$USR_SH_FALSH")${COLOR_33}'运行结束${COLOR_0}"
-            
+            echo
+            echo -e "${COLOR_35}[Tip]${COLOR_33}ROM刷入完毕后建议使用'${COLOR_36}[SLOT]›1*-设备分区管理 -> *6*-格式化指定分区 -> 1*-恢复出厂设置(双清)${COLOR_33}'双清后再重启${COLOR_0}"
         else
             unset -f fastboot
             echo -e "${COLOR_31}[ERROR]${COLOR_33}刷入失败 检查刷机包是否与设备相符或刷入过程中数据线是否意外断开${COLOR_0}"

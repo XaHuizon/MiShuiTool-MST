@@ -1,11 +1,12 @@
  - 重构 连接设备从自动步骤连接变更为轮询连接
  - 重构 所有adb/fastboot命令替换为termux-adb/termux-fastboot
- - 重构 Fastboot>'分区镜像刷入'为'分区镜像管理'
+ - 重构 Fastboot>'分区镜像管理'为'设备分区管理'
  - 修改 使用Root权限运行MST将不会检查安装第三方工具
  - 新增 su 选项 支持以sudo(Root)权限运行命令
  - 新增 '自动联合操作'重启至Faatboot前YN确认
+ - 新增 Fastboot>'设备分区管理'>格式化指定分区
  - 新增 ADB>'安装APK'支持单次安装多个APK
  - 修复 Fastboot即使未解锁也显示解锁
  - 修复 '自动联合操作'的一处语法错误
- - 修复 Fastboot>'分区镜像管理'的分区检测器无法工作
+ - 修复 Fastboot>'设备分区管理'的分区检测器无法工作
  - 修复 其他一些小问题
