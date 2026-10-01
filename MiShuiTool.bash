@@ -12,7 +12,7 @@ MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
 MST_UPDATE_TIME='26.4.6 Official'
-NOW_VERSION=10048
+NOW_VERSION=10049
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -301,7 +301,7 @@ SELEC_ADB_FB_DEVICE() {
 }
 USB_DEVICES_FASTBOOT() {
     echo -e -n "${COLOR_35}[FASTBOOT]${COLOR_33}设备连接状态:${COLOR_0}"
-    FASTBOOT_DEVICES="$(${EVAL_AF}fastboot devices 2>&1)"
+    FASTBOOT_DEVICES="$(timeout 5 ${EVAL_AF}fastboot devices 2>&1)"
     if [ -n "$FASTBOOT_DEVICES" ]
     then
         FASTBOOT_DEVICES=$(echo "$FASTBOOT_DEVICES" | awk '/fastboot/ {print $1}')
@@ -563,7 +563,7 @@ CA_FLASH_MAIN() {
         echo -e "${COLOR_31}[!]${COLOR_33}当前还未安装'${COLOR_36}Termux-Api${COLOR_33}'App${COLOR_0}"
         echo -e "${COLOR_35}[Tip]${COLOR_33}访问Termux官网下载Termux-Api并安装:${COLOR_36}https://termux.dev/cn/${COLOR_0}"
     fi
-    if { [ "$(id -u)" != 0 ] || [ "$EVAL_AF" = termux- ]; } && ! command -v termux-adb &>>$MST_LOG
+        if { [ "$(id -u)" != 0 ] || [ "$EVAL_AF" = termux- ]; } && ! command -v termux-adb &>>$MST_LOG
     then
         MISHUI_MAIN_TIP='安装第三方F&A工具'
         MISHUI_MAIN
@@ -983,7 +983,7 @@ MiShuiTool_FB_main() {
         MISHUI_MAIN_TIP=设备分区管理
         SEE_USB_DEVICES
         NOT_UNLOCK_ERROR
-        echo -e "${COLOR_35}[SLOT]${COLOR_33}选择要刷入的分区 >>$COLOR_0"
+        echo -e "${COLOR_35}[SLOT]${COLOR_33}选择要执行的分区操作 >>$COLOR_0"
         ALL_TIP_TION="${COLOR}[DEV]${COLOR_33}选择设备管理功能 >>${COLOR_0}"
         ALL_OPTION=("1*-刷入Boot(_a/_b)" "2*-刷入Init_boot(_a/_b)" "3*-刷入Recovery(_a/_b)" "4*-刷入自定义分区" "5*-临时启动镜像" "6*-格式化指定分区" "7*-返回主页")
         NOW_LINE
@@ -1044,7 +1044,7 @@ MiShuiTool_FB_main() {
             SHOW_FUNC_MENU
             case "$FUNC_CONT" in
             '1')
-                echo -e "${COLOR_31}[WARN]${COLOR_33}此操作会${COLOR_31}清楚全部用户数据${COLOR_33}且无法恢复 建议操作前备份重要文件${COLOR_0}"
+                echo -e "${COLOR_31}[WARN]${COLOR_33}此操作会${COLOR_31}清除全部用户数据${COLOR_33}且无法恢复 建议操作前备份重要文件${COLOR_0}"
                 CONTINUE_YN && FASTBOOT_ERASE_SLOT "userdata cache"
                 ;;
             '2')
@@ -1061,7 +1061,6 @@ MiShuiTool_FB_main() {
                 ERROR_CONT
                 ;;
             esac
-            REBOOT_FL; return 0
             ;;
         '7')
             MAIN_REBOOT; return 0
@@ -1074,7 +1073,7 @@ MiShuiTool_FB_main() {
     '2' | 'RE' | '重启连接设备')
         MISHUI_MAIN_TIP=重启连接设备
         SEE_USB_DEVICES
-        ALL_TIP_TION="${COLOR_32}[RE]${COLOR_33}选择需要重启的目标模式 >>${COLOR_0}"
+        ALL_TIP_TION="${COLOR_35}[RE]${COLOR_33}选择需要重启的目标模式 >>${COLOR_0}"
         REBOOT_USB_DEVICES
         REBOOT_FL; return 0
         ;;
@@ -2376,7 +2375,7 @@ MiShuiTool_AUTO_main() {
             if ! REBOOT_TO_FASTBOOT_TRY
             then
                 echo -e "${COLOR_31}[ERROR]${COLOR_33}已尝试3此均未能识别到Fastboot设备${COLOR_0}"
-                echo -e "${COLOR_35}[Tip]${COLOR_33}接下来操作较为简单 可检查设备连接是否断开后再返回主页进入'${COLOR_36}[FB]›2*-Fastboot刷机工具 -> [SLOT]›1*-刷入分区镜像 -> 选择$NEED_FLASH_SLOT_NAME分区${COLOR_33}'功能输入镜像文件路径:${COLOR_36}$THE_NEED_PATCH_IMG${COLOR_0}"
+                echo -e "${COLOR_35}[Tip]${COLOR_33}接下来操作较为简单 可检查设备连接是否断开后再返回主页进入'${COLOR_36}[FB]›2*-Fastboot刷机工具 -> [SLOT]›1*-设备分区管 -> 选择$NEED_FLASH_SLOT_NAME分区${COLOR_33}'功能输入镜像文件路径:${COLOR_36}$THE_NEED_PATCH_IMG${COLOR_0}"
                 REBOOT_FL; return 0
             fi
             echo -e -n "$COLOR_35[Flashing]${COLOR_33}正在将'${COLOR_36}$THE_NEED_PATCH_IMG${COLOR_33}'刷入'${COLOR_36}$NEED_FLASH_SLOT_NAME${COLOR_33}'分区...${COLOR_0}"
