@@ -11,8 +11,8 @@ MST_HOME="$HOME/MST"
 MST_LOG="$MST_HOME/MST运行日志.log"
 DOWNLOAD_PATH=$STORAGE/Download
 TERMUX_CMD_PATH="${PATH%%:*}"
-MST_UPDATE_TIME='26.4.8 Official'
-NOW_VERSION=10050
+MST_UPDATE_TIME='26.4.9 Official'
+NOW_VERSION=10051
 if [ "$(id -u)" = "0" ]
 then
     export COLOR="$COLOR_31"
@@ -1188,13 +1188,13 @@ MiShuiTool_FB_main() {
             if [ -z "$PEAGE_TEXT" ]
             then
                 echo -e "${COLOR_31}无法读取${COLOR_0}"
-                echo -e "${COLOR_31}[ERROR]${COLOR_33}MST无法读取本机电量执行判断 若本机电量高于${COLOR_36}45%${COLOR_33}则可以继续操作 >>${COLOR_0}"
-                echo -e "${COLOR_36}[+][1›高于45%/2›低于45%]*ᐷ${COLOR_01}"
+                echo -e "${COLOR_31}[ERROR]${COLOR_33}MST无法读取本机电量执行判断 若本机电量高于${COLOR_36}40%${COLOR_33}则可以继续操作 >>${COLOR_0}"
+                echo -e "${COLOR_36}[+][1›高于40%/2›低于40%]*ᐷ${COLOR_01}"
                 read -r PEAGE_YN_FF
                 case "$PEAGE_YN_FF" in
                 '2')
                     echo
-                    echo -e "${COLOR_31}[WARN]${COLOR_33}设备电量过低可能导致刷入过程中意外断电 需将当前设备充至${COLOR_36}80%${COLOR_33}以上才可继续操作${COLOR_0}"
+                    echo -e "${COLOR_31}[WARN]${COLOR_33}设备电量过低可能导致刷入过程中意外断电 需将当前设备充至${COLOR_36}40%${COLOR_33}以上才可继续操作${COLOR_0}"
                     REBOOT_FL; return 0
                     ;;
                  esac
@@ -1485,7 +1485,7 @@ MiShuiTool_ADB_main() {
                     echo -e "${COLOR_32}[OKAY]${COLOR_33}激活'${COLOR_36}$ACT_APP_NAME${COLOR_33}'命令执行完毕${COLOR_0}"
                 else
                     echo -e "${COLOR_31}[ERROR]${COLOR_33}激活'${COLOR_36}$ACT_APP_NAME${COLOR_33}'命令执行失败${COLOR_0}"
-                    echo -e "${COLOR_35}[CMD]${COLOR_33}手动激活命令: ${COLOR_36}${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell sh $ACT_APP_PATH${COLOR_0}"
+                    echo -e "${COLOR_35}[CMD]${COLOR_33}手动激活命令: ${COLOR_36}${EVAL_AF}adb -s "$ONE_SELEC_ADB_DEVICE" shell $ACT_APP_PATH${COLOR_0}"
                 fi
             fi
         }
