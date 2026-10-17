@@ -304,7 +304,7 @@ SELEC_ADB_FB_DEVICE() {
 }
 USB_DEVICES_FASTBOOT() {
     echo -e -n "${COLOR_35}[FASTBOOT]${COLOR_33}设备连接状态:${COLOR_0}"
-    FASTBOOT_DEVICES="$(timeout 5 ${EVAL_AF}fastboot devices 2>&1)"
+    FASTBOOT_DEVICES="$(${EVAL_AF}fastboot devices 2>&1)"
     if [ -n "$FASTBOOT_DEVICES" ]
     then
         FASTBOOT_DEVICES=$(echo "$FASTBOOT_DEVICES" | awk '/fastboot/ {print $1}')
@@ -369,7 +369,6 @@ USB_DEVICES_ADB() {
     local ANY_OR_ONLY="$1"
     [ -z "$ANY_OR_ONLY" ] && ANY_OR_ONLY=only
     echo -e -n "${COLOR_35}[ADB]${COLOR_33}设备连接状态:${COLOR_0}"
-    timeout 5 ${EVAL_AF}adb wait-for-device &>>$MST_LOG
     ALL_ADB_DEVICES="$(${EVAL_AF}adb devices 2>>$MST_LOG)"
     ADB_DEVICES="$(sed '/^$/d; /List/d; s/\s.*//g' <<< "$ALL_ADB_DEVICES")"
     if [ -z "$ADB_DEVICES" ]
@@ -1188,13 +1187,13 @@ MiShuiTool_FB_main() {
             if [ -z "$PEAGE_TEXT" ]
             then
                 echo -e "${COLOR_31}无法读取${COLOR_0}"
-                echo -e "${COLOR_31}[ERROR]${COLOR_33}MST无法读取本机电量执行判断 若本机电量高于${COLOR_36}40%${COLOR_33}则可以继续操作 >>${COLOR_0}"
-                echo -e "${COLOR_36}[+][1›高于40%/2›低于40%]*ᐷ${COLOR_01}"
+                echo -e "${COLOR_31}[ERROR]${COLOR_33}MST无法读取本机电量执行判断 若本机电量高于${COLOR_36}45%${COLOR_33}则可以继续操作 >>${COLOR_0}"
+                echo -e "${COLOR_36}[+][1›高于45%/2›低于45%]*ᐷ${COLOR_01}"
                 read -r PEAGE_YN_FF
                 case "$PEAGE_YN_FF" in
                 '2')
                     echo
-                    echo -e "${COLOR_31}[WARN]${COLOR_33}设备电量过低可能导致刷入过程中意外断电 需将当前设备充至${COLOR_36}40%${COLOR_33}以上才可继续操作${COLOR_0}"
+                    echo -e "${COLOR_31}[WARN]${COLOR_33}设备电量过低可能导致刷入过程中意外断电 需将当前设备充至${COLOR_36}80%${COLOR_33}以上才可继续操作${COLOR_0}"
                     REBOOT_FL; return 0
                     ;;
                  esac
@@ -1485,7 +1484,7 @@ MiShuiTool_ADB_main() {
                     echo -e "${COLOR_32}[OKAY]${COLOR_33}激活'${COLOR_36}$ACT_APP_NAME${COLOR_33}'命令执行完毕${COLOR_0}"
                 else
                     echo -e "${COLOR_31}[ERROR]${COLOR_33}激活'${COLOR_36}$ACT_APP_NAME${COLOR_33}'命令执行失败${COLOR_0}"
-                    echo -e "${COLOR_35}[CMD]${COLOR_33}手动激活命令: ${COLOR_36}${EVAL_AF}adb -s "$ONE_SELEC_ADB_DEVICE" shell $ACT_APP_PATH${COLOR_0}"
+                    echo -e "${COLOR_35}[CMD]${COLOR_33}手动激活命令: ${COLOR_36}${EVAL_AF}adb -s "$SELEC_ADB_DEVICE" shell sh $ACT_APP_PATH${COLOR_0}"
                 fi
             fi
         }
